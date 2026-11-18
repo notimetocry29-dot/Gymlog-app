@@ -422,11 +422,12 @@ html[data-th=granite] #sess .ex.wn{background:linear-gradient(180deg,#221e14,#1a
 #sess .meta2 .inp{min-height:44px}
 #sess .exname{min-height:44px;display:flex;align-items:center}
 #sess .scell .inp::placeholder{color:var(--mu);opacity:.55;font-weight:500;font-size:17px}
+a.brand,a.brand:visited{color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
 </style>
 </head>
 <body>
 <header class="top">
-  <div class="brand" id="brand"></div>
+  <a class="brand" id="brand" href="https://www.facebook.com/share/1HWtZibWS7/" target="_blank" rel="noopener noreferrer"></a>
   <button class="btn sm pri" id="updBtn" hidden></button>
 </header>
 <main id="view"></main>
@@ -443,7 +444,7 @@ html[data-th=granite] #sess .ex.wn{background:linear-gradient(180deg,#221e14,#1a
 
 <script>
 'use strict';
-const VER='55';
+const VER='56';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
