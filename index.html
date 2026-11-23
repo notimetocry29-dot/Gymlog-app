@@ -411,6 +411,12 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 .wnav .wb.wt{font-size:18px;font-weight:700}
 .wname{padding:10px 18px 8px}.wgh{display:block;font-family:"Figtree",system-ui,sans-serif;font-size:10.5px;font-weight:500;letter-spacing:.05em;color:var(--mu);opacity:.75;margin-top:3px}
 .wname.core{color:var(--ac2)}
+.fbd{stroke:var(--mu);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;fill:none}.fhl{stroke:var(--ac);stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round;fill:none}.ffar{opacity:.3}.fq{stroke:var(--tx2);stroke-width:1.5;fill:none;opacity:.55}.fw{stroke-width:2.2}.fb{fill:var(--tx2);opacity:.6;stroke:none}.fh{stroke:var(--mu);stroke-width:2.2;fill:none}
+.fsv{display:block;overflow:visible}
+.wfig{display:flex;justify-content:center;margin:0 auto 4px;height:112px;cursor:pointer;-webkit-tap-highlight-color:transparent}.wfig .fsv{height:100%;width:auto;max-width:100%}
+.lfig{display:flex;justify-content:center;height:120px;margin:0 0 10px}.lfig .fsv{height:100%;width:auto;max-width:100%}
+.orb .ofig{position:absolute;left:50%;top:50%;width:64%;aspect-ratio:1;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;opacity:.3;pointer-events:none}.orb .ofig svg.fsv{position:static;inset:auto;width:100%;height:100%;overflow:visible}
+.orb .oc{z-index:1}
 .wname{font-family:"Figtree",system-ui,sans-serif;font-weight:600;letter-spacing:-.005em;color:var(--tx2);opacity:.9}.wname.core{opacity:.88}
 .wnav .wn1{flex:1}
 #sheet{position:fixed;inset:0;z-index:30}
@@ -510,9 +516,10 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 
 <script src="quotes.js"></script>
 <script src="exlib.js"></script>
+<script src="figs.js"></script>
 <script>
 'use strict';
-const VER='95';
+const VER='96';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -938,6 +945,10 @@ function copyQuote(el){
 let qx=0,qy=0,qOn=false,qSw=0;
 document.addEventListener('touchstart',e=>{qOn=qGestOn()&&tab==='home'&&e.touches.length===1&&!!e.target.closest('.qt');if(qOn){qx=e.touches[0].clientX;qy=e.touches[0].clientY}},{passive:true});
 document.addEventListener('touchend',e=>{if(!qOn)return;qOn=false;const t=e.changedTouches[0],dx=t.clientX-qx,dy=t.clientY-qy;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){qSw=Date.now();quoteNav(dx<0?-1:1)}},{passive:true});
+function homeFig(dr,d){if(!figOn()||!window.Figs)return '';let nm='';
+  if(dr&&dr.ex&&dr.ex.length){const k0=dr.ex.findIndex(e=>!fullyIn(e));nm=dr.ex[dr.editing?0:(k0<0?dr.ex.length-1:k0)].name}else if(d.ex[0])nm=d.ex[0].name;
+  return Figs.has(nm)?`<span class="ofig" aria-hidden="true">${Figs.svg(nm)}</span>`:''}
+const figOn=()=>S.settings.fig!==0;
 function renderHome(){
   const L=T(),dr=S.draft,nd=dr?(dr.day||nextDayId()):nextDayId(),d=day(nd),ds=done();
   const wk=ds.filter(s=>daysAgo(s.date)>=0&&daysAgo(s.date)<7).length,days=S.program.days,cc=dr?dr.cycle:calcCycle(nd);
@@ -957,6 +968,7 @@ function renderHome(){
   const h=`<div class="homew"><div class="hs">
     <button class="orb" data-a="${dr?'resume':'start'}"${dr?'':` data-d="${d.id}"`}>
       <svg viewBox="0 0 300 300" aria-hidden="true">${arcs}</svg>
+      ${homeFig(dr,d)}
       <span class="oc"><span class="on1"><bdi>${esc(d.name)}</bdi></span><span class="on2">${dr?L.resume:L.exN(d.ex.length)}</span></span>
     </button>
     <div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
@@ -1041,13 +1053,13 @@ function openPick(kind,j){
 }
 function openMenu(){
   const d=S.draft,L=T(),sh=$('#sheet');sh.hidden=false;
-  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="meta2"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div><button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="meta2"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div><button class="btn w ghost mt" data-a="figS">${tr('الرسم التوضيحي: ','Illustration: ')}${figOn()?tr('شغّال','On'):tr('مقفول','Off')}</button><button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
 }
 function openGuide(){
   const d=S.draft;if(!d)return;const e=d.ex[curEx];if(!e)return;const x=libGet(e.name),sh=$('#sheet');
   const body=(x&&detHtml(x))||(e.note0?`<div class="dsec" dir="auto">${esc(e.note0)}</div>`:`<div class="mu">${tr('مفيش شرح جاهز للتمرين ده. تقدر تكتب ملاحظتك من زرار «ملاحظة».','No guide for this exercise yet. Use the Note button to write your own.')}</div>`);
   sh.hidden=false;
-  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx gd"><div class="gdh"><b class="en">${esc(e.name)}</b><button class="wx" data-a="closeSheet" aria-label="${T().back}">✕</button></div><div class="howto gdb">${body}</div>${e.note?`<div class="dsec k0" dir="auto"><b>${tr('ملاحظتك','Your note')}</b><div>${esc(e.note)}</div></div>`:''}<button class="btn w ghost mt" data-a="hist" data-id="${e.exId}">${tr('سجلّ التمرين','Exercise log')}</button></div>`;
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx gd"><div class="gdh"><b class="en">${esc(e.name)}</b><button class="wx" data-a="closeSheet" aria-label="${T().back}">✕</button></div><div class="howto gdb">${body}</div>${e.note?`<div class="dsec k0" dir="auto"><b>${tr('ملاحظتك','Your note')}</b><div>${esc(e.note)}</div></div>`:''}<div class="row mt"><button class="btn sp ghost" data-a="hwEdit" data-n="${esc(e.name)}">✎ ${tr('تعديل الشرح','Edit guide')}</button><button class="btn sp ghost" data-a="hist" data-id="${e.exId}">${tr('سجلّ التمرين','Exercise log')}</button></div></div>`;
 }
 function renderSession(){
   const d=S.draft,L=T();
@@ -1063,10 +1075,11 @@ function renderSession(){
   <div class="corec" id="corec" aria-live="polite"></div>
   <div class="wmain${wAnim?' wa':''}" data-i="${i}">
     <button class="wname en${e.core?' core':''}" data-a="guide" aria-label="${tr('طريقة الأداء','How to perform')}">${esc(e.name)}<span class="wgh">Tap to see how to perform</span></button>
+    ${figOn()&&window.Figs&&Figs.has(e.name)?`<div class="wfig" data-a="figT" role="button" aria-label="${tr('إخفاء الرسم','Hide illustration')}">${Figs.svg(e.name)}</div>`:''}
     <div class="wtg">${showW?`<button class="wwt en" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>`:''}<span class="wsr en">${e.tsets}×${e.treps}${u}</span></div>
     <div class="wsets">${cir}</div>
     <div class="wrest">${swHtml(e)}</div>
-    <div class="whint${showH?' open':''}" dir="auto" data-a="tgl" data-k="h${i}">${esc(e.note0||'')}</div>
+    <div class="whint${showH?' open':''}" dir="auto" data-a="tgl" data-k="h${i}">${esc((libOv(e.name)&&libOv(e.name).short)||e.note0||'')}</div>
     <div class="wlinks"><button data-a="tgl" data-k="l${i}">↺ ${tr('آخر أداء','Last')}</button><button data-a="tgl" data-k="n${i}">✎ ${L.note}</button><button data-a="addset" data-i="${i}">+ ${tr('مجموعة','Set')}</button></div>
     ${showL?`<div class="tnote">${lastP}${p?`<div class="pmsg ${p.c}">${p.t}</div>`:''}</div>`:''}
     ${showN?`<input class="inp noteI" data-f="n" value="${esc(e.note)}" placeholder="${L.notePh}">`:''}
@@ -1185,7 +1198,8 @@ const cuG=c=>{const g=c.g||'core',n=c.name||'';if(GRP[g])return g;if(g==='arms')
 const customLib=()=>(S.custom||[]).map(c=>[c.name,cuG(c),c.w||0,c.sets||3,c.reps||12,c.unit||'',c.how||'','',null,1]);
 const allLib=()=>LIB.concat(customLib());
 const libGet=n=>LIB.find(x=>x[0]===n)||customLib().find(x=>x[0]===n);
-const libHow=n=>{const x=libGet(n);return x?(howLang()==='en'&&x[7]?x[7]:x[6]):''};
+const libOv=n=>(S.libOv&&S.libOv[n])||null;
+const libHow=n=>{const x=libGet(n);if(!x)return '';const o=libOv(n);if(o&&o.short!=null&&o.short!=='')return o.short;return howLang()==='en'&&x[7]?x[7]:x[6]};
 const lastW=n=>{for(const s of done()){const e=s.ex.find(x=>x.name===n&&+x.w>0);if(e)return +e.w}return null};
 const mk=(n,sets,reps,core)=>{const L=libGet(n)||[n,'',0,3,12,''];const lw=lastW(n);return{id:uid(),name:n,w:lw!=null?lw:L[2],sets:sets||L[3],reps:reps||L[4],goal:reps||L[4],unit:L[5]||'',core:!!core,note:''}};
 const SYSTEMS=[
@@ -1212,7 +1226,10 @@ function switchSys(id){
 }
 /* ================= شاشة التمارين: كل التمارين وشرحها ================= */
 const DETL=['العضلات','التجهيز','التنفيذ','أخطاء شائعة','نصيحة قوية'];
-function detHtml(x){const d=DET[x[0]];if(howLang()==='en'&&x[7])return `<div class="dsec" dir="ltr" lang="en">${esc(x[7])}</div>`;if(d)return d.map((t,k)=>`<div class="dsec k${k}" dir="rtl" lang="ar"><b>${DETL[k]}</b><div>${esc(t)}</div></div>`).join('');return x[6]?`<div class="dsec" style="white-space:pre-wrap">${esc(x[6])}</div>`:''}
+function detHtml(x){const o=x[9]?null:libOv(x[0]),d=(o&&o.d)||DET[x[0]],en=(o&&o.en!=null)?o.en:x[7];
+  if(howLang()==='en'&&en)return `<div class="dsec" dir="ltr" lang="en" style="white-space:pre-wrap">${esc(en)}</div>`;
+  if(d){const h=d.map((t,k)=>t&&String(t).trim()?`<div class="dsec k${k}" dir="rtl" lang="ar"><b>${DETL[k]}</b><div style="white-space:pre-wrap">${esc(t)}</div></div>`:'').join('');if(h)return h}
+  const sh=(o&&o.short)||x[6];return sh?`<div class="dsec" style="white-space:pre-wrap">${esc(sh)}</div>`:''}
 let lbQ='',lbG='all';
 function lbRefresh(){const l=$('#lbL');if(!l)return;const o=[...l.querySelectorAll('.lbn[open]')].map(x=>x.dataset.n);l.innerHTML=libRows();o.forEach(n=>{const d=[...l.querySelectorAll('.lbn')].find(x=>x.dataset.n===n);if(d){const g=d.closest('.lgrp');if(g)g.open=true;d.open=true;lbFill(d)}})}
 function histBlock(h){
@@ -1221,9 +1238,9 @@ function histBlock(h){
   return `<div class="lhist"><div class="lht"><b>${tr('سجلّك','Your log')}</b> · ${tr(h.length+' جلسة','' +h.length+' session(s)')}${best>0?` · ${tr('أعلى وزن','Best')} <span class="en">${fw(best)}</span>`:''}</div>
   <table class="h">${h.slice(0,10).map(x=>`<tr><td>${fmtD(x.date)}</td><td class="en">${fw(x.w)}</td><td class="en">${esc(setsStr(x))}</td></tr>`).join('')}</table>${h.length>10?`<div class="mu">+${h.length-10}</div>`:''}</div>`;
 }
-function lbBody(x,hm){return `<div class="howto">${detHtml(x)||`<span class="mu">${tr('مفيش شرح. اضغط تعديل واكتب شرحك.','No guide yet. Tap Edit and write yours.')}</span>`}</div>
+function lbBody(x,hm){return `${window.Figs&&Figs.has(x[0])?`<div class="lfig">${Figs.svg(x[0])}</div>`:''}<div class="howto">${detHtml(x)||`<span class="mu">${tr('مفيش شرح. اضغط تعديل واكتب شرحك.','No guide yet. Tap Edit and write yours.')}</span>`}</div>
     ${histBlock(hm[nk(x[0])]||[])}
-    <div class="pact" style="border:0;padding-top:4px;margin-top:6px"><button class="plink" data-a="lbAdd" data-n="${esc(x[0])}">${tr('ضيف لبرنامجي…','Add to my program…')}</button>${x[9]?`<button class="plink" data-a="cuEdit" data-n="${esc(x[0])}">${tr('تعديل','Edit')}</button>`:''}</div>`}
+    <div class="pact" style="border:0;padding-top:4px;margin-top:6px"><button class="plink" data-a="lbAdd" data-n="${esc(x[0])}">${tr('ضيف لبرنامجي…','Add to my program…')}</button><button class="plink" data-a="hwEdit" data-n="${esc(x[0])}">${tr('تعديل الشرح','Edit guide')}</button>${x[9]?`<button class="plink" data-a="cuEdit" data-n="${esc(x[0])}">${tr('تعديل التمرين','Edit exercise')}</button>`:''}</div>`}
 function lbFill(d){const b=d.querySelector('.lbody');if(!b||b.dataset.f)return;const n=d.dataset.n,x=allLib().find(q=>q[0]===n);if(!x)return;b.dataset.f='1';b.innerHTML=lbBody(x,histMap())}
 let lbE='all';const lbOpenG=new Set();
 const lbMatch=(x,q)=>{if(!q)return true;const m=META[x[0]];return x[0].toLowerCase().includes(q)||!!(m&&m.ar.includes(q))};
@@ -1247,6 +1264,29 @@ function renderLib(){
 }
 const lbEChips=()=>`<button class="${lbE==='all'?'on':''}" data-a="lbE" data-e="all">${tr('كل الأدوات','All gear')}</button>${EQ_ORDER.map(e=>`<button class="${lbE===e?'on':''}" data-a="lbE" data-e="${e}">${EQN[e][LANG==='ar'?0:1]}</button>`).join('')}`;
 const lbChips=()=>`<button class="${lbG==='all'?'on':''}" data-a="lbG" data-g="all">${tr('الكل','All')}</button>${Object.keys(GRP).map(g=>`<button class="${lbG===g?'on':''}" data-a="lbG" data-g="${g}">${GRP[g][LANG==='ar'?0:1]}</button>`).join('')}`;
+function hwModal(n){
+  const x=libGet(n);if(!x)return;if(x[9]){cuModal(n);return}
+  const o=libOv(n)||{},d=o.d||DET[n]||['','','','',''],en=o.en!=null?o.en:(x[7]||''),sh=o.short!=null&&o.short!==''?o.short:x[6];
+  modal(`<h3 class="en">${esc(n)}</h3><div class="mu" style="margin-bottom:10px">${tr('عدّل الشرح والمعلومات. اللي تكتبه هو اللي هيظهر في شاشة اللعب.','Edit the guide and notes. What you write is what shows in the session screen.')}</div>
+  <label class="fld">${tr('ملخص سطر واحد (تحت المجموعات في اللعب)','One-line summary (under the sets)')}<textarea class="inp" id="hwS" rows="2" dir="auto">${esc(sh)}</textarea></label>
+  ${DETL.map((t,k)=>`<label class="fld">${t}<textarea class="inp" id="hwD${k}" rows="3" dir="rtl">${esc(d[k]||'')}</textarea></label>`).join('')}
+  <label class="fld">${tr('الشرح بالإنجليزي','English guide')}<textarea class="inp en" id="hwE" rows="4" dir="ltr" style="text-align:left">${esc(en)}</textarea></label>
+  <div class="row"><button class="btn pri sp" data-a="hwSave" data-n="${esc(n)}">${T().saveB}</button><button class="btn ghost" data-a="closeM">${T().cancel}</button></div>
+  ${o.d||o.en!=null||o.short!=null?`<button class="btn w ghost dan mt" data-a="hwReset" data-n="${esc(n)}">${tr('رجّع الشرح الأصلي','Restore original guide')}</button>`:''}`);
+}
+function hwApply(n,old){
+  save();queueBackup();
+  const nw=libHow(n);if(S.draft)S.draft.ex.forEach(e=>{if(e.name===n&&e.note0===old)e.note0=nw});save();
+  closeModal();if($('#sess')&&!$('#sess').hidden)renderSession();else if($('#lbL'))lbRefresh();
+}
+function hwSave(n){
+  const x=libGet(n);if(!x)return;const old=libHow(n),d=[0,1,2,3,4].map(k=>$('#hwD'+k).value.trim()),en=$('#hwE').value.trim(),sh=$('#hwS').value.trim();
+  const d0=DET[n]||['','','','',''],same=d.every((t,k)=>t===(d0[k]||''));
+  S.libOv=S.libOv||{};const o={};
+  if(!same)o.d=d;if(en!==(x[7]||''))o.en=en;if(sh!==x[6])o.short=sh;
+  if(Object.keys(o).length)S.libOv[n]=o;else delete S.libOv[n];
+  hwApply(n,old);toast(tr('اتحفظ ✓','Saved ✓'));
+}
 function cuModal(n){
   const c=n?(S.custom||[]).find(x=>x.name===n):null,t=c||{name:'',g:'chest',w:'',sets:3,reps:12,unit:'',how:''};
   modal(`<h3>${c?tr('تعديل التمرين','Edit exercise'):tr('تمرين جديد','New exercise')}</h3>
@@ -1371,7 +1411,7 @@ async function deriveKey(pass,salt,iter){
 }
 async function sealBytes(key,bytes){const iv=crypto.getRandomValues(new Uint8Array(12));return{iv,ct:new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,bytes))}}
 /* كل اللي محتاجينه عشان الاسترجاع يرجّع كل حاجة (نفس الشكل في الملف وGitHub) */
-const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],mig:S.mig||0});
+const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],libOv:S.libOv||{},mig:S.mig||0});
 async function packBackup(){
   const payload=enc.encode(JSON.stringify({app:'gymlog',v:1,at:Date.now(),data:snapData()}));
   let z=null;try{z=await pipe(payload,new CompressionStream('gzip'))}catch(e){}
@@ -1494,7 +1534,7 @@ async function applyRestore(d){
   if(!confirm(T().confRestore(c.ss.length)))return false;
   /* نسخة من اللي على الموبايل قبل الاسترجاع، عشان «تراجع» */
   try{await idb.set('state.prerestore',{at:Date.now(),data:JSON.parse(JSON.stringify(S))})}catch(e){}
-  S={v:1,program:Object.assign({},d.program,{days:c.days}),sessions:c.ss,settings:Object.assign({cycle:8},d.settings||{},{lang:LANG}),draft:d.draft||null,sys:d.sys||undefined,custom:Array.isArray(d.custom)?d.custom:[],mig:Math.max(+d.mig||0,HIST_MIG)};
+  S={v:1,program:Object.assign({},d.program,{days:c.days}),sessions:c.ss,settings:Object.assign({cycle:8},d.settings||{},{lang:LANG}),draft:d.draft||null,sys:d.sys||undefined,custom:Array.isArray(d.custom)?d.custom:[],libOv:(d.libOv&&typeof d.libOv==='object')?d.libOv:{},mig:Math.max(+d.mig||0,HIST_MIG)};
   if(S.draft&&(!Array.isArray(S.draft.ex)))S.draft=null;
   save();queueBackup();toast(c.bad?T().restoredSkip(c.bad):T().restored);go('home');return true;
 }
@@ -1589,6 +1629,7 @@ function renderData(){
     <div class="mu">${L.lastBk}: ${lb?new Date(lb).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.never}</div>
     ${persisted===true?`<div class="mu">✓ ${L.persisted}</div>`:''}</div>
   <div class="thseg" role="group" aria-label="${L.themeT}"><button class="${(S.settings.theme||'iron')==='iron'?'on':''}" data-a="theme" data-k="iron">${THEMES.iron[LANG]}</button><button class="${S.settings.theme==='morning'?'on':''}" data-a="theme" data-k="morning">${THEMES.morning[LANG]}</button></div>
+  <div class="qrow"><div class="mu">${tr('الرسم التوضيحي للتمرين','Exercise illustration')}</div><div class="thseg"><button class="${figOn()?'on':''}" data-a="figS" data-k="on">${tr('شغّال','On')}</button><button class="${figOn()?'':'on'}" data-a="figS" data-k="off">${tr('مقفول','Off')}</button></div></div>
   <div class="qrow"><div class="mu">${tr('بيت الشعر: دوسة = نسخ · سحب = تنقل','Verse: tap = copy · swipe = browse')}</div><div class="thseg"><button class="${qGestOn()?'on':''}" data-a="qGest" data-k="on">${tr('شغّال','On')}</button><button class="${qGestOn()?'':'on'}" data-a="qGest" data-k="off">${tr('مقفول','Off')}</button></div></div>
   <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?`<span class="pdot${SYNC.err?' er':''}" style="margin-inline-start:6px"></span>`:''}<span class="pchev">⌄</span></summary><div class="fbody">
     ${SYNC.on?`<div class="note-ok" style="margin:0 0 10px">${L.syncOnL} · ${L.syncLast}: ${SYNC.last?new Date(SYNC.last).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.syncNever}${SYNC.dirty?' · '+L.syncWait(Math.max(1,SYNC.missed)):''}</div>${SYNC.err?`<div class="warn" style="margin:0 0 10px">${L.syncErr(esc(syncMsg(SYNC.err)))}</div>`:''}${syncPublic()?`<div class="warn" style="margin:0 0 10px">${L.syncPub}</div>`:''}
@@ -1686,6 +1727,8 @@ document.addEventListener('click',ev=>{
     case 'tgl':{const k=b.dataset.k;openTips.has(k)?openTips.delete(k):openTips.add(k);renderSession();break}
     case 'hist':closeSheet();exHistModal(b.dataset.id);break;
     case 'guide':openGuide();break;
+    case 'figT':S.settings.fig=0;save();renderSession();toast(tr('الرسم اتخبّى — ترجّعه من ⋯ أو من الملف','Hidden — bring it back from ⋯ or File'));break;
+    case 'figS':{const on=b.dataset.k?b.dataset.k==='on':!figOn();S.settings.fig=on?1:0;save();if(!$('#sess').hidden){renderSession();closeSheet()}else renderData();break}
     case 'sess':sessModal(b.dataset.id);break;
     case 'copyS':copy(cardText(S.sessions.find(x=>x.id===b.dataset.id)));break;
     case 'aiS':{const s=S.sessions.find(x=>x.id===b.dataset.id);if(s)shareText(aiText(s,s.id));break}
@@ -1702,6 +1745,9 @@ document.addEventListener('click',ev=>{
     case 'libG':libG=b.dataset.g;libModal();break;
     case 'cuNew':cuModal();break;
     case 'cuEdit':cuModal(b.dataset.n);break;
+    case 'hwEdit':closeSheet();hwModal(b.dataset.n);break;
+    case 'hwSave':hwSave(b.dataset.n);break;
+    case 'hwReset':{const n=b.dataset.n,old=libHow(n);if(S.libOv)delete S.libOv[n];hwApply(n,old);toast(tr('رجع الأصلي ✓','Restored ✓'));break}
     case 'cuSave':cuSave(b.dataset.n);break;
     case 'cuDel':if(confirm(tr('تحذف التمرين ده من مكتبتك؟ برنامجك وسجلك مش هيتأثروا.','Delete this exercise from your library? Your program and log are not affected.'))){S.custom=(S.custom||[]).filter(x=>x.name!==b.dataset.n);save();queueBackup();closeModal();renderLib()}break;
     case 'qGest':S.settings.qGest=b.dataset.k==='off'?0:1;save();renderData();break;
