@@ -333,6 +333,8 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 .orb .ar{transition:stroke-width .07s}
 .orb:active .ar.cur{stroke-width:13}
 .orb svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.orb svg.spin{animation:orbspin .7s cubic-bezier(.5,0,.25,1)}
+@keyframes orbspin{to{transform:rotate(360deg)}}
 .orb .ar{fill:none;stroke:var(--bd);stroke-width:7;stroke-linecap:round}
 .orb .ar.dn{stroke:var(--ac)}
 .orb .ar.cur{stroke:var(--ac2);stroke-width:10}
@@ -524,7 +526,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='102';
+const VER='103';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1041,7 +1043,10 @@ function swHtml(e){
   return `<button class="swt${on?' on':''}" data-a="sw" aria-label="${esc(L)}"><span class="swi">${on?'<i class="swp"></i>':'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="14" r="7.5"/><path d="M12 10.5V14l2.2 1.6M9.5 2.5h5M12 2.5v4M18.4 7.6l1.4-1.4"/></svg>'}</span><span class="swc"><b class="en" id="${on?'swT':''}">${on?mmss((Date.now()-d.sw.t0)/1000):'0:00'}</b><small>${L}</small></span></button>`;
 }
 function goEx(k){const d=S.draft;if(!d||k<0||k>=d.ex.length||k===curEx)return;closeSheet();curEx=k;wAnim=true;renderSession();wAnim=false;$('#sess').scrollTop=0}
-function orbGo(b,fn){try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}fn()}
+function orbGo(b,fn){try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}
+  /* الأقواس اللي حوالين الدايرة تلف لفة كاملة، وبعدها يفتح التمرين */
+  const v=b.querySelector('svg');if(!v||b.dataset.go||matchMedia('(prefers-reduced-motion: reduce)').matches){if(!b.dataset.go)fn();return}
+  b.dataset.go='1';let k=false;const end=()=>{if(k)return;k=true;fn()};v.addEventListener('animationend',end,{once:true});v.classList.add('spin');setTimeout(end,900)}
 function closeSheet(){const s=$('#sheet');if(s){s.hidden=true;s.innerHTML=''}pk=null}
 function openPick(kind,j){
   const d=S.draft,e=d.ex[curEx],L=T();let cur,step,min,max;
