@@ -344,7 +344,7 @@ html[data-th] .brand .wm b,html .brand .wm b{font-size:12px;letter-spacing:.02em
 .ex.wn .chk{color:var(--mid)}
 html[data-th=dawn] .ex.wn{background:rgba(220,200,150,.13)}
 .brand .lg{cursor:pointer;padding:9px 8px;box-sizing:content-box;margin:-9px -8px;-webkit-tap-highlight-color:transparent}
-.brand .lg.spin{animation:lgspin .38s ease-out}
+.brand .lg.spin{animation:lgspin 1s cubic-bezier(.5,.05,.2,1)}
 @keyframes lgspin{to{transform:rotate(360deg)}}
 .sysopt{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--bd);border-radius:var(--rad);margin-bottom:8px;background:var(--s1)}
 .sysopt.on{border-color:var(--ac);background:var(--acbg)}
@@ -441,6 +441,11 @@ html[data-th=granite] #sess .ex.wn{background:linear-gradient(180deg,#221e14,#1a
 @font-face{font-family:"BasQ";src:url(fonts/ruqaa.woff2) format("woff2");font-weight:700;font-display:swap}
 .qt{margin:12px auto 0;max-width:360px;padding:0 10px;text-align:center;font-family:"BasQ",var(--font);font-weight:700;font-size:23px;line-height:1.8;color:var(--tx2);opacity:.82;direction:rtl;text-transform:none;letter-spacing:0;min-height:3.6em}
 .qt span{display:block}
+.qt.qout{opacity:0;transform:translateY(6px);transition:opacity .45s ease,transform .45s ease}
+.qt.qin span{animation:qin .85s cubic-bezier(.2,.7,.2,1) both}
+.qt.qin span:nth-child(2){animation-delay:.2s}
+@keyframes qin{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:none}}
+
 .hs .orb{width:min(84vw,350px,calc(100dvh - 440px))}
 a.brand,a.brand:visited{color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
 
@@ -632,7 +637,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 <script src="quotes.js"></script>
 <script>
 'use strict';
-const VER='84';
+const VER='85';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -953,10 +958,17 @@ function applyLang(){applyTheme();
 }
 function saveUI(){try{localStorage.setItem('gymlog.ui',JSON.stringify({t:tab,s:!$('#sess').hidden,y:window.scrollY,at:Date.now()}))}catch(e){}}
 /* الدامبل: بيت جديد من غير ما يدخل أي صفحة */
+let nqBusy=false;
 function newQuote(){
+  if(nqBusy)return;
   const lg=document.querySelector('.brand .lg');
-  if(lg){lg.classList.remove('spin');void lg.getBoundingClientRect();lg.classList.add('spin');setTimeout(()=>lg.classList.remove('spin'),380)}
-  QSEL=null;if(tab==='home')renderHome()}
+  if(lg){lg.classList.remove('spin');void lg.getBoundingClientRect();lg.classList.add('spin');setTimeout(()=>lg.classList.remove('spin'),1000)}
+  if(tab!=='home')return;
+  nqBusy=true;const old=document.querySelector('.qt');if(old)old.classList.add('qout');
+  setTimeout(()=>{
+    QSEL=null;if(tab==='home')renderHome();
+    const q=document.querySelector('.qt');if(q)q.classList.add('qin');
+    setTimeout(()=>{nqBusy=false},900)},old?460:0)}
 function openCredits(){
   modal(`<div class="cr en">
   <svg class="crl" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg>
