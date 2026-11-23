@@ -564,6 +564,14 @@ html[data-th=granite] .ptabs button.on{color:var(--gd);border-bottom-color:var(-
 html[data-th=granite] .pdot{background:var(--gd)}
 .lbn .lbody{padding:0 2px 12px}
 .lbn>summary .sp{min-width:0}
+.psel{flex:1;min-width:0;background:none;border:0;color:var(--mu);font-size:16px;padding:12px 2px;outline:0;appearance:none;-webkit-appearance:none}
+.psel option,.psel optgroup{background:var(--s1);color:var(--tx)}
+.lsearch:has(.psel){position:relative;margin-bottom:4px}
+.pmon{margin:18px 2px 2px;color:var(--mu);font-size:13px;letter-spacing:.02em}
+.pmon:first-child{margin-top:8px}
+.pst{flex:none;font-size:13px;color:var(--mu)}
+.pst.full{color:var(--ac2)}
+html[data-th=granite] .pst.full{color:var(--gd)}
 </style>
 </head>
 <body>
@@ -1093,9 +1101,11 @@ function exHistModal(exId){
 /* ================= السجل ================= */
 function renderHistory(){
   const L=T(),ds=done();
-  let h=`<div class="card"><div class="mu" style="margin-bottom:6px">${L.exPick}</div><select class="inp" id="exPick"><option value="">${L.exPickPh}</option>${S.program.days.map(d=>`<optgroup label="${esc(d.name)}">${d.ex.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</optgroup>`).join('')}</select></div>`;
+  let h=`<div class="lsearch"><select id="exPick" class="psel"><option value="">${L.exPickPh}</option>${S.program.days.map(d=>`<optgroup label="${esc(d.name)}">${d.ex.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</optgroup>`).join('')}</select><span class="pchev">⌄</span></div>`;
   if(!ds.length)h+=`<div class="empty">${L.noSess}</div>`;
-  else h+=`<div class="sl">${ds.map(s=>`<div class="sc ${s.status}" data-a="sess" data-id="${s.id}"><div class="sp"><div class="n"><bdi>${esc(s.dayName)}</bdi></div><div class="d">${fmtD(s.date)} · <span class="en">C${s.cycle}</span> · ${L.exN(s.ex.length)}</div></div><span class="st">${T().st[s.status]||''}</span></div>`).join('')}</div>`;
+  else{let last='';h+=`<div class="plist">${ds.map(s=>{
+    let mh='';try{const m=new Date(s.date+'T00:00:00').toLocaleDateString(LANG==='ar'?'ar-EG':'en-GB',{month:'long',year:'numeric'});if(m!==last){last=m;mh=`<div class="pmon">${m}</div>`}}catch(e){}
+    return `${mh}<div class="pr2"><div class="pr2b" data-a="sess" data-id="${s.id}"><div class="sp"><div class="pnm"><bdi>${esc(s.dayName)}</bdi></div><div class="mu">${fmtD(s.date)} · <span class="en">C${s.cycle}</span> · ${L.exN(s.ex.length)}</div></div><span class="pst ${s.status}">${L.st[s.status]||''}</span></div></div>`}).join('')}</div>`}
   $('#view').innerHTML=h;
   $('#exPick').onchange=e=>{if(e.target.value)exHistModal(e.target.value);e.target.value=''};
 }
