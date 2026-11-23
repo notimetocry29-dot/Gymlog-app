@@ -655,7 +655,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="quotes.js"></script>
 <script>
 'use strict';
-const VER='87';
+const VER='88';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1023,7 +1023,7 @@ window.addEventListener('popstate',e=>{
   const st=e.state||{},M=$('#modal'),Sx=$('#sess');
   if(st.modal){if(M.hidden)history.back();return}
   M.hidden=true;
-  if(!st.sess&&!Sx.hidden){Sx.hidden=true;document.body.style.overflow='';if(S.draft)queueDraftBackup()}
+  if(!st.sess&&!Sx.hidden){wakeOff();Sx.hidden=true;document.body.style.overflow='';if(S.draft)queueDraftBackup()}
   if(Sx.hidden)go(st.tab||'home');
 });
 try{history.replaceState({},'')}catch(e){}
@@ -1104,8 +1104,10 @@ function editSession(id){
   if(d)for(const t of d.ex)if(!ex.some(e=>e.exId===t.id))ex.push(draftEx(t));
   S.draft.ex=ex;openTips.clear();save();closeModal(true);openSession();
 }
-function openSession(){const dd=S.draft,k0=dd.ex.findIndex(e=>!fullyIn(e));curEx=dd.editing?0:(k0<0?dd.ex.length-1:k0);finishing=false;renderSession();$('#sess').hidden=false;$('#sess').classList.remove('in');void $('#sess').offsetWidth;$('#sess').classList.add('in');$('#sess').scrollTop=0;document.body.style.overflow='hidden';if(!hs().sess){const n=Object.assign({tab:tab},hs(),{sess:1});delete n.modal;if(hs().modal)history.replaceState(n,'');else history.pushState(n,'')}saveUI()}
-function closeSession(){endRest(false);flushSave();$('#sess').hidden=true;document.body.style.overflow='';if(tab==='home')renderHome();saveUI();if(hs().sess)history.back()}
+function openSession(){const dd=S.draft,k0=dd.ex.findIndex(e=>!fullyIn(e));curEx=dd.editing?0:(k0<0?dd.ex.length-1:k0);finishing=false;renderSession();$('#sess').hidden=false;$('#sess').classList.remove('in');void $('#sess').offsetWidth;$('#sess').classList.add('in');$('#sess').scrollTop=0;document.body.style.overflow='hidden';wakeOn();if(!hs().sess){const n=Object.assign({tab:tab},hs(),{sess:1});delete n.modal;if(hs().modal)history.replaceState(n,'');else history.pushState(n,'')}saveUI()}
+let WL=null;async function wakeOn(){try{if('wakeLock' in navigator&&!WL&&!document.hidden){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}}catch(e){}}
+function wakeOff(){try{WL&&WL.release()}catch(e){}WL=null}
+function closeSession(){wakeOff();endRest(false);flushSave();$('#sess').hidden=true;document.body.style.overflow='';if(tab==='home')renderHome();saveUI();if(hs().sess)history.back()}
 const openTips=new Set();
 /* ===== شاشة التمرين (v57): تمرين واحد في الشاشة ===== */
 let curEx=0,pk=null,restEnd=0,restTot=90,restIv=null,wAnim=false,finishing=false;
@@ -1203,16 +1205,6 @@ function persistDraft(){
   if(i>-1){s.ts=S.sessions[i].ts;S.sessions[i]=s}else S.sessions.push(s);
   S.draft=null;openTips.clear();save();autoFile();queueBackup(true);
   return s;
-}
-function commit(){
-  const d=S.draft,s=buildFromDraft();
-  if(!s){toast(T().noSets);return}
-  const i=d.editing?S.sessions.findIndex(x=>x.id===d.editing):-1;
-  if(i>-1){s.ts=S.sessions[i].ts;S.sessions[i]=s}else S.sessions.push(s);
-  S.draft=null;openTips.clear();save();closeSession();
-  toast(s.status==='full'?T().savedFull:s.status==='core'?T().savedCore:T().saved);
-  autoFile();queueBackup(true);
-  go('home');
 }
 function shareDraft(){const s=buildFromDraft();if(!s){toast(T().noSets);return}shareText(aiText(s,S.draft.editing))}
 function exHistModal(exId){
@@ -1498,7 +1490,7 @@ const b64=u=>{let t='';for(let i=0;i<u.length;i+=0x8000)t+=String.fromCharCode.a
 const unb64=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
 const pipe=async(bytes,S2)=>new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(S2)).arrayBuffer());
 let SYNC={on:false,repo:'',branch:'gym-backup',path:'sync/state.bin',salt:'',iter:600000,last:0,n:0,dirty:false,missed:0,err:''};
-let BKEY=null,running=false,chg=0;
+let BKEY=null,running=false,chg=0,brOK=false,rSha=null;
 async function loadSync(){try{const c=await idb.get('sync');if(c)Object.assign(SYNC,c)}catch(e){}try{BKEY=(await idb.get('bk.key'))||null}catch(e){}}
 const saveSync=()=>idb.set('sync',Object.assign({},SYNC)).catch(()=>{});
 async function deriveKey(pass,salt,iter){
@@ -1546,11 +1538,12 @@ async function ensureBranch(tok){
 }
 async function putBackup(text){
   const url=`/repos/${SYNC.repo}/contents/${SYNC.path}`;
-  for(let k=0;k<2;k++){
-    let sha;const g=await gh('GET',`${url}?ref=${SYNC.branch}`);
-    if(g.ok)sha=(await g.json()).sha;else if(g.status!==404)throw ghErr(g);
+  for(let k=0;k<3;k++){
+    let sha=rSha;
+    if(!sha){const g=await gh('GET',`${url}?ref=${SYNC.branch}`);if(g.ok)sha=(await g.json()).sha;else if(g.status!==404)throw ghErr(g)}
     const p=await gh('PUT',url,Object.assign({message:'sync '+new Date().toISOString().slice(0,16),content:b64(enc.encode(text)),branch:SYNC.branch},sha?{sha}:{}));
-    if(p.ok)return;if(p.status!==409&&p.status!==422)throw ghErr(p);
+    if(p.ok){try{rSha=(await p.json()).content.sha}catch(e){rSha=null}return}
+    rSha=null;if(p.status!==409&&p.status!==422)throw ghErr(p);
   }
   throw new Error('conflict');
 }
@@ -1562,11 +1555,11 @@ async function runBackup(verify){
   if(!SYNC.on||!BKEY||running||!navigator.onLine)return false;
   running=true;const my=chg;let ok=false;
   try{
-    await ensureBranch();
+    if(!brOK){await ensureBranch();brOK=true}
     await putBackup(await packBackup());
     if(verify){const back=await openBackup(await readRemote(),BKEY);if(!back.data||back.data.sessions.length!==S.sessions.length)throw new Error('verify')}
     if(chg===my)SYNC.dirty=false;SYNC.missed=0;SYNC.last=Date.now();SYNC.n=S.sessions.length;SYNC.err='';ok=true;markBackup();
-  }catch(e){SYNC.err=String(e.message||e)}
+  }catch(e){SYNC.err=String(e.message||e);brOK=false;rSha=null}
   running=false;await saveSync();
   if(ok&&chg!==my)runBackup();
   refresh();return ok;
@@ -1586,7 +1579,7 @@ async function enableSyncWith(tok,p1,repo){
   toast(T().syncBusy);
   try{
     const salt=crypto.getRandomValues(new Uint8Array(16));
-    SYNC=Object.assign(SYNC,{repo,salt:b64(salt),iter:600000,on:true,dirty:true,missed:0,err:''});chg++;
+    brOK=false;rSha=null;SYNC=Object.assign(SYNC,{repo,salt:b64(salt),iter:600000,on:true,dirty:true,missed:0,err:''});chg++;
     BKEY=await deriveKey(p1,salt,SYNC.iter);
     const {iv,ct}=await sealBytes(BKEY,enc.encode(tok));
     await idb.set('bk.token',{iv,ct});await idb.set('bk.key',BKEY);await saveSync();
@@ -1604,7 +1597,7 @@ async function restoreRemote(){
   if(!tok||!p1||!/^[\w.-]+\/[\w.-]+$/.test(repo)){toast(T().syncBadIn);return}
   toast(T().syncBusy);
   try{
-    SYNC.repo=repo;
+    SYNC.repo=repo;brOK=false;rSha=null;
     const o=await openBackup(await readRemote(tok),p1);
     if(!await applyRestore(o.data))return;
     if(!SYNC.on&&confirm(T().syncAfterRestore))await enableSyncWith(tok,p1,repo);
@@ -1709,7 +1702,7 @@ function importFile(file){
     await applyRestore(d)};
   r.readAsText(file);
 }
-function refresh(){if(tab==='data')renderData();if(tab==='home')renderHome()}
+function refresh(){if(tab==='data')renderData();if(tab==='home'){const o=[...document.querySelectorAll('#view details')].map(x=>x.open);renderHome();document.querySelectorAll('#view details').forEach((x,k)=>{if(o[k])x.open=true})}}
 /* حالة «التخزين محمي» و«تراجع الاسترجاع»: بتتقرا في الخلفية والصفحة بتترسم فورًا بآخر قيمة معروفة */
 const DM={p:null,u:false};
 async function dataMeta(){let p=null,u=false;
@@ -1723,7 +1716,7 @@ function renderData(){
   $('#view').innerHTML=`<div class="fhead"><div class="mu">${L.onPhone}</div><div class="fbig">${n} <span class="mu">${L.sessions}</span></div>
     <div class="mu">${L.lastBk}: ${lb?new Date(lb).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.never}</div>
     ${persisted===true?`<div class="mu">✓ ${L.persisted}</div>`:''}</div>
-  <details class="fsec" data-fk="theme"${fOpen.has('theme')?' open':''}><summary>${L.themeT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="dd${thmOpen?' open':''}"><button class="dd-cur" data-a="thmTog">${swatch(S.settings.theme||'granite')}<span>${(THEMES[S.settings.theme]||THEMES.granite)[LANG]}</span><span class="ch">▾</span></button>${thmOpen?`<div class="dd-list">${Object.keys(THEMES).map(k=>`<button class="dd-opt${(S.settings.theme||'granite')===k?' on':''}" data-a="theme" data-k="${k}">${swatch(k)}<span>${THEMES[k][LANG]}<small>${THEMES[k][LANG==='ar'?'da':'de']}</small></span></button>`).join('')}</div>`:''}</div></div></details>
+  <details class="fsec" data-fk="theme"${fOpen.has('theme')?' open':''}><summary>${L.themeT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="dd${thmOpen?' open':''}"><button class="dd-cur" data-a="thmTog">${swatch(S.settings.theme||'iron')}<span>${(THEMES[S.settings.theme]||THEMES.iron)[LANG]}</span><span class="ch">▾</span></button>${thmOpen?`<div class="dd-list">${Object.keys(THEMES).map(k=>`<button class="dd-opt${(S.settings.theme||'iron')===k?' on':''}" data-a="theme" data-k="${k}">${swatch(k)}<span>${THEMES[k][LANG]}<small>${THEMES[k][LANG==='ar'?'da':'de']}</small></span></button>`).join('')}</div>`:''}</div></div></details>
   <details class="fsec" data-fk="rest"${fOpen.has('rest')?' open':''}><summary>${tr('الراحة بين المجموعات','Rest between sets')}<span class="pchev">⌄</span></summary><div class="fbody">${restChips()}</div></details>
   <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?`<span class="pdot${SYNC.err?' er':''}" style="margin-inline-start:6px"></span>`:''}<span class="pchev">⌄</span></summary><div class="fbody">
     ${SYNC.on?`<div class="note-ok" style="margin:0 0 10px">${L.syncOnL} · ${L.syncLast}: ${SYNC.last?new Date(SYNC.last).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.syncNever}${SYNC.dirty?' · '+L.syncWait(Math.max(1,SYNC.missed)):''}</div>${SYNC.err?`<div class="warn" style="margin:0 0 10px">${L.syncErr(esc(syncMsg(SYNC.err)))}</div>`:''}${syncPublic()?`<div class="warn" style="margin:0 0 10px">${L.syncPub}</div>`:''}
@@ -1800,7 +1793,6 @@ document.addEventListener('click',ev=>{
     case 'start':if(b.classList.contains('orb'))orbGo(b,()=>startSession(b.dataset.d));else startSession(b.dataset.d);break;
     case 'resume':if(b.classList.contains('orb'))orbGo(b,openSession);else openSession();break;
     case 'closeS':flushSave();closeSession();if(S.draft)queueDraftBackup();break;
-    case 'commit':commit();break;
     case 'shareDraft':shareDraft();break;
     case 'discard':if(confirm(d.editing?L.confCancelEdit:L.confDiscard)){S.draft=null;openTips.clear();save();closeSession()}break;
     case 'addset':d.ex[i].sets.push('');save();renderSession();break;
@@ -1820,7 +1812,6 @@ document.addEventListener('click',ev=>{
     case 'finish':finishSession();break;
     case 'copyDone':if(lastDone)copy(cardText(lastDone));break;
     case 'doneClose':closeSession();go('home');break;
-    case 'rmset':if(d.ex[i].sets.length>1){d.ex[i].sets.pop();save();renderSession()}break;
     case 'tgl':{const k=b.dataset.k;openTips.has(k)?openTips.delete(k):openTips.add(k);renderSession();break}
     case 'hist':exHistModal(b.dataset.id);break;
     case 'sess':sessModal(b.dataset.id);break;
@@ -1849,7 +1840,6 @@ document.addEventListener('click',ev=>{
     case 'dayEdit':dayModal();break;
     case 'daySave':{const v=$('#dName').value.trim();if(v){day(pDay).name=v;save();queueBackup()}closeModal();renderProgram();break}
     case 'dayDel':if(confirm(tr('تحذف اليوم ده بتمارينه؟ السجل القديم مش هيتأثر.','Delete this day and its exercises? Your log is not affected.'))){S.program.days=S.program.days.filter(x=>x.id!==pDay);pDay=S.program.days[0].id;save();queueBackup();closeModal();renderProgram()}break;
-    case 'up':case 'down':{const ex=day(pDay).ex,j=a==='up'?i-1:i+1;if(j>=0&&j<ex.length){[ex[i],ex[j]]=[ex[j],ex[i]];save();queueBackup();renderProgram()}break}
     case 'editT':tplModal(i);break;
     case 'addT':cuModal();break;
     case 'saveT':saveTpl(i);break;
@@ -1900,9 +1890,9 @@ function restoreUI(u){try{if(!u||Date.now()-u.at>12*36e5)return;
   if(u.s&&S.draft)openSession();else if(u.y)setTimeout(()=>window.scrollTo(0,u.y),50)}catch(e){}}
 window.addEventListener('scroll',()=>{clearTimeout(window.__st);window.__st=setTimeout(saveUI,250)},{passive:true});
 window.addEventListener('pagehide',flushSave);
-document.addEventListener('visibilitychange',()=>{if(document.hidden){flushSave();saveUI();if(S.draft)queueDraftBackup()}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){flushSave();saveUI();if(S.draft)queueDraftBackup()}else if(!$('#sess').hidden)wakeOn()});
 const UI0=readUI();
-boot().then(()=>{if(!S.settings.thGr){S.settings.thGr=1;S.settings.thDawn=1;S.settings.theme='granite';save()}applyLang();if(S.impN){const k=S.impN;S.impN=0;save();setTimeout(()=>toast(T().histNote(k)),600)}go('home');restoreUI(UI0);setTimeout(()=>('requestIdleCallback' in window?requestIdleCallback(warmTabs,{timeout:4000}):warmTabs()),2500);if(pendMig){toast(T().migNote);pendMig=false}});
+boot().then(()=>{if(!S.settings.thGr){S.settings.thGr=1;S.settings.thDawn=1;S.settings.theme='granite';save()}applyLang();if(S.impN){const k=S.impN;S.impN=0;save();setTimeout(()=>toast(T().histNote(k)),600)}go('home');restoreUI(UI0);setTimeout(()=>('requestIdleCallback' in window?requestIdleCallback(warmTabs,{timeout:4000}):warmTabs()),2500);if(pendMig){toast(T().migNote);pendMig=false}if(SYNC.on&&SYNC.dirty)setTimeout(runBackup,1500)});
 </script>
 </body>
 </html>
