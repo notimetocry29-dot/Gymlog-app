@@ -201,6 +201,8 @@ html[data-th] .brand .wm b,html .brand .wm b{font-size:12px;letter-spacing:.02em
 .lgrp>summary b{flex:1}
 .lgrp[open]>summary .pchev{transform:rotate(180deg)}
 .lgc{font-size:12px;font-weight:700;color:var(--mu);background:var(--s2);border-radius:99px;padding:2px 9px}
+.qt{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.qrow{margin:0 0 14px}.qrow .mu{margin:0 2px 8px}.qrow .thseg{margin:0}
 .thseg{display:flex;gap:4px;padding:4px;background:var(--s2);border:1px solid var(--bd);border-radius:99px;margin:0 0 14px}
 .thseg button{flex:1;background:none;border:0;border-radius:99px;padding:11px 0;font-size:15px;font-weight:700;color:var(--mu);min-height:44px}
 .thseg button.on{background:var(--ac);color:var(--onac)}
@@ -501,7 +503,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='92';
+const VER='93';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -886,12 +888,11 @@ function closeModal(silent){$('#modal').hidden=true;if(!silent&&hs().modal)histo
 /* ================= الرئيسية (v57: دايرة واحدة) ================= */
 const arcP=(r,a0,a1)=>{const p=a=>{const t=(a-90)*Math.PI/180;return[150+r*Math.cos(t),150+r*Math.sin(t)]};const[x0,y0]=p(a0),[x1,y1]=p(a1);return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${a1-a0>180?1:0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`};
 /* جملة الشاشة الرئيسية: بتتختار مرة واحدة كل فتحة/ريفريش حسب الحالة (الملف quotes.js) */
-let QSEL=null;
-function homeQuote(ds,wk,dr){
+let QSEL=null,QH=[],QI=-1;
+const qGestOn=()=>S.settings.qGest!==0;
+const quoteHtml=q=>`<div class="qt">${q.split('|').map(x=>`<span>${esc(x.trim())}</span>`).join('')}</div>`;
+function pickQuote(st,wk){
   const Q=window.BAS_Q;if(!Q)return '';
-  const k=ds[0]?Math.max(0,daysAgo(ds[0].date)):-1;
-  const st=dr?'live':k<0?'start':k===0?'today':k===1?'d1':k===2?'d2':k<=4?'d3':k<=7?'d5':k<=14?'d8':'d15';
-  if(QSEL&&QSEL.st===st)return QSEL.h;
   const hr=new Date().getHours(),pools=[[Q[st],6]];
   if(wk>=4&&Q.fire)pools.push([Q.fire,2]);
   if((hr>=23||hr<4)&&Q.night)pools.push([Q.night,2]);
@@ -901,8 +902,33 @@ function homeQuote(ds,wk,dr){
   let c=all.filter(x=>x!==last);if(!c.length)c=all;if(!c.length)return '';
   const q=c[Math.floor(Math.random()*c.length)];
   try{localStorage.setItem('bas_q_last',q)}catch(e){}
-  const h=`<div class="qt">${q.split('|').map(x=>`<span>${esc(x.trim())}</span>`).join('')}</div>`;
-  QSEL={st,h};return h}
+  return q}
+function pushQuote(q){QH.push(q);if(QH.length>60)QH.shift();QI=QH.length-1}
+function homeQuote(ds,wk,dr){
+  if(!window.BAS_Q)return '';
+  const k=ds[0]?Math.max(0,daysAgo(ds[0].date)):-1;
+  const st=dr?'live':k<0?'start':k===0?'today':k===1?'d1':k===2?'d2':k<=4?'d3':k<=7?'d5':k<=14?'d8':'d15';
+  if(QSEL&&QSEL.st===st)return QSEL.h;
+  const q=pickQuote(st,wk);if(!q)return '';
+  pushQuote(q);const h=quoteHtml(q);QSEL={st,h,wk,q};return h}
+/* بيت الشعر: دوسة = نسخ، سحب شمال = البيت اللي قبله، سحب يمين = اللي بعده */
+function quoteNav(d){
+  if(tab!=='home'||nqBusy||!QSEL)return;
+  let q;
+  if(d<0){if(QI<=0)return;QI--;q=QH[QI]}
+  else if(QI<QH.length-1){QI++;q=QH[QI]}
+  else{q=pickQuote(QSEL.st,QSEL.wk);if(!q)return;pushQuote(q)}
+  const el=document.querySelector('.qt');if(!el)return;
+  nqBusy=true;el.classList.add('qout');
+  setTimeout(()=>{const h=quoteHtml(q);QSEL.h=h;QSEL.q=q;const e2=document.querySelector('.qt');if(e2){e2.outerHTML=h;const n=document.querySelector('.qt');if(n)n.classList.add('qin')}setTimeout(()=>{nqBusy=false},650)},300)}
+function copyQuote(el){
+  const t=[...el.querySelectorAll('span')].map(x=>x.textContent.trim()).join('\n');
+  const ok=()=>toast(tr('اتنسخ ✓','Copied ✓'));
+  const fb=()=>{try{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0;top:0';document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();ok()}catch(e){}};
+  try{navigator.clipboard.writeText(t).then(ok,fb)}catch(e){fb()}}
+let qx=0,qy=0,qOn=false,qSw=0;
+document.addEventListener('touchstart',e=>{qOn=qGestOn()&&tab==='home'&&e.touches.length===1&&!!e.target.closest('.qt');if(qOn){qx=e.touches[0].clientX;qy=e.touches[0].clientY}},{passive:true});
+document.addEventListener('touchend',e=>{if(!qOn)return;qOn=false;const t=e.changedTouches[0],dx=t.clientX-qx,dy=t.clientY-qy;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){qSw=Date.now();quoteNav(dx<0?-1:1)}},{passive:true});
 function renderHome(){
   const L=T(),dr=S.draft,nd=dr?(dr.day||nextDayId()):nextDayId(),d=day(nd),ds=done();
   const wk=ds.filter(s=>daysAgo(s.date)>=0&&daysAgo(s.date)<7).length,days=S.program.days,cc=dr?dr.cycle:calcCycle(nd);
@@ -1548,6 +1574,7 @@ function renderData(){
     <div class="mu">${L.lastBk}: ${lb?new Date(lb).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.never}</div>
     ${persisted===true?`<div class="mu">✓ ${L.persisted}</div>`:''}</div>
   <div class="thseg" role="group" aria-label="${L.themeT}"><button class="${(S.settings.theme||'iron')==='iron'?'on':''}" data-a="theme" data-k="iron">${THEMES.iron[LANG]}</button><button class="${S.settings.theme==='morning'?'on':''}" data-a="theme" data-k="morning">${THEMES.morning[LANG]}</button></div>
+  <div class="qrow"><div class="mu">${tr('بيت الشعر: دوسة = نسخ · سحب = تنقل','Verse: tap = copy · swipe = browse')}</div><div class="thseg"><button class="${qGestOn()?'on':''}" data-a="qGest" data-k="on">${tr('شغّال','On')}</button><button class="${qGestOn()?'':'on'}" data-a="qGest" data-k="off">${tr('مقفول','Off')}</button></div></div>
   <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?`<span class="pdot${SYNC.err?' er':''}" style="margin-inline-start:6px"></span>`:''}<span class="pchev">⌄</span></summary><div class="fbody">
     ${SYNC.on?`<div class="note-ok" style="margin:0 0 10px">${L.syncOnL} · ${L.syncLast}: ${SYNC.last?new Date(SYNC.last).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.syncNever}${SYNC.dirty?' · '+L.syncWait(Math.max(1,SYNC.missed)):''}</div>${SYNC.err?`<div class="warn" style="margin:0 0 10px">${L.syncErr(esc(syncMsg(SYNC.err)))}</div>`:''}${syncPublic()?`<div class="warn" style="margin:0 0 10px">${L.syncPub}</div>`:''}
       <button class="btn pri w" data-a="syncNow">${L.syncNow}</button><button class="btn dan w mt" data-a="syncOff">${L.syncOffB}</button>`
@@ -1593,7 +1620,7 @@ document.addEventListener('input',ev=>{if(ev.target.id==='libS'){libQ=ev.target.
 document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('lgrp')&&d.dataset.g){d.open?lbOpenG.add(d.dataset.g):lbOpenG.delete(d.dataset.g)}if(d.classList&&d.classList.contains('lbn')&&d.open)lbFill(d);if(d.classList&&d.classList.contains('dtl')&&d.open)setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'start'}),30)},true);
 const TABS=['home','hist','prog','lib','data'];
 let px=0,py=0,pt=0,pok=false,pmode=0,pdx=0;
-const swOK=e=>$('#sess').hidden&&$('#modal').hidden&&e.touches.length===1&&!e.target.closest('input,select,textarea,.chips,.ptabs,table,[data-grip],.pr2.drag');
+const swOK=e=>$('#sess').hidden&&$('#modal').hidden&&e.touches.length===1&&!(qGestOn()&&e.target.closest('.qt'))&&!e.target.closest('input,select,textarea,.chips,.ptabs,table,[data-grip],.pr2.drag');
 document.addEventListener('touchstart',e=>{const t=e.touches[0];px=t.clientX;py=t.clientY;pt=Date.now();pmode=0;pdx=0;pok=swOK(e)},{passive:true});
 document.addEventListener('touchmove',e=>{if(!pok)return;const t=e.touches[0],dx=t.clientX-px,dy=t.clientY-py;
   if(!pmode){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.3)pmode=1;else if(Math.abs(dy)>10)pmode=2;else return}
@@ -1613,6 +1640,7 @@ document.addEventListener('touchcancel',()=>{if(pmode===1){const v=$('#view');v.
 document.addEventListener('click',ev=>{
   if(ev.target.closest('.brand .lg')){newQuote();return}
   if(ev.target.closest('.brand .wmk')){openCredits();return}
+  {const qe=ev.target.closest('.qt');if(qe&&tab==='home'&&qGestOn()){if(Date.now()-qSw>450)copyQuote(qe);return}}
   if(ev.target.closest('[data-hr]')){hardRefresh();return}
   const tb=ev.target.closest('.tabs button');if(tb){navTab(tb.dataset.tab);return}
   if(ev.target.id==='modal'){closeModal();return}
@@ -1660,6 +1688,7 @@ document.addEventListener('click',ev=>{
     case 'cuEdit':cuModal(b.dataset.n);break;
     case 'cuSave':cuSave(b.dataset.n);break;
     case 'cuDel':if(confirm(tr('تحذف التمرين ده من مكتبتك؟ برنامجك وسجلك مش هيتأثروا.','Delete this exercise from your library? Your program and log are not affected.'))){S.custom=(S.custom||[]).filter(x=>x.name!==b.dataset.n);save();queueBackup();closeModal();renderLib()}break;
+    case 'qGest':S.settings.qGest=b.dataset.k==='off'?0:1;save();renderData();break;
     case 'howLang':S.settings.howLang=b.dataset.k==='en'?'en':'ar';save();renderData();break;
     case 'lbE':lbE=b.dataset.e;{const c=$('#lbEC'),l=$('#lbL');if(c)c.innerHTML=lbEChips();if(l)l.innerHTML=libRows()}break;
     case 'lbG':lbG=b.dataset.g;{const c=$('#lbC'),l=$('#lbL');if(c)c.innerHTML=lbChips();if(l)l.innerHTML=libRows()}break;
