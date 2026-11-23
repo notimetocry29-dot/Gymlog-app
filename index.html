@@ -424,6 +424,11 @@ html[data-th=granite] #sess .ex.wn{background:linear-gradient(180deg,#221e14,#1a
 #sess .scell .inp::placeholder{color:var(--mu);opacity:.55;font-weight:500;font-size:17px}
 /* v72: الاسم BA'S بخط Cinzel كمسارات SVG */
 .brand .wmk{height:17px;width:auto;display:block;flex:none;fill:var(--tx)}.brand .wmk .ap{fill:var(--ac2)}
+/* v73: جملة تحت سطر Cycle */
+@font-face{font-family:"BasQ";src:url(fonts/ruqaa.woff2) format("woff2");font-weight:700;font-display:swap}
+.qt{margin:14px auto 0;max-width:340px;padding:0 12px;text-align:center;font-family:"BasQ",var(--font);font-weight:700;font-size:17px;line-height:1.75;color:var(--mu);opacity:.72;direction:rtl;text-transform:none;letter-spacing:0;min-height:3.5em}
+.qt span{display:block}
+.hs .orb{width:min(86vw,360px,calc(100dvh - 400px))}
 a.brand,a.brand:visited{color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
 
 /* ===== v57: بساطة — دايرة واحدة وتمرين واحد في الشاشة ===== */
@@ -610,9 +615,10 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 <div id="modal" hidden><div class="mbox"></div></div>
 <div id="toast"></div>
 
+<script src="quotes.js"></script>
 <script>
 'use strict';
-const VER='72';
+const VER='73';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -959,6 +965,24 @@ function closeModal(silent){$('#modal').hidden=true;if(!silent&&hs().modal)histo
 
 /* ================= الرئيسية (v57: دايرة واحدة) ================= */
 const arcP=(r,a0,a1)=>{const p=a=>{const t=(a-90)*Math.PI/180;return[150+r*Math.cos(t),150+r*Math.sin(t)]};const[x0,y0]=p(a0),[x1,y1]=p(a1);return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${a1-a0>180?1:0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`};
+/* جملة الشاشة الرئيسية: بتتختار مرة واحدة كل فتحة/ريفريش حسب الحالة (الملف quotes.js) */
+let QSEL=null;
+function homeQuote(ds,wk,dr){
+  const Q=window.BAS_Q;if(!Q)return '';
+  const k=ds[0]?Math.max(0,daysAgo(ds[0].date)):-1;
+  const st=dr?'live':k<0?'start':k===0?'today':k===1?'d1':k===2?'d2':k<=4?'d3':k<=7?'d5':k<=14?'d8':'d15';
+  if(QSEL&&QSEL.st===st)return QSEL.h;
+  const hr=new Date().getHours(),pools=[[Q[st],6]];
+  if(wk>=4&&Q.fire)pools.push([Q.fire,2]);
+  if((hr>=23||hr<4)&&Q.night)pools.push([Q.night,2]);
+  if(Q.any&&st!=='live')pools.push([Q.any,3]);
+  let all=[];for(const [p,w] of pools)if(p)for(let i=0;i<w;i++)all=all.concat(p);
+  let last='';try{last=localStorage.getItem('bas_q_last')||''}catch(e){}
+  let c=all.filter(x=>x!==last);if(!c.length)c=all;if(!c.length)return '';
+  const q=c[Math.floor(Math.random()*c.length)];
+  try{localStorage.setItem('bas_q_last',q)}catch(e){}
+  const h=`<div class="qt">${q.split('|').map(x=>`<span>${esc(x.trim())}</span>`).join('')}</div>`;
+  QSEL={st,h};return h}
 function renderHome(){
   const L=T(),dr=S.draft,nd=dr?(dr.day||nextDayId()):nextDayId(),d=day(nd),ds=done();
   const wk=ds.filter(s=>daysAgo(s.date)>=0&&daysAgo(s.date)<7).length,days=S.program.days,cc=dr?dr.cycle:calcCycle(nd);
@@ -981,6 +1005,7 @@ function renderHome(){
       <span class="oc"><span class="on1"><bdi>${esc(d.name)}</bdi></span><span class="on2">${dr?L.resume:L.exN(d.ex.length)}</span></span>
     </button>
     <div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
+    ${homeQuote(ds,wk,dr)}
     </div>
     <details class="dtl"><summary>${tr('التفاصيل','Details')}${al?'<i class="aldot"></i>':''}</summary>
       <div class="dl">${rows}</div>
