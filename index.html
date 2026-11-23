@@ -549,6 +549,17 @@ html[data-th] .tabs button.on{box-shadow:none}
 .pgo{margin-bottom:8px}
 html[data-th=granite] .pno.cr,html[data-th=granite] .pcore b,html[data-th=granite] .ptxt,html[data-th=granite] .plink{color:var(--gd)}
 html[data-th=granite] .ptabs button.on{color:var(--gd);border-bottom-color:var(--gd)}
+.lsearch{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--bd);margin-bottom:6px}
+.lsearch input{flex:1;min-width:0;background:none;border:0;color:var(--tx);font-size:16px;padding:12px 2px;outline:0}
+.lsearch .ptxt{flex:none;white-space:nowrap}
+.ptabs.scr{overflow-x:auto;scrollbar-width:none;margin-bottom:8px}.ptabs.scr::-webkit-scrollbar{display:none}
+.ptabs.scr button{flex:none;padding:10px 14px}
+.lcount{margin:2px 2px 4px;font-size:13px}
+.pdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ac2);flex:none}
+.pdot.in{margin-inline-end:2px}
+html[data-th=granite] .pdot{background:var(--gd)}
+.lbn .lbody{padding:0 2px 12px}
+.lbn>summary .sp{min-width:0}
 </style>
 </head>
 <body>
@@ -570,7 +581,7 @@ html[data-th=granite] .ptabs button.on{color:var(--gd);border-bottom-color:var(-
 
 <script>
 'use strict';
-const VER='59';
+const VER='60';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1188,16 +1199,16 @@ function histBlock(h){
 function libRows(){
   const q=lbQ.trim().toLowerCase(),inP=new Set(S.program.days.flatMap(d=>d.ex.map(t=>t.name))),hm=histMap();
   const r=allLib().filter(x=>(lbG==='all'||x[1]===lbG)&&(!q||x[0].toLowerCase().includes(q)));
-  return r.map(x=>`<details class="lbx"><summary><span class="nm en">${esc(x[0])}</span>${x[9]?`<span class="tag">${tr('تمريني','Mine')}</span>`:''}${inP.has(x[0])?`<span class="tag">${tr('في برنامجك','In program')}</span>`:''}${(hm[nk(x[0])]||[]).length?`<span class="tag cnt">${(hm[nk(x[0])]).length}×</span>`:''}<span class="mu en">${x[3]}×${x[4]}${x[5]?' '+esc(unitTxt(x[5])):''}</span></summary>
-    <div class="mu" style="margin-bottom:8px">${(GRP[x[1]]||GRP.core)[LANG==='ar'?0:1]}</div><div class="howto">${detHtml(x)||`<span class="mu">${tr('مفيش شرح. اضغط تعديل واكتب شرحك.','No guide yet. Tap Edit and write yours.')}</span>`}</div>
+  return r.map(x=>`<details class="pr2 lbn"><summary><div class="sp"><div class="pnm en">${esc(x[0])}</div><div class="mu"><span class="en">${x[3]}×${x[4]}${x[5]?' '+esc(unitTxt(x[5])):''}</span> · ${(GRP[x[1]]||GRP.core)[LANG==='ar'?0:1]}${x[9]?' · '+tr('تمريني','Mine'):''}</div></div>${inP.has(x[0])?'<span class="pdot"></span>':''}<span class="pchev">⌄</span></summary>
+    <div class="lbody"><div class="howto">${detHtml(x)||`<span class="mu">${tr('مفيش شرح. اضغط تعديل واكتب شرحك.','No guide yet. Tap Edit and write yours.')}</span>`}</div>
     ${histBlock(hm[nk(x[0])]||[])}
-    <div class="row mt"><button class="btn sm sp" data-a="lbAdd" data-n="${esc(x[0])}">${tr('ضيف لبرنامجي…','Add to my program…')}</button>${x[9]?`<button class="btn sm" data-a="cuEdit" data-n="${esc(x[0])}">${tr('تعديل','Edit')}</button>`:''}</div></details>`).join('')||`<div class="empty">—</div>`;
+    <div class="pact" style="border:0;padding-top:4px;margin-top:6px"><button class="plink" data-a="lbAdd" data-n="${esc(x[0])}">${tr('ضيف لبرنامجي…','Add to my program…')}</button>${x[9]?`<button class="plink" data-a="cuEdit" data-n="${esc(x[0])}">${tr('تعديل','Edit')}</button>`:''}</div></div></details>`).join('')||`<div class="empty">—</div>`;
 }
 function renderLib(){
-  $('#view').innerHTML=`<div class="srow"><input class="inp" id="lbS" dir="auto" placeholder="${tr('ابحث عن تمرين…','Search exercises…')}" value="${esc(lbQ)}" style="text-align:start"><button class="btn sm" data-a="cuNew">${tr('إضافة','Add')}</button></div>
-  <div class="chips" id="lbC">${lbChips()}</div>
-  <div class="mu" style="margin:2px 4px 8px">${tr('دوس على أي تمرين يظهر شرحه الكامل.','Tap an exercise for the full guide.')} · ${allLib().length}</div>
-  <div class="card" id="lbL">${libRows()}</div>`;
+  $('#view').innerHTML=`<div class="lsearch"><input id="lbS" dir="auto" placeholder="${tr('ابحث عن تمرين…','Search exercises…')}" value="${esc(lbQ)}" style="text-align:start"><button class="ptxt" data-a="cuNew">+ ${tr('تمرين مخصص','Custom')}</button></div>
+  <div class="ptabs scr" id="lbC">${lbChips()}</div>
+  <div class="mu lcount">${allLib().length} ${tr('تمرين','exercises')} · <span class="pdot in"></span> ${tr('في برنامجك','in your program')}</div>
+  <div class="plist" id="lbL">${libRows()}</div>`;
 }
 const lbChips=()=>`<button class="${lbG==='all'?'on':''}" data-a="lbG" data-g="all">${tr('الكل','All')}</button>${Object.keys(GRP).map(g=>`<button class="${lbG===g?'on':''}" data-a="lbG" data-g="${g}">${GRP[g][LANG==='ar'?0:1]}</button>`).join('')}`;
 function cuModal(n){
