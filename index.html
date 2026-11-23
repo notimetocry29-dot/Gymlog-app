@@ -518,30 +518,30 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='100';
+const VER='101';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
 en:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg><span class="wmk" data-a="credits" role="button" aria-label="چيم لوج">چيم لوج</span>',title:"چيم لوج",langBtn:'عربي',tabs:['Home','Log','Program','Exercises','File'],update:'Update available — tap',
- next:'Next session',coreL:'Core',start:'Start',draftOpen:'Unsaved session in progress',draftEdit:'Editing a session',resume:'Continue',
+ next:'Next session',coreL:'Essentials',start:'Start',draftOpen:'Unsaved session in progress',draftEdit:'Editing a session',resume:'Continue',
  last7:'Last 7 days',sessions:'sessions',lastSess:'Last session',min3:'Weekly minimum is 3 sessions.',
  bkNone:'No backup yet.',bkAgo:n=>`Last backup was ${n} day(s) ago.`,bkWarn:' If Chrome data is cleared, the log goes with it.',bkNowBtn:'Save a backup file now',
- recent:'Recent sessions',st:{full:'Full',core:'Core',part:'Partial',imp:'Imported'},
+ recent:'Recent sessions',st:{full:'Full',core:'Essentials',part:'Partial',imp:'Imported'},
  back:'Back',date:'Date',target:'Target',last:'Last',first:'First time',wt:'kg',clean:'Clean',note:'Note',tips:'Tips',notePh:'Note (optional)',
  save:'Save to log',saveEdit:'Save changes',shareW:'Share workout',discard:'Discard session',discardEdit:'Cancel editing',
- coreDone:'Core done ✓',coreN:(k,n)=>`Core ${k}/${n}`,noSets:'No sets logged yet',
- savedFull:'Saved ✓ Full session',savedCore:'Saved ✓ Core done — the day counts',saved:'Saved ✓',
+ coreDone:'Essentials done ✓',coreN:(k,n)=>`Essentials ${k}/${n}`,noSets:'No sets logged yet',
+ savedFull:'Saved ✓ Full session',savedCore:'Saved ✓ Essentials done — the day counts',saved:'Saved ✓',
  confNew:'There is an unsaved session. Discard it and start a new one?',confEditOver:'There is an unsaved session. Discard it and edit this one?',
  confDiscard:'Discard this session? Everything typed in it will be lost.',confCancelEdit:'Cancel editing?',
- pUp:(s,g)=>`Increase earned ↑ Move up and start at ${s}×8, build back to ${g}.`,pUpU:(s,g)=>`Increase earned ↑ (${s}×${g} on two days).`,
+ pUp:(s,g)=>g>8?`Increase earned ↑ Move up and start at ${s}×8, build back to ${g}.`:`Increase earned ↑ Add the weight and build back to ${s}×${g}.`,pUpU:(s,g)=>`Increase earned ↑ (${s}×${g} on two days).`,
  pStuck:n=>`${n} sessions at this weight without earning an increase: check food, sleep, exercise order, or the weight itself.`,
  pQ1:(s,g)=>`Qualified 1 of 2: one more clean ${s}×${g} day to move up (clean days only count).`,pCtl:(st,pc)=>`Next jump +${st} kg is ${pc}% heavier: earn it with control first. Slower lowering, a 1-second pause, then add a rep before adding weight.`,cbN:(d,p)=>`Back after ${d} days: weights are about ${p}% of your last session. Start there and climb back over two sessions.`,
  sessCount:n=>`${n} session(s)`,noData:'Nothing logged yet',close:'Close',
  exPick:'Exercise progress',exPickPh:'Choose an exercise…',noSess:'No sessions yet. Start your first one from Home.',exN:n=>`${n} exercises`,
  copyCard:'Copy card',shareAI:'Share for analysis',edit:'Edit',del:'Delete',confDel:'Delete this session permanently?',copied:'Copied ✓',copyFail:'Could not copy',
- addEx:'+ New exercise',copyTpl:'Copy card',progHint:'An exercise repeated on two days (like Leg Curl) shares one history by name. The weight shown is the last one logged.',
+ addEx:'+ New exercise',copyTpl:'Copy card',progHint:'An exercise repeated on two days shares one history by name. The weight shown is the last one logged.',
  editEx:'Edit exercise',newEx:'New exercise',name:'Name',weight:'Weight (kg)',sets:'Sets',reps:'Reps',goal:'Increase goal',unit:'Unit',
- units:{'':'reps','ث':'sec','خطوة':'steps','د':'min'},coreEx:'Core exercise',instr:'Instructions',tplHint:'This weight is only used the first time; after that the app uses your last logged weight.',
+ units:{'':'reps','ث':'sec','خطوة':'steps','د':'min'},coreEx:'Essential exercise',instr:'Instructions',tplHint:'This weight is only used the first time; after that the app uses your last logged weight.',
  saveB:'Save',cancel:'Cancel',nameReq:'Enter the exercise name',confDelEx:'Remove this exercise from the program? Its past log stays.',
  onPhone:'On this phone',lastBk:'Last backup',never:'Never',persisted:'Storage is protected: the browser will not clear it on its own when space runs low.',
  autoT:'Auto-save to a file',autoLinked:n=>`Linked to ${n}. Every session is saved into it.`,autoHint:'Link a file once, and every session will be written to it automatically.',linkB:'Link a file',relinkB:'Change file',
@@ -553,15 +553,15 @@ en:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor"
  linked:'File linked ✓ every session will be saved into it',linkFail:'Could not link the file',restored:'Restored ✓',badFile:"This file isn't a backup from this app",
  confRestore:n=>`This backup has ${n} session(s). It will replace the data on this phone now. Continue?`,csvDone:'Excel file downloaded ✓',storeFail:'Could not save! Take a backup now',cycleSaved:'Saved',
  shared:'Shared ✓',copiedInstead:'Sharing unavailable — copied to clipboard ✓',
- aiHead:(d,c)=>`Workout log — ${d} (Cycle ${c})`,aiDate:'Date',aiCore:(k,n)=>`Core exercises done: ${k}/${n}`,
- aiUnits:'Weights are in kg per side / per dumbbell. Reps are listed per set (seconds or steps where noted).',
+ aiHead:(d,c)=>`Workout log — ${d} (Cycle ${c})`,aiDate:'Date',aiCore:(k,n)=>`Essential exercises done: ${k}/${n}`,
+ aiUnits:'Weights are in kg: per dumbbell, per side on plate-loaded bars and machines, or the stack number. Reps are listed per set (seconds, steps or minutes where noted).',
  aiRule:'Progression rule: add weight only after the full target (e.g. 3×12) is done on two separate days at the same weight.',
  aiTarget:'Target',aiWeight:'Weight',aiSets:'Sets',aiForm:'Form',aiClean:'clean (no momentum, full control)',aiNotClean:'not marked clean',
- aiLast:'Previous',aiStatus:'Status',aiNote:'Note',aiNotDone:'Not done',aiCoreTag:'[core]',bw:'bodyweight',
+ aiLast:'Previous',aiStatus:'Status',aiNote:'Note',aiNotDone:'Not done',aiCoreTag:'[essential]',bw:'bodyweight',
  st2:{q1:'qualified 1 of 2',up:'increase earned',stuck:n=>`${n} sessions at this weight without an increase`},
  mdTitle:"چيم لوج — Backup",mdExported:'Exported',mdSessions:'Sessions',mdProgram:'Program',mdLog:'Log (newest first)',
- mdCols:['#','Exercise','Weight','Target','Core','Notes'],mdSCols:['Exercise','Weight','Sets','Clean','Note'],mdData:'Data used by “Restore” in the app — do not edit',yes:'✓',
- csvH:['Date','Cycle','Day','Exercise','Weight','Sets','Set count','Total reps','Clean','Core','Note'],coreLine:'Core',themeT:'Theme',histNote:n=>`${n} past session(s) from your earlier log were added.`,todayL:'Today',otherDay:'Start a different day',newInstead:'Start a new session instead',weekOf:n=>`${n} session(s) in the last 7 days · goal 3`,
+ mdCols:['#','Exercise','Weight','Target','Essential','Notes'],mdSCols:['Exercise','Weight','Sets','Clean','Note'],mdData:'Data used by “Restore” in the app — do not edit',yes:'✓',
+ csvH:['Date','Cycle','Day','Exercise','Weight','Sets','Set count','Total reps','Clean','Essential','Note'],coreLine:'Essentials',themeT:'Theme',histNote:n=>`${n} past session(s) from your earlier log were added.`,todayL:'Today',otherDay:'Start a different day',newInstead:'Start a new session instead',weekOf:n=>`${n} session(s) in the last 7 days · goal 3`,
  syncT:'Encrypted auto-backup (GitHub)',syncHint:'After every session the whole log is encrypted on this phone and uploaded to your repo. Without the passphrase the file is unreadable.',
  syncRepo:'Repository (owner/name)',syncTok:'GitHub token (contents: write, this repo only)',syncP1:'Backup passphrase (6+ characters)',syncP2:'Repeat the passphrase',
  syncWarn:'Lose the passphrase and the backup cannot be opened. There is no recovery. Never send it to anyone.',
@@ -585,13 +585,13 @@ ar:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor"
  savedFull:'اتحفظت ✓ جلسة كاملة',savedCore:'اتحفظت ✓ الأساسي اتلعب، اليوم محسوب',saved:'اتحفظت ✓',
  confNew:'فيه جلسة مفتوحة لسه ماتحفظتش. تمسحها وتبدأ جديدة؟',confEditOver:'فيه جلسة مفتوحة لسه ماتحفظتش. تمسحها وتعدّل دي؟',
  confDiscard:'تلغي الجلسة؟ اللي اتكتب فيها هيتمسح.',confCancelEdit:'تلغي التعديل؟',
- pUp:(s,g)=>`استحقيت الزيادة ↑ ادخل بالوزن الجديد ${s}×8 وابني لحد ${g}.`,pUpU:(s,g)=>`استحقيت تزوّد ↑ (${s}×${g} في يومين).`,
+ pUp:(s,g)=>g>8?`استحقيت الزيادة ↑ ادخل بالوزن الجديد ${s}×8 وابني لحد ${g}.`:`استحقيت الزيادة ↑ زوّد الوزن وارجع ابني لحد ${s}×${g}.`,pUpU:(s,g)=>`استحقيت تزوّد ↑ (${s}×${g} في يومين).`,
  pStuck:n=>`${n} جلسات على نفس الوزن من غير ما تستحق زيادة: راجع الأكل، النوم، ترتيب التمارين، أو الوزن نفسه.`,
  pQ1:(s,g)=>`مؤهل ١ من ٢: يوم نضيف كمان ${s}×${g} وتزوّد (الأيام النضيفة بس بتتحسب).`,pCtl:(st,pc)=>`القفزة الجاية +${st} كجم يعني ${pc}% أتقل: اكسبها بالتحكم الأول. نزول أبطأ، وقفة ثانية، وريب زيادة قبل ما تزوّد الوزن.`,cbN:(d,p)=>`رجعت بعد ${d} يوم: الأوزان حوالي ${p}% من آخر جلسة. ابدأ بيها وارجع لوزنك على جلستين.`,
  sessCount:n=>`${n} جلسة`,noData:'لسه مفيش تسجيل',close:'قفل',
  exPick:'تقدّم تمرين',exPickPh:'اختار تمرين…',noSess:'لسه مفيش جلسات. ابدأ أول واحدة من الرئيسية.',exN:n=>`${n} تمارين`,
  copyCard:'انسخ الكارت',shareAI:'شارك للتحليل',edit:'عدّل',del:'امسح',confDel:'تمسح الجلسة دي نهائيًا؟',copied:'اتنسخ ✓',copyFail:'مقدرتش أنسخ',
- addEx:'+ تمرين جديد',copyTpl:'انسخ الكارت',progHint:'التمرين المتكرر في يومين (زي Leg Curl) ليه سجل واحد بالاسم. الوزن اللي ظاهر هو آخر وزن اتسجل.',
+ addEx:'+ تمرين جديد',copyTpl:'انسخ الكارت',progHint:'التمرين المتكرر في يومين ليه سجل واحد بالاسم. الوزن اللي ظاهر هو آخر وزن اتسجل.',
  editEx:'تعديل تمرين',newEx:'تمرين جديد',name:'الاسم',weight:'الوزن (k)',sets:'مجموعات',reps:'عدّات',goal:'هدف الزيادة',unit:'الوحدة',
  units:{'':'عدّة','ث':'ثانية','خطوة':'خطوة','د':'دقيقة'},coreEx:'تمرين أساسي',instr:'تعليمات',tplHint:'الوزن هنا بيتستخدم أول مرة بس، بعدها التطبيق بياخد آخر وزن سجّلته.',
  saveB:'حفظ',cancel:'إلغاء',nameReq:'اكتب اسم التمرين',confDelEx:'تمسح التمرين من البرنامج؟ السجل القديم بتاعه هيفضل.',
@@ -606,7 +606,7 @@ ar:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor"
  confRestore:n=>`النسخة فيها ${n} جلسة. هتحل محل البيانات اللي على الموبايل دلوقتي. أكمّل؟`,csvDone:'ملف Excel نزل ✓',storeFail:'مقدرتش أحفظ! خد نسخة احتياطية فورًا',cycleSaved:'اتحفظ',
  shared:'اتشاركت ✓',copiedInstead:'المشاركة مش متاحة، اتنسخت ✓',
  aiHead:(d,c)=>`سجل تمرين — ${d} (Cycle ${c})`,aiDate:'التاريخ',aiCore:(k,n)=>`التمارين الأساسية اللي اتلعبت: ${k}/${n}`,
- aiUnits:'الأوزان بالكيلو لكل جنب / لكل دمبل. العدّات مكتوبة لكل مجموعة (بالثواني أو الخطوات لو مذكور).',
+ aiUnits:'الأوزان بالكيلو: لكل دمبل، أو لكل جنب في البار والأجهزة اللي بتتحمّل أقراص، أو رقم الجهاز. العدّات مكتوبة لكل مجموعة (بالثواني أو الخطوات أو الدقايق لو مذكور).',
  aiRule:'قاعدة الزيادة: الوزن يزيد بس بعد ما الهدف كامل (زي ٣×١٢) يتلعب في يومين منفصلين على نفس الوزن.',
  aiTarget:'الهدف',aiWeight:'الوزن',aiSets:'المجموعات',aiForm:'الأداء',aiClean:'نضيف (من غير مرجحة وبتحكّم كامل)',aiNotClean:'مش متعلّم نضيف',
  aiLast:'المرة اللي فاتت',aiStatus:'الحالة',aiNote:'ملاحظة',aiNotDone:'ماتلعبش',aiCoreTag:'[أساسي]',bw:'وزن الجسم',
@@ -646,38 +646,22 @@ function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');c
 
 /* ================= البيانات ================= */
 function E(name,w,sets,reps,o={}){return{id:uid(),name,w,sets,reps,goal:o.goal??(o.unit?reps:Math.max(12,reps)),unit:o.unit||'',core:!!o.core,note:o.note||''}}
+/* البرنامج الافتراضي لأي حد بيفتح التطبيق أول مرة: أبر/لوور ٤ أيام. الأوزان من مكتبة التمارين (وزن بداية) والشرح كله من المكتبة */
 function seed(){
-  const B='ممنوع تكتم نفسك: طلّع النفس مع المجهود.';
-  return{v:1,settings:{cycle:8,lastBackup:null,lang:'en'},draft:null,sessions:[],program:{days:[
+  const X=(n,sets,reps,core)=>{const L=typeof LIB!=='undefined'&&LIB.find(r=>r[0]===n);return E(n,L?L[2]:0,sets,reps,{core,unit:L?L[5]:''})};
+  return{v:1,settings:{cycle:1,lastBackup:null},draft:null,sessions:[],program:{days:[
     {id:'U1',name:'Upper 1',ex:[
-      E('Flat Dumbbell Press',15,3,12,{core:1,note:'التمرين الرئيسي. نزول بطيء، والكوع مايعدّيش مستوى الكتف.'}),
-      E('Lat Pulldown',39,3,10,{core:1,note:'بالشدّاد. الكوع ينزل ناحية جنبك، والبار يوصل للصدر.'}),
-      E('Shoulder Press',18,3,10,{core:1,note:'الإحماء إلزامي. لو فيه وجع في الكتف وقّف فورًا.'}),
-      E('Triceps Pushdown',25,3,12),
-      E('Biceps Curl',7.5,3,10,{note:'من غير مرجحة.'}),
-      E("Farmer's Walk",20,3,25,{unit:'خطوة',note:'آخر تمرين. القبضة أول نقطة تلامس.'})]},
+      X('Flat Dumbbell Press',3,10,1),X('Lat Pulldown',3,10,1),X('Shoulder Press',3,10),
+      X('Seated Row',3,10),X('Lateral Raises',3,15),X('Triceps Pushdown',3,12),X('Biceps Curl',3,10)]},
     {id:'L1',name:'Lower 1',ex:[
-      E('Plank',0,3,45,{unit:'ث',core:1}),
-      E('Leg Press',60,3,10,{core:1,note:'ادفع من كعبك، ومتنزلش أعمق من نقطة ما المؤخرة تتحرك. '+B}),
-      E('Leg Extension',25,3,12),
-      E('Leg Curl',25,3,12,{core:1,note:'من غير مرجحة، والنزول بطيء.'}),
-      E('Calf Raises',25,3,15,{note:'وقفة ثانية فوق، ونزول لآخر مدى.'}),
-      E('Wrist Curl + Reverse',20,2,15,{note:'على الكابل: الكف لفوق مرة، ولتحت مرة.'})]},
+      X('Leg Press',3,10,1),X('Romanian Deadlift',3,10,1),X('Leg Extension',3,12),
+      X('Leg Curl',3,12),X('Calf Raises',3,15),X('Plank',3,45)]},
     {id:'U2',name:'Upper 2',ex:[
-      E('Incline Dumbbell Press',15,3,12,{core:1,note:'التمرين الرئيسي.'}),
-      E('T-Bar Row',20,3,10,{core:1,note:'الشدّاد إلزامي، والمسند على أعلى صدرك. '+B}),
-      E('Face Pull',35,3,15,{core:1,note:'صحة الكتف وخلفيته.'}),
-      E('Lateral Raises',7.5,3,15),
-      E('Cable Overhead Extension',15,3,12),
-      E('Hammer Curl',7.5,3,10),
-      E('DB Shrugs',20,3,15)]},
+      X('Incline Dumbbell Press',3,10,1),X('Chest-Supported Row',3,10,1),X('DB Shoulder Press',3,10),
+      X('Face Pull',3,15),X('Cable Overhead Extension',3,12),X('Hammer Curl',3,10)]},
     {id:'L2',name:'Lower 2',ex:[
-      E('Plank',0,3,45,{unit:'ث',core:1}),
-      E('Hack Squat',40,3,10,{core:1,note:'نزول ٣ ثواني ودفع سريع متحكم فيه. '+B}),
-      E('Back Extension',10,3,12,{core:1}),
-      E('Leg Curl',25,3,12,{note:'رقم منفصل عن Lower 1.'}),
-      E('Seated Calf Raise',25,3,15),
-      E('Forearm Cable',20,2,15)]}
+      X('Hack Squat',3,10,1),X('Hip Thrust',3,12,1),X('Seated Leg Curl',3,12),
+      X('Walking Lunges',3,10),X('Seated Calf Raise',3,15),X('Hanging Knee Raise',3,10)]}
   ]}};
 }
 function load(){try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);if(o&&o.program&&Array.isArray(o.sessions))return o}}catch(e){}return null}
@@ -745,9 +729,9 @@ async function boot(){
   const fresh=!a&&!b;
   S=(a&&b)?((b.at||0)>(a.at||0)?b:a):(a||b||seed());
   /* v87: أول فتح خالص: ثيم Iron، دورة ١، ومن غير رسايل ترحيل قديمة */
-  if(fresh){S.mig=5;S.settings.theme='iron';S.settings.cycle=1}
+  if(fresh){S.mig=5;S.settings.theme='iron';S.settings.cycle=1;S.settings.lang='';S.settings.howLang=/^en/i.test(navigator.language||'')?'en':'ar'}
   S.settings=S.settings||{};
-  if(!S.settings.lang)S.settings.lang='en';
+  if(!S.settings.lang)S.settings.lang=/^ar/i.test(navigator.language||'')?'ar':'en';
   LANG=S.settings.lang;
   migrate();
   /* مسودة قديمة: لو اليوم ده اتحفظ فعلًا بنفس التاريخ، أو المسودة فاضية وقديمة، تتشال */
@@ -895,14 +879,16 @@ function navTab(t){
 window.addEventListener('popstate',e=>{
   const st=e.state||{},M=$('#modal'),Sx=$('#sess');
   if(st.modal){if(M.hidden)history.back();return}
-  M.hidden=true;
+  const wasM=!M.hidden||Date.now()-mClosed<1500;M.hidden=true;
   if(!st.sess&&!Sx.hidden){wakeOff();Sx.hidden=true;document.body.style.overflow='';if(S.draft)queueDraftBackup()}
-  if(Sx.hidden)go(st.tab||'home');
+  /* قفل نافذة بس: الصفحة زي ما هي (من غير ما المفتوح فيها يتقفل) */
+  if(Sx.hidden&&!(wasM&&(st.tab||'home')===tab))go(st.tab||'home');
 });
 try{history.replaceState({},'')}catch(e){}
 function go(t){tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));({home:renderHome,hist:renderHistory,prog:renderProgram,lib:renderLib,data:renderData})[t]();window.scrollTo(0,0);saveUI()}
 function modal(h){const m=$('#modal');m.querySelector('.mbox').innerHTML=h;if(m.hidden&&!hs().modal)history.pushState(Object.assign({tab:tab},hs(),{modal:1}),'');m.hidden=false}
-function closeModal(silent){$('#modal').hidden=true;if(!silent&&hs().modal)history.back()}
+let mClosed=0;
+function closeModal(silent){$('#modal').hidden=true;mClosed=Date.now();if(!silent&&hs().modal)history.back()}
 
 /* ================= الرئيسية (v57: دايرة واحدة) ================= */
 const arcP=(r,a0,a1)=>{const p=a=>{const t=(a-90)*Math.PI/180;return[150+r*Math.cos(t),150+r*Math.sin(t)]};const[x0,y0]=p(a0),[x1,y1]=p(a1);return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${a1-a0>180?1:0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`};
@@ -1020,7 +1006,7 @@ function swRecord(){
   if(e){const sec=Math.max(1,Math.round((Date.now()-d.sw.t0)/1000)),j=swNext(e);
     e.dur=(e.dur||[]).slice();while(e.dur.length<e.sets.length)e.dur.push(0);
     if(j>=e.sets.length){e.sets.push('');e.dur.push(0)}
-    e.dur[j]=sec;if(!(num(e.sets[j])>0))e.sets[j]=String(e.unit==='ث'?sec:e.treps)}
+    e.dur[j]=sec;if(!(num(e.sets[j])>0))e.sets[j]=String(e.unit==='ث'?sec:e.unit==='د'?Math.max(1,Math.round(sec/60)):e.treps)}
   d.sw=null;swHalt();
 }
 function swTap(){
@@ -1040,7 +1026,7 @@ function closeSheet(){const s=$('#sheet');if(s){s.hidden=true;s.innerHTML=''}pk=
 function openPick(kind,j){
   const d=S.draft,e=d.ex[curEx],L=T();let cur,step,min,max;
   if(kind==='w'){cur=num(e.w);if(isNaN(cur))cur=0;step=.5;min=0;max=Math.max(250,cur)}
-  else{cur=num(e.sets[j]);if(!(cur>0))cur=+e.treps||10;const un=!!e.unit;step=un?5:1;min=un?5:1;max=Math.max(un?300:60,cur)}
+  else{cur=num(e.sets[j]);if(!(cur>0))cur=+e.treps||10;const un=!!e.unit,mn=e.unit==='د';step=mn?1:un?5:1;min=mn?1:un?5:1;max=Math.max(mn?120:un?300:60,cur)}
   const vals=[];for(let v=min;v<=max+1e-9;v+=step)vals.push(Math.round(v*100)/100);
   if(!vals.includes(cur)){vals.push(cur);vals.sort((a,b)=>a-b)}
   pk={kind,j,vals};
@@ -1053,7 +1039,7 @@ function openPick(kind,j){
 }
 function openMenu(){
   const d=S.draft,L=T(),sh=$('#sheet');sh.hidden=false;
-  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="meta2"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div>${d.editing||!d.ex.some(x=>x.core)||d.ex.every(x=>x.core)?'':`<button class="btn w ghost mt" data-a="coreOnly">${tr('الأساسي بس','Core only')}</button>`}<button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="meta2"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div>${d.editing||!d.ex.some(x=>x.core)||d.ex.every(x=>x.core)?'':`<button class="btn w ghost mt" data-a="coreOnly">${tr('الأساسي بس','Essentials only')}</button>`}<button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
 }
 function openGuide(){
   const d=S.draft;if(!d)return;const e=d.ex[curEx];if(!e)return;const x=libGet(e.name),sh=$('#sheet');
@@ -1075,11 +1061,11 @@ function renderSession(){
   <div class="corec" id="corec" aria-live="polite"></div>
   ${d.cb?`<div class="cbn">${T().cbN(d.cb,85)}</div>`:''}
   <div class="wmain${wAnim?' wa':''}" data-i="${i}">
-    <button class="wname en${e.core?' core':''}" data-a="guide" aria-label="${tr('طريقة الأداء','How to perform')}">${esc(e.name)}<span class="wgh">Tap to see how to perform</span></button>
+    <button class="wname en${e.core?' core':''}" data-a="guide" aria-label="${tr('طريقة الأداء','How to perform')}">${esc(e.name)}<span class="wgh">${tr('اضغط لطريقة الأداء','Tap to see how to perform')}</span></button>
     <div class="wtg">${showW?`<button class="wwt en${earn?' earn':''}" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>`:''}<span class="wsr en">${e.tsets}×${e.treps}${u}</span></div>
     <div class="wsets">${cir}</div>
     <div class="wrest">${swHtml(e)}</div>
-    <div class="whint${showH?' open':''}" dir="auto" data-a="tgl" data-k="h${i}">${esc((libOv(e.name)&&libOv(e.name).short)||e.note0||'')}</div>
+    <div class="whint${showH?' open':''}" dir="auto" data-a="tgl" data-k="h${i}">${esc(e.note0&&e.note0!==libHowAlt(e.name)?e.note0:(libHow(e.name)||e.note0||''))}</div>
     <div class="wlinks"><button data-a="tgl" data-k="l${i}">↺ ${tr('آخر أداء','Last')}</button><button data-a="tgl" data-k="n${i}">✎ ${L.note}</button><button data-a="addset" data-i="${i}">+ ${tr('مجموعة','Set')}</button></div>
     ${showL?`<div class="tnote">${lastP}${p?`<div class="pmsg ${p.c}">${p.t}</div>`:''}</div>`:''}
     ${showN?`<input class="inp noteI" data-f="n" value="${esc(e.note)}" placeholder="${L.notePh}">`:''}
@@ -1190,7 +1176,7 @@ function sessModal(id){
 /* ================= البرنامج ================= */
 /* ================= مكتبة التمارين + الأنظمة ================= */
 const tr=(a,e)=>LANG==='ar'?a:e;
-const GRP={chest:['صدر','Chest'],back:['ضهر','Back'],shoulders:['كتف','Shoulders'],biceps:['باي','Biceps'],triceps:['تراي','Triceps'],forearms:['ساعد وقبضة','Forearms & grip'],neck:['رقبة','Neck'],quads:['فخذ أمامي','Quads'],posterior:['فخذ خلفي ومؤخرة','Hamstrings & glutes'],calves:['سمانة','Calves'],core:['جذع','Core'],cond:['لياقة وكارديو','Conditioning']};
+const GRP={chest:['صدر','Chest'],back:['ضهر','Back'],shoulders:['كتف','Shoulders'],biceps:['باي','Biceps'],triceps:['تراي','Triceps'],forearms:['ساعد وقبضة','Forearms & grip'],neck:['رقبة','Neck'],quads:['فخد أمامي','Quads'],posterior:['فخد خلفي ومؤخرة','Hamstrings & glutes'],calves:['سمانة','Calves'],core:['جذع','Core'],cond:['لياقة وكارديو','Conditioning']};
 const EQN={bb:['بار','Barbell'],db:['دمبل','Dumbbell'],mach:['جهاز','Machine'],cable:['كابل','Cable'],bw:['وزن جسم','Bodyweight'],kb:['كيتل بل','Kettlebell'],band:['شريط','Band'],other:['أخرى','Other']};
 const howLang=()=>S.settings.howLang==='en'?'en':'ar';
 /* [الاسم، المجموعة، وزن مبدئي، مجموعات، عدّات، وحدة، شرح عربي، شرح إنجليزي] */
@@ -1204,18 +1190,20 @@ const exNotes=n=>(S.exNotes&&S.exNotes[String(n||'').trim().toLowerCase()])||[];
 function addExNote(n,t,d){t=(t||'').trim();if(!t)return;S.exNotes=S.exNotes||{};const k=String(n||'').trim().toLowerCase(),a=S.exNotes[k]||(S.exNotes[k]=[]);if(!a.some(x=>x.t===t))a.push({d:d||today(),t})}
 function notesHtml(n,extra){const a=exNotes(n).slice();if(extra&&!a.some(x=>x.t===extra))a.push({d:'',t:extra});
   return a.length?`<div class="dsec k0 unotes" dir="auto"><b>${tr('ملاحظاتك','Your notes')}</b>${a.map(x=>`<div>• ${esc(x.t)}${x.d?` <span class="mu">· ${fmtD(x.d)}</span>`:''}</div>`).join('')}</div>`:''}
-const libHow=n=>{const x=libGet(n);if(!x)return '';const o=libOv(n);if(o&&o.short!=null&&o.short!=='')return o.short;return howLang()==='en'&&x[7]?x[7]:x[6]};
+const libHow=n=>{const x=libGet(n);if(!x)return '';const o=libOv(n);if(howLang()==='en'){if(o&&o.shortEn)return o.shortEn;if(x[7])return x[7]}else if(o&&o.short!=null&&o.short!=='')return o.short;return x[6]};
+/* الملخص باللغة التانية: لو note0 اتاخد من المكتبة قبل تغيير لغة الشرح، نعرضه باللغة الحالية */
+const libHowAlt=n=>{const x=libGet(n);if(!x)return '';const o=libOv(n)||{};return howLang()==='en'?((o.short!=null&&o.short!=='')?o.short:x[6]):(o.shortEn||x[7]||'')};
 const lastW=n=>{for(const s of done()){const e=s.ex.find(x=>x.name===n&&+x.w>0);if(e)return +e.w}return null};
 const mk=(n,sets,reps,core)=>{const L=libGet(n)||[n,'',0,3,12,''];const lw=lastW(n);return{id:uid(),name:n,w:lw!=null?lw:L[2],sets:sets||L[3],reps:reps||L[4],goal:reps||L[4],unit:L[5]||'',core:!!core,note:''}};
 const SYSTEMS=[
-{id:'ul4',ar:['أبر / لوور (٤ أيام)','دورتك الحالية: كل نمط مرتين، من زاويتين'],en:['Upper / Lower (4 days)','Your current cycle: each pattern twice from two angles'],mine:1},
-{id:'ul2',ar:['أبر / لوور (يومين)','للأسابيع المزحومة: جزء علوي وجزء سفلي'],en:['Upper / Lower (2 days)','For busy weeks: one upper, one lower'],
+{id:'ul4',ar:['أبر / لوور (٤ أيام)','كل عضلة مرتين في الأسبوع، من زاويتين مختلفتين. توازن ممتاز بين الحجم والراحة'],en:['Upper / Lower (4 days)','Every muscle twice a week from two angles. A great balance of volume and recovery'],mine:1},
+{id:'ul2',ar:['أبر / لوور (يومين)','للأسابيع المزحومة: يوم للجزء العلوي ويوم للسفلي'],en:['Upper / Lower (2 days)','For busy weeks: one upper day, one lower day'],
  days:[['Upper',[['Flat Dumbbell Press',3,12,1],['Lat Pulldown',3,10,1],['Shoulder Press',3,10,1],['Seated Row',3,10],['Triceps Pushdown',3,12],['Biceps Curl',3,10]]],['Lower',[['Leg Press',3,10,1],['Romanian Deadlift',3,10,1],['Leg Curl',3,12,1],['Leg Extension',3,12],['Calf Raises',3,15],['Plank',3,45]]]]},
 {id:'fb3',ar:['فول بودي (٣ أيام)','جسمك كله في كل جلسة. مناسب لو بتتغيب كتير'],en:['Full Body (3 days)','Whole body each session. Good if you miss days often'],
  days:[['Full Body A',[['Leg Press',3,10,1],['Flat Dumbbell Press',3,10,1],['Lat Pulldown',3,10,1],['Shoulder Press',2,10],['Biceps Curl',2,12],['Plank',2,40]]],['Full Body B',[['Hack Squat',3,10,1],['Incline Dumbbell Press',3,10,1],['Seated Row',3,10,1],['Leg Curl',3,12],['Triceps Pushdown',2,12],['Lateral Raises',2,15]]],['Full Body C',[['Romanian Deadlift',3,10,1],['Chest Press Machine',3,10,1],['Chest-Supported Row',3,10,1],['Leg Extension',2,12],['Hammer Curl',2,12],["Farmer's Walk",3,25]]]]},
 {id:'ppl3',ar:['دفع / سحب / رجل (٣ أيام)','الكلاسيكي: دفع، سحب، رجل، وبتكرره'],en:['Push / Pull / Legs (3 days)','The classic: push, pull, legs, repeat'],
  days:[['Push',[['Incline Dumbbell Press',3,10,1],['Flat Dumbbell Press',3,12,1],['Shoulder Press',3,10,1],['Lateral Raises',3,15],['Triceps Pushdown',3,12],['Cable Overhead Extension',3,12]]],['Pull',[['Lat Pulldown',3,10,1],['Seated Row',3,10,1],['Face Pull',3,15,1],['Biceps Curl',3,10],['Hammer Curl',3,10],['DB Shrugs',3,15]]],['Legs',[['Plank',3,45,1],['Leg Press',3,10,1],['Leg Curl',3,12,1],['Leg Extension',3,12],['Calf Raises',3,15],['Back Extension',3,12]]]]},
-{id:'ulppl5',ar:['دفع / سحب / رجل + أبر / لوور (٥ أيام)','دورة الـ ٥ أيام اللي لعبتها قبل كده'],en:['Push / Pull / Legs + Upper / Lower (5 days)','The five-day cycle you ran before'],
+{id:'ulppl5',ar:['دفع / سحب / رجل + أبر / لوور (٥ أيام)','خمس أيام: دفع وسحب ورجل، وبعدين يوم علوي ويوم سفلي'],en:['Push / Pull / Legs + Upper / Lower (5 days)','Five days: push, pull, legs, then an upper and a lower day'],
  days:[['Push',[['Incline Dumbbell Press',3,10,1],['Chest Press Machine',3,12,1],['Shoulder Press',3,10,1],['Lateral Raises',3,15],['Triceps Pushdown',3,12]]],['Pull',[['Lat Pulldown',3,10,1],['T-Bar Row',3,10,1],['Face Pull',3,15,1],['Biceps Curl',3,10],['Hammer Curl',3,10]]],['Legs',[['Leg Press',3,12,1],['Hack Squat',3,10,1],['Back Extension',3,12],['Leg Curl',3,10,1],['Calf Raises',4,15]]],['Upper',[['Chest Press Machine',3,12,1],['Lat Pulldown',3,10,1],['Shoulder Press',3,10,1],['Triceps Pushdown',3,12],['Hammer Curl',3,10]]],['Lower',[['Leg Press',3,12,1],['Leg Extension',3,12],['Leg Curl',3,10,1],['Calf Raises',4,15]]]]},
 {id:'bro5',ar:['تقسيم عضلات (٥ أيام)','يوم لكل عضلة: صدر، ضهر، كتف، دراعين، رجل'],en:['Body-part split (5 days)','One muscle group a day: chest, back, shoulders, arms, legs'],
  days:[['Chest',[['Flat Dumbbell Press',4,10,1],['Incline Dumbbell Press',3,12,1],['Pec Deck',3,12],['Push-Up',2,15]]],['Back',[['Lat Pulldown',4,10,1],['T-Bar Row',3,10,1],['Seated Row',3,12],['Back Extension',3,12]]],['Shoulders',[['Shoulder Press',4,10,1],['Lateral Raises',4,15],['Rear Delt Fly',3,15],['DB Shrugs',3,15]]],['Arms',[['Biceps Curl',3,10,1],['Hammer Curl',3,10],['Triceps Pushdown',3,12,1],['Cable Overhead Extension',3,12],['Wrist Curl + Reverse',2,15]]],['Legs',[['Leg Press',4,10,1],['Hack Squat',3,10,1],['Leg Curl',3,12,1],['Leg Extension',3,12],['Calf Raises',4,15]]]]}
@@ -1230,10 +1218,12 @@ function switchSys(id){
   delete S.sys.saved[id];S.program.days=days;S.sys.cur=id;pDay=days[0].id;save();queueBackup();
 }
 /* ================= شاشة التمارين: كل التمارين وشرحها ================= */
-const DETL=['العضلات','التجهيز','التنفيذ','أخطاء شائعة','نصيحة قوية'];
-function detHtml(x){const o=x[9]?null:libOv(x[0]),d=(o&&o.d)||DET[x[0]],en=(o&&o.en!=null)?o.en:x[7];
-  if(howLang()==='en'&&en)return `<div class="dsec" dir="ltr" lang="en" style="white-space:pre-wrap">${esc(en)}</div>`;
-  if(d){const h=d.map((t,k)=>t&&String(t).trim()?`<div class="dsec k${k}" dir="rtl" lang="ar"><b>${DETL[k]}</b><div style="white-space:pre-wrap">${esc(t)}</div></div>`:'').join('');if(h)return h}
+const DETL=['العضلات','التجهيز','التنفيذ','أخطاء شائعة','نصيحة'],DETLE=['Muscles','Setup','How to do it','Common mistakes','Coach\'s tip'];
+const detEn=(x,o)=>{if(o&&o.de)return o.de;if(o&&o.en!=null)return null;return typeof DETEN!=='undefined'&&DETEN[x[0]]||null};
+const secHtml=(d,L,dir,lg)=>d.map((t,k)=>t&&String(t).trim()?`<div class="dsec k${k}" dir="${dir}" lang="${lg}"><b>${L[k]}</b><div style="white-space:pre-wrap">${esc(t)}</div></div>`:'').join('');
+function detHtml(x){const o=x[9]?null:libOv(x[0]),d=(o&&o.d)||DET[x[0]];
+  if(howLang()==='en'&&!x[9]){const de=detEn(x,o);if(de){const h=secHtml(de,DETLE,'ltr','en');if(h)return h}const en=(o&&o.en!=null)?o.en:x[7];if(en)return `<div class="dsec" dir="ltr" lang="en" style="white-space:pre-wrap">${esc(en)}</div>`}
+  if(d){const h=secHtml(d,DETL,'rtl','ar');if(h)return h}
   const sh=(o&&o.short)||x[6];return sh?`<div class="dsec" style="white-space:pre-wrap">${esc(sh)}</div>`:''}
 let lbQ='',lbG='all';
 function lbRefresh(){const l=$('#lbL');if(!l)return;const o=[...l.querySelectorAll('.lbn[open]')].map(x=>x.dataset.n);l.innerHTML=libRows();o.forEach(n=>{const d=[...l.querySelectorAll('.lbn')].find(x=>x.dataset.n===n);if(d){const g=d.closest('.lgrp');if(g)g.open=true;d.open=true;lbFill(d)}})}
@@ -1254,7 +1244,7 @@ function libRows(){
   const q=lbQ.trim().toLowerCase(),inP=new Set(S.program.days.flatMap(d=>d.ex.map(t=>t.name)));
   const r=allLib().filter(x=>(lbG==='all'||x[1]===lbG)&&(lbE==='all'||lbEq(x)===lbE)&&lbMatch(x,q));
   if(!r.length)return `<div class="empty">—</div>`;
-  const row=x=>`<details class="pr2 lbn" data-n="${esc(x[0])}"><summary><div class="sp"><div class="pnm en">${esc(x[0])}</div><div class="mu"><span class="en">${x[3]}×${x[4]}${x[5]?' '+esc(unitTxt(x[5])):''}</span> · ${(EQN[lbEq(x)]||EQN.other)[LANG==='ar'?0:1]}${x[9]?' · '+tr('تمريني','Mine'):''}</div></div>${inP.has(x[0])?'<span class="pdot"></span>':''}<span class="pchev">⌄</span></summary>
+  const row=x=>`<details class="pr2 lbn" data-n="${esc(x[0])}"><summary><div class="sp"><div class="pnm en">${esc(x[0])}</div><div class="mu">${LANG==='ar'&&META[x[0]]?esc(META[x[0]].ar)+' · ':''}<span class="en">${x[3]}×${x[4]}${x[5]?' '+esc(unitTxt(x[5])):''}</span> · ${(EQN[lbEq(x)]||EQN.other)[LANG==='ar'?0:1]}${x[9]?' · '+tr('تمريني','Mine'):''}</div></div>${inP.has(x[0])?'<span class="pdot"></span>':''}<span class="pchev">⌄</span></summary>
     <div class="lbody"></div></details>`;
   return GRP_ORDER.map(g=>{const rs=r.filter(x=>x[1]===g);if(!rs.length)return '';
     const op=!!q||lbG!=='all'||lbOpenG.has(g);
@@ -1273,13 +1263,16 @@ function hwModal(n){
   const x=libGet(n);if(!x)return;
   const nt=`<label class="fld">${tr('ملاحظاتك (سطر لكل ملاحظة)','Your notes (one per line)')}<textarea class="inp" id="hwN" rows="3" dir="auto">${esc(exNotes(n).map(q=>q.t).join('\n'))}</textarea></label>`;
   if(x[9]){modal(`<h3 class="en">${esc(n)}</h3>${nt}<div class="row"><button class="btn pri sp" data-a="hwSave" data-n="${esc(n)}">${T().saveB}</button><button class="btn sp" data-a="cuEdit" data-n="${esc(n)}">${tr('تعديل التمرين','Edit exercise')}</button><button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);return}
-  const o=libOv(n)||{},d=o.d||DET[n]||['','','','',''],en=o.en!=null?o.en:(x[7]||''),sh=o.short!=null&&o.short!==''?o.short:x[6];
-  modal(`<h3 class="en">${esc(n)}</h3><div class="mu" style="margin-bottom:10px">${tr('عدّل الشرح والمعلومات. اللي تكتبه هو اللي هيظهر في شاشة اللعب.','Edit the guide and notes. What you write is what shows in the session screen.')}</div>
-  <label class="fld">${tr('ملخص سطر واحد (تحت المجموعات في اللعب)','One-line summary (under the sets)')}<textarea class="inp" id="hwS" rows="2" dir="auto">${esc(sh)}</textarea></label>
-  ${DETL.map((t,k)=>`<label class="fld">${t}<textarea class="inp" id="hwD${k}" rows="3" dir="rtl">${esc(d[k]||'')}</textarea></label>`).join('')}
-  ${nt}<label class="fld">${tr('الشرح بالإنجليزي','English guide')}<textarea class="inp en" id="hwE" rows="4" dir="ltr" style="text-align:left">${esc(en)}</textarea></label>
+  const o=libOv(n)||{},E=howLang()==='en',dir=E?'ltr':'rtl',L=E?DETLE:DETL;
+  const d=E?(detEn(x,o)||(o.en!=null?[ '',o.en,'','','']:null)||['','','','','']):(o.d||DET[n]||['','','','','']);
+  const sh=E?(o.shortEn!=null&&o.shortEn!==''?o.shortEn:(x[7]||'')):(o.short!=null&&o.short!==''?o.short:x[6]);
+  modal(`<h3 class="en">${esc(n)}</h3><div class="mu" style="margin-bottom:10px">${tr('عدّل الشرح والمعلومات. اللي تكتبه هو اللي هيظهر في شاشة اللعب.','Edit the guide and notes. What you write is what shows in the session screen.')} <span class="en">(${E?'English':'عربي'})</span></div>
+  <label class="fld">${tr('ملخص قصير (بيظهر تحت المجموعات في اللعب)','Short summary (shown under the sets)')}<textarea class="inp${E?' en':''}" id="hwS" rows="2" dir="${dir}">${esc(sh)}</textarea></label>
+  ${L.map((t,k)=>`<label class="fld">${t}<textarea class="inp${E?' en':''}" id="hwD${k}" rows="${k===3?4:3}" dir="${dir}">${esc(d[k]||'')}</textarea></label>`).join('')}
+  ${nt}
+  <div class="mu" style="margin:-4px 0 12px">${tr('لغة الشرح بتتغيّر من «الملف» ← اللغة.','The guide language is set in File → Language.')}</div>
   <div class="row"><button class="btn pri sp" data-a="hwSave" data-n="${esc(n)}">${T().saveB}</button><button class="btn ghost" data-a="closeM">${T().cancel}</button></div>
-  ${o.d||o.en!=null||o.short!=null?`<button class="btn w ghost dan mt" data-a="hwReset" data-n="${esc(n)}">${tr('رجّع الشرح الأصلي','Restore original guide')}</button>`:''}`);
+  ${o.d||o.de||o.en!=null||o.short!=null||o.shortEn!=null?`<button class="btn w ghost dan mt" data-a="hwReset" data-n="${esc(n)}">${tr('رجّع الشرح الأصلي','Restore original guide')}</button>`:''}`);
 }
 function hwApply(n,old){
   save();queueBackup();
@@ -1291,10 +1284,14 @@ function hwSave(n){
   {const k=String(n).trim().toLowerCase(),prev=exNotes(n),ls=($('#hwN').value||'').split('\n').map(t=>t.trim()).filter(Boolean);S.exNotes=S.exNotes||{};
    if(ls.length)S.exNotes[k]=ls.map(t=>{const q=prev.find(z=>z.t===t);return q||{d:today(),t}});else delete S.exNotes[k]}
   if(x[9]){hwApply(n,old);toast(tr('اتحفظ ✓','Saved ✓'));return}
-  const d=[0,1,2,3,4].map(k=>$('#hwD'+k).value.trim()),en=$('#hwE').value.trim(),sh=$('#hwS').value.trim();
-  const d0=DET[n]||['','','','',''],same=d.every((t,k)=>t===(d0[k]||''));
-  S.libOv=S.libOv||{};const o={};
-  if(!same)o.d=d;if(en!==(x[7]||''))o.en=en;if(sh!==x[6])o.short=sh;
+  const d=[0,1,2,3,4].map(k=>$('#hwD'+k).value.trim()),sh=$('#hwS').value.trim(),E=howLang()==='en';
+  S.libOv=S.libOv||{};const o=Object.assign({},S.libOv[n]||{});
+  if(E){const d0=(typeof DETEN!=='undefined'&&DETEN[n])||['','','','',''];delete o.en;
+    if(d.every((t,k)=>t===(d0[k]||'')))delete o.de;else o.de=d;
+    if(sh===(x[7]||''))delete o.shortEn;else o.shortEn=sh}
+  else{const d0=DET[n]||['','','','',''];
+    if(d.every((t,k)=>t===(d0[k]||'')))delete o.d;else o.d=d;
+    if(sh===x[6])delete o.short;else o.short=sh}
   if(Object.keys(o).length)S.libOv[n]=o;else delete S.libOv[n];
   hwApply(n,old);toast(tr('اتحفظ ✓','Saved ✓'));
 }
@@ -1345,7 +1342,7 @@ function renderProgram(){
   <div class="phead"><div class="pdn en">${esc(d.name)}</div><button class="ptxt" data-a="pedit">${pEdit?tr('تم','Done'):tr('تعديل','Edit')}</button></div>
   <div class="plist${pEdit?' ed':''}">${rows}</div>
   ${pEdit?`<div class="pact"><button class="plink" data-a="libOpen">+ ${tr('تمرين','Exercise')}</button><button class="plink" data-a="dayEdit">${tr('اسم اليوم','Rename day')}</button><button class="plink" data-a="copyT">${L.copyTpl}</button></div>`
-  :`${cores.length?`<div class="pcore"><b>${tr('الأساسي','Core')}:</b> <span class="en">${cores.join(' + ')}</span></div>`:''}${d.ex.length?`<button class="btn pri w pgo" data-a="start" data-d="${d.id}">${tr('ابدأ اليوم ده','Start this day')}</button>`:`<button class="btn pri w pgo" data-a="libOpen">+ ${tr('ضيف تمرين من المكتبة','Add from library')}</button>`}`}`;
+  :`${cores.length?`<div class="pcore"><b>${tr('الأساسي','Essentials')}:</b> <span class="en">${cores.join(' + ')}</span></div>`:''}${d.ex.length?`<button class="btn pri w pgo" data-a="start" data-d="${d.id}">${tr('ابدأ اليوم ده','Start this day')}</button>`:`<button class="btn pri w pgo" data-a="libOpen">+ ${tr('ضيف تمرين من المكتبة','Add from library')}</button>`}`}`;
 }
 function infoModal(i){
   const d=day(pDay),t=d.ex[i];if(!t)return;const lb=libGet(t.name),how=libHow(t.name),l=exHist(t.id)[0];
@@ -1387,7 +1384,7 @@ function tplModal(i){
   modal(`<h3>${i>-1?L.editEx:L.newEx}</h3>
   <label class="fld">${L.name}<input class="inp en" id="tName" list="libdl" value="${esc(t.name)}" style="text-align:left"><datalist id="libdl">${allLib().map(x=>`<option value="${esc(x[0])}">`).join('')}</datalist></label>
   <div class="fgrid"><label class="fld">${L.weight}<input class="inp" id="tW" inputmode="decimal" value="${esc(t.w)}"></label><label class="fld">${L.sets}<input class="inp" id="tS" inputmode="numeric" value="${esc(t.sets)}"></label><label class="fld">${L.reps}<input class="inp" id="tR" inputmode="numeric" value="${esc(t.reps)}"></label></div>
-  <div class="fgrid"><label class="fld">${L.goal}<input class="inp" id="tG" inputmode="numeric" value="${esc(t.goal)}"></label><label class="fld" style="grid-column:span 2">${L.unit}<select class="inp" id="tU">${['','ث','خطوة'].map(u=>`<option value="${u}" ${t.unit===u?'selected':''}>${L.units[u]}</option>`).join('')}</select></label></div>
+  <div class="fgrid"><label class="fld">${L.goal}<input class="inp" id="tG" inputmode="numeric" value="${esc(t.goal)}"></label><label class="fld" style="grid-column:span 2">${L.unit}<select class="inp" id="tU">${['','ث','خطوة','د'].map(u=>`<option value="${u}" ${t.unit===u?'selected':''}>${L.units[u]}</option>`).join('')}</select></label></div>
   <label class="cl" style="margin:4px 0 12px"><input type="checkbox" id="tC" ${t.core?'checked':''}>${L.coreEx}</label>
   <label class="fld">${L.instr}<textarea class="inp" id="tN" rows="2">${esc(t.note)}</textarea></label>
   <div class="mu" style="margin-bottom:10px">${L.tplHint}</div>
@@ -1450,7 +1447,7 @@ async function ensureBranch(tok){
   const def=(await rr.json()).default_branch;
   let br=await gh('GET',`/repos/${R}/git/ref/heads/${def}`,null,null,tok);
   if(!br.ok&&(br.status===404||br.status===409)){
-    const init=await gh('PUT',`/repos/${R}/contents/README.md`,{message:'init',content:btoa('Gym Log backup\n'),branch:def},null,tok);
+    const init=await gh('PUT',`/repos/${R}/contents/README.md`,{message:'init',content:btoa('Gym log - encrypted backup\n'),branch:def},null,tok);
     if(!init.ok)throw ghErr(init);
     br=await gh('GET',`/repos/${R}/git/ref/heads/${def}`,null,null,tok);
   }
@@ -1739,7 +1736,7 @@ document.addEventListener('click',ev=>{
         if(ps&&ps.k==='up'&&!e.unit&&v>(isNaN(old)?0:old)&&+e.goal>8){e.goal=8;e.treps=8;toast(tr('وزن جديد: الهدف النهارده ٨ عدّات','New weight: today\'s target is 8 reps'))}
         e.w=String(v)}else e.sets[pk.j]=String(v);saveSoon();closeSheet();renderSession();break}
     case 'stepSet':{const e=d.ex[curEx];S.steps=S.steps||{};S.steps[nk(e.name)]=+b.dataset.v;save();b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderSession();break}
-    case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Core only ✓'))}break}
+    case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
     case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value);if(!(w>0)&&!(c>0)){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}
       S.body=S.body||[];const t=today();let r=S.body.find(x=>x.d===t);if(!r){r={d:t};S.body.push(r)}if(w>0)r.w=w;if(c>0)r.c=c;fOpen.add('body');save();queueBackup();renderData();toast(tr('اتسجّل ✓','Logged ✓'));break}
     case 'bodyDel':S.body=(S.body||[]).filter(x=>x.d!==b.dataset.d);save();renderData();break
