@@ -237,25 +237,25 @@ PAT.bike=o=>({loop:1,eq:()=>FL()+ci([98,100],11)+ln([98,100],[60,64],'fq fw')+ln
 const MAP={
 "Barbell Bench Press":['press_lying',{}],"Incline Barbell Press":['press_lying',{inc:30}],"Decline Bench Press":['press_lying',{dec:1}],
 "Flat Dumbbell Press":['press_lying',{eq:'db'}],"Incline Dumbbell Press":['press_lying',{inc:30,eq:'db'}],"Floor Press":['press_lying',{floor:1,eq:'db'}],
-"Smith Machine Bench Press":['press_lying',{smith:1}],"Incline Smith Press":['press_lying',{inc:30,smith:1}],"Close-Grip Bench Press":['press_lying',{}],
+"Smith Machine Bench Press":['press_lying',{smith:1}],"Incline Smith Press":['press_lying',{inc:30,smith:1}],
 "Chest Press Machine":['press_machine',{}],
-"Push-Up":['pushup',{}],"Incline Push-Up":['pushup',{hand:22}],"Decline Push-Up":['pushup',{foot:22}],"Diamond Push-Up":['pushup',{}],
-"Pec Deck":['fly_front',{}],"Cable Fly":['fly_front',{}],
-"Conventional Deadlift":['hinge',{kind:'dl'}],"Good Morning":['hinge',{kind:'gm'}],"Romanian Deadlift":['hinge',{kind:'rdl',eq:'db'}],
+"Push-Up":['pushup',{}],"Incline Push-Up":['pushup',{hand:22}],
+
+"Romanian Deadlift":['hinge',{kind:'rdl',eq:'db'}],
 "Barbell Row":['row_hinged',{}],"Seated Row":['row_seated',{}],"Machine Row":['row_seated',{}],
 "Lat Pulldown":['pulldown',{}],"Wide-Grip Pulldown":['pulldown',{wide:1}],"Close-Grip Pulldown":['pulldown',{}],"Neutral-Grip Pulldown":['pulldown',{}],
-"Pull-Up":['pullup',{}],"Chin-Up":['pullup',{}],"Dumbbell Pullover":['pullover',{}],
-"Overhead Press":['press_vertical',{stand:1}],"DB Shoulder Press":['press_vertical',{eq:'db'}],"Smith Machine Shoulder Press":['press_vertical',{smith:1}],
-"Lateral Raises":['lateral',{}],"Front Raise":['front_raise',{}],"DB Shrugs":['shrug',{}],"Barbell Shrug":['shrug',{}],
+
+"Overhead Press":['press_vertical',{stand:1}],"DB Shoulder Press":['press_vertical',{eq:'db'}],
+"Lateral Raises":['lateral',{}],"Front Raise":['front_raise',{}],
 "Barbell Curl":['curl',{eq:'bb'}],"EZ Bar Curl":['curl',{eq:'ez'}],"Reverse Curl":['curl',{eq:'bb'}],"Biceps Curl":['curl',{eq:'db'}],"Hammer Curl":['curl',{eq:'db'}],"Cable Curl":['curl',{eq:'cable'}],
 "Skull Crusher":['skull',{}],"Triceps Pushdown":['pushdown',{}],"Rope Pushdown":['pushdown',{}],
-"Overhead Triceps Extension (DB)":['overhead_ext',{}],"Cable Overhead Extension":['overhead_ext',{eq:'cable'}],
+"Overhead Triceps Extension (DB)":['overhead_ext',{}],
 "Back Squat":['squat',{}],"Front Squat":['squat',{kind:'front'}],"Goblet Squat":['squat',{kind:'goblet'}],"Smith Machine Squat":['squat',{smith:1}],
-"Leg Press":['leg_press',{}],"Hack Squat":['hack',{}],"Reverse Lunge":['lunge',{}],"Walking Lunges":['lunge',{}],"Bulgarian Split Squat":['lunge',{bulg:1}],
+"Leg Press":['leg_press',{}],"Reverse Lunge":['lunge',{}],"Bulgarian Split Squat":['lunge',{bulg:1}],
 "Leg Extension":['leg_ext',{}],"Hip Thrust":['hip_thrust',{}],"Glute Bridge":['hip_thrust',{floor:1,eq:'bw'}],
 "Leg Curl":['leg_curl',{}],"Seated Leg Curl":['leg_curl',{seated:1}],
-"Calf Raises":['calf',{}],"Seated Calf Raise":['calf',{seated:1}],
-"Plank":['plank',{}],"Hanging Knee Raise":['leg_raise',{knee:1}],"Hanging Leg Raise":['leg_raise',{}],"Lying Leg Raise":['leg_raise_lying',{}],"Decline Sit-Up":['situp',{}],
+"Seated Calf Raise":['calf',{seated:1}],
+"Plank":['plank',{}],"Hanging Knee Raise":['leg_raise',{knee:1}],"Hanging Leg Raise":['leg_raise',{}],"Lying Leg Raise":['leg_raise_lying',{}],
 "Incline Treadmill Walk":['walk',{inc:1}],"Treadmill Run":['walk',{run:1}],"Outdoor Walking":['walk',{}],"Stationary Bike":['bike',{}]
 };
 const CROP={skull:'0 38 200 92',pullover:'0 38 200 92',plank:'0 40 200 90',situp:'0 40 200 90',pushup:'0 44 200 86',leg_raise_lying:'0 50 200 78',hip_thrust:'0 44 200 86'};
@@ -281,6 +281,6 @@ function kick(){if(!raf&&!document.hidden&&!reduce())raf=requestAnimationFrame(t
 document.addEventListener('visibilitychange',kick);
 /* بيتأكد إن الحلقة شغّالة بعد أي إعادة رسم للشاشة */
 new MutationObserver(kick).observe(document.documentElement,{childList:true,subtree:true});
-window.Figs={has,svg,kick,count:()=>Object.keys(MAP).filter(has).length,names:()=>Object.keys(MAP).filter(has)};
+window.__SPEC=spec;window.Figs={has,svg,kick,count:()=>Object.keys(MAP).filter(has).length,names:()=>Object.keys(MAP).filter(has)};
 window.__PAT=PAT;window.__FIGS_ENGINE={joints,mix,draw,drawFront,sAt,TOT};
 })();
