@@ -621,7 +621,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 <script src="quotes.js"></script>
 <script>
 'use strict';
-const VER='81';
+const VER='82';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -942,14 +942,12 @@ function applyLang(){applyTheme();
 }
 function saveUI(){try{localStorage.setItem('gymlog.ui',JSON.stringify({t:tab,s:!$('#sess').hidden,y:window.scrollY,at:Date.now()}))}catch(e){}}
 function openCredits(){
-  const ar=LANG==='ar';
-  modal(`<div style="text-align:center;padding:6px 4px 2px">
-  <div style="font-family:'BasQ',var(--font);font-weight:700;font-size:34px;line-height:1.5;color:var(--tx2)">چيم لوج</div>
-  <div class="mu" style="margin:2px 0 18px">${tr('تطبيق من تطويري أنا','An app made by me')}</div>
-  <div style="font-size:20px;font-weight:700;margin-bottom:4px">${tr('أحمد ماهر','Ahmed Maher')}</div>
-  <div class="mu" style="margin-bottom:18px">${tr('صاحب التطبيق وصانعه','Creator of this app')}</div>
-  <a class="btn pri w" href="https://www.facebook.com/share/1HWtZibWS7/" target="_blank" rel="noopener noreferrer" style="display:block;text-decoration:none;text-align:center">${tr('صفحتي على فيسبوك','My Facebook page')}</a>
-  <div class="mu" style="margin-top:14px;font-size:12px">v${VER}</div></div>`)}
+  modal(`<div class="en" style="text-align:center;padding:10px 4px 6px">
+  <div style="font-family:'BasQ',var(--font);font-weight:700;font-size:34px;line-height:1.5;color:var(--tx2);margin-bottom:14px">چيم لوج</div>
+  <div class="mu" style="font-size:15px;margin-bottom:4px">An app made by:</div>
+  <div style="font-size:22px;font-weight:700;margin-bottom:16px">Ahmed Maher</div>
+  <a href="https://www.facebook.com/share/1HWtZibWS7/" target="_blank" rel="noopener noreferrer" style="color:var(--ac2);font-size:16px">facebook.com/share/1HWtZibWS7</a>
+  <div class="mu" style="margin-top:18px;font-size:12px">v${VER}</div></div>`)}
 async function hardRefresh(){
   const lg=document.querySelector('.brand .lg');if(lg)lg.classList.add('spin');
   saveUI();try{await sq}catch(e){}
