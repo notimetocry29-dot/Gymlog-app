@@ -572,6 +572,13 @@ html[data-th=granite] .pdot{background:var(--gd)}
 .pst{flex:none;font-size:13px;color:var(--mu)}
 .pst.full{color:var(--ac2)}
 html[data-th=granite] .pst.full{color:var(--gd)}
+.fhead{padding:6px 2px 16px;border-bottom:1px solid var(--bd)}
+.fbig{font-size:28px;font-weight:700;line-height:1.3}
+.fsec{border-bottom:1px solid var(--bd)}
+.fsec>summary{list-style:none;display:flex;align-items:center;padding:16px 2px;font-weight:700;font-size:16px;cursor:pointer}
+.fsec>summary::-webkit-details-marker{display:none}
+.fsec[open]>summary .pchev{transform:rotate(180deg)}
+.fbody{padding:0 2px 16px}
 </style>
 </head>
 <body>
@@ -593,7 +600,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 
 <script>
 'use strict';
-const VER='61';
+const VER='62';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -901,7 +908,7 @@ async function shareText(t){
 }
 
 const THEMES={"iron": {"ar": "حديد", "en": "Iron", "da": "دافي · نحاسي", "de": "Warm copper", "bg": "#0e0e0f", "s1": "#17171a", "tx": "#ece8e1", "ac": "#c38d4f"}, "granite": {"ar": "جرانيت", "en": "Granite", "da": "فاخر · بلاتيني", "de": "Premium platinum", "bg": "#0b0d10", "s1": "#171b21", "tx": "#eef1f5", "ac": "#d8c18c"}, "obsidian": {"ar": "أوبسيديان", "en": "Obsidian", "da": "صارم · أحمر قاني", "de": "Stark crimson", "bg": "#09090a", "s1": "#121214", "tx": "#f1efec", "ac": "#c0343c"}, "cedar": {"ar": "أرز", "en": "Cedar", "da": "أخضر وذهب قديم", "de": "Forest and old gold", "bg": "#0a110e", "s1": "#101a16", "tx": "#ebe7d6", "ac": "#c9a24b"}, "sand": {"ar": "رمال", "en": "Sand", "da": "فاتح · برونزي", "de": "Light bronze", "bg": "#ede4d3", "s1": "#f8f2e6", "tx": "#2b211a", "ac": "#a4622d"}, "plate": {"ar": "ورشة", "en": "Plate", "da": "صناعي · أصفر", "de": "Industrial yellow", "bg": "#0b0b0a", "s1": "#151513", "tx": "#f3f1e8", "ac": "#f2c200"}, "book": {"ar": "دفتر", "en": "Logbook", "da": "ورق مسطّر", "de": "Ruled paper", "bg": "#efe6d0", "s1": "#fbf6e8", "tx": "#1f2430", "ac": "#1f3a8a"}, "pulse": {"ar": "نبض", "en": "Pulse", "da": "شاشة قياس", "de": "Monitor glow", "bg": "#04080b", "s1": "#08121a", "tx": "#dff7f2", "ac": "#19e3c1"}, "dawn": {"ar": "فجر", "en": "Dawn", "da": "زجاج · شروق", "de": "Glass sunrise", "bg": "#2a1d4a", "s1": "#3d2d63", "tx": "#f7eae0", "ac": "#f1bc95"}, "x": {"ar": "إكس", "en": "X", "da": "أسود خالص · أزرق", "de": "Pure black, blue", "bg": "#000000", "s1": "#16181c", "tx": "#e7e9ea", "ac": "#1d9bf0"}};
-let thmOpen=false;
+let thmOpen=false;const fOpen=new Set();document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.fk){d.open?fOpen.add(d.dataset.fk):fOpen.delete(d.dataset.fk)}},true);
 const swatch=k=>{const t=THEMES[k]||THEMES.granite;return `<span class="sw" style="background:${t.bg}"><i style="background:${t.s1};border-color:${t.ac}"><b style="background:${t.tx}"></b><u style="background:${t.ac}"></u></i></span>`};
 function applyTheme(){const t=THEMES[S.settings.theme]?S.settings.theme:'granite';document.documentElement.dataset.th=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEMES[t].bg}
 /* ================= التنقل ================= */
@@ -1556,12 +1563,11 @@ async function renderData(){
   let pre=null;try{pre=await idb.get('state.prerestore')}catch(e){}
   const canUndo=!!(pre&&pre.data&&Date.now()-pre.at<864e5);
   if(tab!=='data')return;
-  $('#view').innerHTML=`<div class="mu" style="text-align:center;margin:0 0 10px">${L.ver}: v${VER}</div>
-  <div class="card"><div class="mu">${L.onPhone}</div><div class="big">${n} <span class="mu">${L.sessions}</span></div>
+  $('#view').innerHTML=`<div class="fhead"><div class="mu">${L.onPhone}</div><div class="fbig">${n} <span class="mu">${L.sessions}</span></div>
     <div class="mu">${L.lastBk}: ${lb?new Date(lb).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.never}</div>
-    ${persisted===true?`<div class="note-ok">${L.persisted}</div>`:''}</div>
-  <div class="card"><div style="font-weight:700;margin-bottom:8px">${L.themeT}</div><div class="dd${thmOpen?' open':''}"><button class="dd-cur" data-a="thmTog">${swatch(S.settings.theme||'granite')}<span>${(THEMES[S.settings.theme]||THEMES.granite)[LANG]}</span><span class="ch">▾</span></button>${thmOpen?`<div class="dd-list">${Object.keys(THEMES).map(k=>`<button class="dd-opt${(S.settings.theme||'granite')===k?' on':''}" data-a="theme" data-k="${k}">${swatch(k)}<span>${THEMES[k][LANG]}<small>${THEMES[k][LANG==='ar'?'da':'de']}</small></span></button>`).join('')}</div>`:''}</div></div>
-  <div class="card"><div style="font-weight:700;margin-bottom:4px">${L.syncT}</div>
+    ${persisted===true?`<div class="mu">✓ ${L.persisted}</div>`:''}</div>
+  <details class="fsec" data-fk="theme"${fOpen.has('theme')?' open':''}><summary>${L.themeT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="dd${thmOpen?' open':''}"><button class="dd-cur" data-a="thmTog">${swatch(S.settings.theme||'granite')}<span>${(THEMES[S.settings.theme]||THEMES.granite)[LANG]}</span><span class="ch">▾</span></button>${thmOpen?`<div class="dd-list">${Object.keys(THEMES).map(k=>`<button class="dd-opt${(S.settings.theme||'granite')===k?' on':''}" data-a="theme" data-k="${k}">${swatch(k)}<span>${THEMES[k][LANG]}<small>${THEMES[k][LANG==='ar'?'da':'de']}</small></span></button>`).join('')}</div>`:''}</div></div></details>
+  <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?'<span class="pdot" style="margin-inline-start:6px${SYNC.err?';background:var(--bad)':''}"></span>':''}<span class="pchev">⌄</span></summary><div class="fbody">
     ${SYNC.on?`<div class="note-ok" style="margin:0 0 10px">${L.syncOnL} · ${L.syncLast}: ${SYNC.last?new Date(SYNC.last).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.syncNever}${SYNC.dirty?' · '+L.syncWait(Math.max(1,SYNC.missed)):''}</div>${SYNC.err?`<div class="warn" style="margin:0 0 10px">${L.syncErr(esc(syncMsg(SYNC.err)))}</div>`:''}${syncPublic()?`<div class="warn" style="margin:0 0 10px">${L.syncPub}</div>`:''}
       <button class="btn pri w" data-a="syncNow">${L.syncNow}</button><button class="btn dan w mt" data-a="syncOff">${L.syncOffB}</button>`
     :`<div class="mu" style="margin-bottom:10px">${L.syncHint}</div>
@@ -1571,17 +1577,17 @@ async function renderData(){
       <label class="fld">${L.syncP2}<input class="inp" id="gP2" type="password" autocomplete="new-password"></label>
       <div class="warn" style="margin:0 0 10px">${L.syncWarn}</div>
       <button class="btn pri w" data-a="syncOn">${L.syncEnable}</button>
-      <button class="btn w mt" data-a="syncRestore">${L.syncRestore}</button><div class="mu mt">${L.syncRestoreHint}</div>`}</div>
-  ${FS?`<div class="card"><div style="font-weight:700;margin-bottom:4px">${L.autoT}</div><div class="mu" style="margin-bottom:10px">${S.settings.linked?L.autoLinked('<span class="en">'+esc(S.settings.linked)+'</span>'):L.autoHint}</div><button class="btn w" data-a="link">${S.settings.linked?L.relinkB:L.linkB}</button></div>`:''}
-  <div class="card"><div style="font-weight:700;margin-bottom:4px">${L.bkT}</div><div class="mu" style="margin-bottom:10px">${L.bkHint}</div>
+      <button class="btn w mt" data-a="syncRestore">${L.syncRestore}</button><div class="mu mt">${L.syncRestoreHint}</div>`}</div></details>
+  ${FS?`<details class="fsec" data-fk="auto"${fOpen.has('auto')?' open':''}><summary>${L.autoT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${S.settings.linked?L.autoLinked('<span class="en">'+esc(S.settings.linked)+'</span>'):L.autoHint}</div><button class="btn w" data-a="link">${S.settings.linked?L.relinkB:L.linkB}</button></div></details>`:''}
+  <details class="fsec" data-fk="bk"${fOpen.has('bk')?' open':''}><summary>${L.bkT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${L.bkHint}</div>
     <button class="btn pri w" data-a="backup">${L.bkSave}</button>
     <button class="btn w mt" data-a="share">${L.bkShare}</button>
     <label class="btn w mt" style="cursor:pointer">${L.restore}<input type="file" id="imp" accept=".md,.txt,.json,text/markdown,text/plain,application/json" hidden></label>
-    ${canUndo?`<button class="btn w mt dan" data-a="undoRestore">${L.undoRestore}</button>`:''}</div>
-  <div class="card"><div style="font-weight:700;margin-bottom:4px">${L.csvT}</div><div class="mu" style="margin-bottom:10px">${L.csvHint}</div><button class="btn w" data-a="csv">${L.csvB}</button></div>
-  <div class="card"><div style="font-weight:700;margin-bottom:8px">Language · اللغة</div><button class="btn w" data-a="lang">${L.langBtn}</button></div>
-  <div class="card"><label class="fld" style="margin:0">${L.cycleL}<input class="inp" id="cyc0" inputmode="numeric" value="${esc(S.settings.cycle)}"></label></div>
-`;
+    ${canUndo?`<button class="btn w mt dan" data-a="undoRestore">${L.undoRestore}</button>`:''}</div></details>
+  <details class="fsec" data-fk="csv"${fOpen.has('csv')?' open':''}><summary>${L.csvT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${L.csvHint}</div><button class="btn w" data-a="csv">${L.csvB}</button></div></details>
+  <details class="fsec" data-fk="lang"${fOpen.has('lang')?' open':''}><summary>Language · اللغة<span class="pchev">⌄</span></summary><div class="fbody"><button class="btn w" data-a="lang">${L.langBtn}</button></div></details>
+  <div class="fbody" style="padding-top:16px"><label class="fld" style="margin:0">${L.cycleL}<input class="inp" id="cyc0" inputmode="numeric" value="${esc(S.settings.cycle)}"></label></div>
+  <div class="mu" style="text-align:center;margin:18px 0 0">${L.ver}: v${VER}</div>`;
   $('#imp').onchange=e=>{const f=e.target.files[0];if(f)importFile(f);e.target.value=''};
   $('#cyc0').onchange=e=>{const v=num(e.target.value);if(v>0){S.settings.cycle=v;save();toast(L.cycleSaved)}};
 }
