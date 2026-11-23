@@ -431,12 +431,10 @@ a.brand,a.brand:visited{color:inherit;text-decoration:none;-webkit-tap-highlight
 html[data-th] .tabs button.on{box-shadow:none}
 .homew{display:flex;flex-direction:column;align-items:center;padding:3vh 0 20px}
 .orb{position:relative;width:min(86vw,380px);aspect-ratio:1;border-radius:50%;border:0;background:var(--s1);color:var(--tx);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;transition:transform .15s}
-.orb{--sd:color-mix(in srgb,var(--bg) 40%,#000);box-shadow:0 11px 0 var(--sd),0 22px 30px rgba(0,0,0,.45);transition:transform .09s,box-shadow .09s}
-.orb:active,.orb.press{transform:translateY(10px) scale(.965);box-shadow:0 1px 0 var(--sd),0 5px 10px rgba(0,0,0,.4)}
-.orb.press{animation:orbp .28s ease-out}
-.orb.press .ar.cur{stroke-width:15}
-.orb .ar{transition:stroke-width .12s}
-@keyframes orbp{0%{transform:none;box-shadow:0 11px 0 var(--sd),0 22px 30px rgba(0,0,0,.45)}38%{transform:translateY(12px) scale(.95);box-shadow:0 0 0 var(--sd),0 2px 6px rgba(0,0,0,.4)}100%{transform:translateY(10px) scale(.965);box-shadow:0 1px 0 var(--sd),0 5px 10px rgba(0,0,0,.4)}}
+.orb{box-shadow:none;transition:transform .07s ease-out,background .07s}
+.orb:active{transform:scale(.96);background:var(--s2)}
+.orb .ar{transition:stroke-width .07s}
+.orb:active .ar.cur{stroke-width:13}
 .orb svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .orb .ar{fill:none;stroke:var(--bd);stroke-width:7;stroke-linecap:round}
 .orb .ar.dn{stroke:var(--ac)}
@@ -461,6 +459,8 @@ html[data-th] .tabs button.on{box-shadow:none}
 .dtl .warn,.dtl .bkn{margin:0 0 10px}
 /* --- شاشة التمرين --- */
 #sess{display:flex;flex-direction:column;touch-action:pan-y}
+#sess.in{animation:sfade .12s ease-out}
+@keyframes sfade{from{opacity:0}to{opacity:1}}
 .wtop{display:flex;align-items:center;gap:6px;padding:calc(8px + env(safe-area-inset-top)) 8px 0}
 .wx{flex:none;width:48px;height:48px;border:0;background:none;color:var(--mu);font-size:22px;display:flex;align-items:center;justify-content:center;padding:0}
 .wseg{flex:1;display:flex;gap:4px;direction:ltr}
@@ -601,7 +601,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 
 <script>
 'use strict';
-const VER='63';
+const VER='62';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -999,7 +999,7 @@ function editSession(id){
   if(d)for(const t of d.ex)if(!ex.some(e=>e.exId===t.id))ex.push(draftEx(t));
   S.draft.ex=ex;openTips.clear();save();closeModal(true);openSession();
 }
-function openSession(){const dd=S.draft,k0=dd.ex.findIndex(e=>!fullyIn(e));curEx=dd.editing?0:(k0<0?dd.ex.length-1:k0);finishing=false;renderSession();$('#sess').hidden=false;$('#sess').scrollTop=0;document.body.style.overflow='hidden';if(!hs().sess){const n=Object.assign({tab:tab},hs(),{sess:1});delete n.modal;if(hs().modal)history.replaceState(n,'');else history.pushState(n,'')}saveUI()}
+function openSession(){const dd=S.draft,k0=dd.ex.findIndex(e=>!fullyIn(e));curEx=dd.editing?0:(k0<0?dd.ex.length-1:k0);finishing=false;renderSession();$('#sess').hidden=false;$('#sess').classList.remove('in');void $('#sess').offsetWidth;$('#sess').classList.add('in');$('#sess').scrollTop=0;document.body.style.overflow='hidden';if(!hs().sess){const n=Object.assign({tab:tab},hs(),{sess:1});delete n.modal;if(hs().modal)history.replaceState(n,'');else history.pushState(n,'')}saveUI()}
 function closeSession(){endRest(false);flushSave();$('#sess').hidden=true;document.body.style.overflow='';if(tab==='home')renderHome();saveUI();if(hs().sess)history.back()}
 const openTips=new Set();
 /* ===== شاشة التمرين (v57): تمرين واحد في الشاشة ===== */
@@ -1010,8 +1010,7 @@ function tickRest(){const ms=restEnd-Date.now();if(!restEnd||ms<=0){endRest(!!re
 function endRest(buzz){clearInterval(restIv);restIv=null;restEnd=0;const el=$('#wrest');if(el)el.innerHTML='';if(buzz){try{navigator.vibrate&&navigator.vibrate([180,90,180])}catch(e){}}}
 function startRest(){restTot=REST;restEnd=Date.now()+REST*1000;clearInterval(restIv);restIv=setInterval(tickRest,250);buildRest()}
 function goEx(k){const d=S.draft;if(!d||k<0||k>=d.ex.length||k===curEx)return;endRest(false);closeSheet();curEx=k;wAnim=true;renderSession();wAnim=false;$('#sess').scrollTop=0}
-function orbGo(b,fn){if(b.dataset.busy)return;b.dataset.busy='1';b.classList.add('press');try{navigator.vibrate&&navigator.vibrate(20)}catch(e){}
-  setTimeout(()=>{fn();b.classList.remove('press');delete b.dataset.busy},280)}
+function orbGo(b,fn){try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}fn()}
 function closeSheet(){const s=$('#sheet');if(s){s.hidden=true;s.innerHTML=''}pk=null}
 function openPick(kind,j){
   const d=S.draft,e=d.ex[curEx],L=T();let cur,step,min,max;
