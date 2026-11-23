@@ -660,7 +660,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="quotes.js"></script>
 <script>
 'use strict';
-const VER='89';
+const VER='90';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -930,9 +930,13 @@ function progMsg(t,h,unit){
   if(p.k==='stuck')return{c:'bad',t:L.pStuck(p.n)};
   return{c:'mid',t:L.pQ1(t.sets,t.goal)};
 }
+const durSum=e=>(e.dur||[]).reduce((a,b)=>a+(+b||0),0);
+const durLine=e=>e.dur&&e.dur.some(x=>x>0)?tr('الوقت','Time')+': '+e.dur.map(x=>x>0?mmss(x):'—').join(' | ')+' | '+tr('الإجمالي','Total')+' '+mmss(durSum(e)):'';
 function cardText(s){
-  const L=[`Cycle ${s.cycle}`,`${s.dayName} — ${s.date}`,''];
-  for(const e of s.ex){L.push(e.name);L.push(`${fw(e.w)} | ${setsStr(e)}${e.clean?' | '+T().clean:''}`);if(e.note)L.push(e.note);L.push('')}
+  const tm=!s.imp&&s.ts?new Date(s.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+  const L=[`Cycle ${s.cycle}`,`${s.dayName} — ${s.date}${tm?' · '+tm:''}`,''];
+  for(const e of s.ex){L.push(e.name);L.push(`${fw(e.w)} | ${setsStr(e)}${e.clean?' | '+T().clean:''}`);const dl=durLine(e);if(dl)L.push(dl);if(e.note)L.push(e.note);L.push('')}
+  const tot=s.ex.reduce((a,e)=>a+durSum(e),0);if(tot>0)L.push(tr('إجمالي وقت المجموعات: ','Total set time: ')+mmss(tot),'');
   const d=S.program.days.find(x=>x.id===s.day);const c=d?coreNames(d):s.ex.filter(e=>e.core).map(e=>e.name);
   if(c.length)L.push(T().coreLine+': '+c.join(' + '));
   return L.join('\n').trim();
@@ -959,7 +963,7 @@ function aiText(s,skip){
     out.push(`   ${L.aiTarget}: ${e.tsets||e.sets.length}×${e.treps||''}${u}`);
     out.push(`   ${L.aiWeight}: ${noW(e.w)?(e.unit?'—':L.bw):(+e.w)+' kg'}`);
     out.push(`   ${L.aiSets}: ${e.sets.join(', ')}${u}`);
-    if(e.dur&&e.dur.some(x=>x>0))out.push(`   ${tr('مدة كل مجموعة','Set duration')}: ${e.dur.map(x=>x>0?mmss(x):'—').join(', ')}`);
+    {const dl=durLine(e);if(dl)out.push('   '+dl)}
     if(e.clean)out.push(`   ${L.aiForm}: ${L.aiClean}`);
     const h=exHist(e.exId,skip).filter(x=>x.date<=s.date);const prev=h[0];
     if(prev)out.push(`   ${L.aiLast} (${prev.date}): ${noW(prev.w)?'—':(+prev.w)+' kg'} — ${prev.sets.join('/')}${u}${prev.clean?', '+L.clean:''}`);
@@ -968,6 +972,7 @@ function aiText(s,skip){
     if(e.note)out.push(`   ${L.aiNote}: ${e.note}`);
     out.push('');
   });
+  {const tot=s.ex.reduce((a,e)=>a+durSum(e),0);if(tot>0){out.push(tr('إجمالي وقت المجموعات: ','Total set time: ')+mmss(tot));out.push('')}}
   const miss=tpl.filter(t=>!s.ex.some(e=>e.exId===t.id)).map(t=>t.name);
   if(miss.length)out.push(`${L.aiNotDone}: ${miss.join(', ')}`);
   return out.join('\n').trim();
