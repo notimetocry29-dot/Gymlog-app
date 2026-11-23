@@ -610,7 +610,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 
 <script>
 'use strict';
-const VER='67';
+const VER='68';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1132,7 +1132,7 @@ function exHistModal(exId){
 const dayBase=n=>String(n||'').replace(/\b(light|lite)\b/gi,' ').replace(/لايت|خفيفة|خفيف/g,' ').replace(/[-–·()]+/g,' ').replace(/\s+/g,' ').trim();
 const dayKey=n=>dayBase(n).toLowerCase();
 let hsList=[],hsN=0,hsLast='';
-function histChunk(){const L=T(),part=hsList.slice(hsN,hsN+30);hsN+=part.length;
+function histChunk(){const L=T(),part=hsList.slice(hsN,hsN+(hsN?30:12));hsN+=part.length;
   return part.map(s=>{
     let mh='';try{const m=new Date(s.date+'T00:00:00').toLocaleDateString(LANG==='ar'?'ar-EG':'en-GB',{month:'long',year:'numeric'});if(m!==hsLast){hsLast=m;mh=`<div class="pmon">${m}</div>`}}catch(e){}
     return `${mh}<div class="pr2"><div class="pr2b" data-a="sess" data-id="${s.id}"><div class="sp"><div class="pnm"><bdi>${esc(s.dayName)}</bdi></div><div class="mu">${fmtD(s.date)} · <span class="en">C${s.cycle}</span> · ${L.exN(s.ex.length)}</div></div><span class="pst ${s.status}">${L.st[s.status]||''}</span></div></div>`}).join('')}
@@ -1687,9 +1687,10 @@ document.addEventListener('touchend',e=>{if(!pok||pmode!==1){pok=false;return}po
   const dir=(LANG==='ar'?dx>0:dx<0)?1:-1,nx=TABS.indexOf(tab)+dir,go2=Math.abs(dx)>W*.22||(vel>.45&&Math.abs(dx)>28);
   const back=()=>{v.style.transition='transform .2s ease-out,opacity .2s';v.style.transform='';v.style.opacity='';setTimeout(()=>{v.style.transition=''},220)};
   if(!go2||nx<0||nx>=TABS.length){back();return}
-  const sgn=dx<0?-1:1;v.style.transition='transform .12s ease-in,opacity .12s';v.style.transform=`translateX(${sgn*W*.3}px)`;v.style.opacity='0';
-  setTimeout(()=>{navTab(TABS[nx]);v.style.transition='none';v.style.transform=`translateX(${-sgn*W*.22}px)`;v.style.opacity='0';void v.offsetWidth;
-    v.style.transition='transform .22s cubic-bezier(.2,.8,.2,1),opacity .18s';v.style.transform='';v.style.opacity='';setTimeout(()=>{v.style.transition=''},240)},110)},{passive:true});
+  /* v67: الصفحة الجديدة بتتبدّل فورًا لحظة رفع الصباع (من غير انتظار «اختفاء») وتنزلق مكانها في ١٦٠ms */
+  const sgn=dx<0?-1:1;v.style.transition='none';navTab(TABS[nx]);
+  v.style.transform=`translateX(${-sgn*W*.16}px)`;v.style.opacity='.4';void v.offsetWidth;
+  v.style.transition='transform .16s cubic-bezier(.2,.8,.2,1),opacity .14s';v.style.transform='';v.style.opacity='';setTimeout(()=>{v.style.transition=''},190)},{passive:true});
 document.addEventListener('touchcancel',()=>{if(pmode===1){const v=$('#view');v.style.transform='';v.style.opacity='';}pok=false},{passive:true});
 document.addEventListener('click',ev=>{
   if(ev.target.closest('.brand .lg')){hardRefresh();return}
@@ -1794,6 +1795,8 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'){
   }).catch(()=>{});
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(updating&&!r){r=true;location.reload()}});
 }
+/* تسخين: أول رسم للسجل والمكتبة بيبقى أبطأ، فبنعمله مرة في الخلفية وإنت على الرئيسية (من غير ما يبان) */
+function warmTabs(){try{if(tab!=='home'||!$('#sess').hidden||!$('#modal').hidden)return;renderHistory();renderLib();renderHome()}catch(e){}}
 function readUI(){try{return JSON.parse(localStorage.getItem('gymlog.ui')||'null')}catch(e){return null}}
 function restoreUI(u){try{if(!u||Date.now()-u.at>12*36e5)return;
   if(u.t&&u.t!=='home')navTab(u.t);
@@ -1802,7 +1805,7 @@ window.addEventListener('scroll',()=>{clearTimeout(window.__st);window.__st=setT
 window.addEventListener('pagehide',flushSave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){flushSave();saveUI();if(S.draft)queueDraftBackup()}});
 const UI0=readUI();
-boot().then(()=>{if(!S.settings.thGr){S.settings.thGr=1;S.settings.thDawn=1;S.settings.theme='granite';save()}applyLang();if(S.impN){const k=S.impN;S.impN=0;save();setTimeout(()=>toast(T().histNote(k)),600)}go('home');restoreUI(UI0);if(pendMig){toast(T().migNote);pendMig=false}});
+boot().then(()=>{if(!S.settings.thGr){S.settings.thGr=1;S.settings.thDawn=1;S.settings.theme='granite';save()}applyLang();if(S.impN){const k=S.impN;S.impN=0;save();setTimeout(()=>toast(T().histNote(k)),600)}go('home');restoreUI(UI0);setTimeout(()=>('requestIdleCallback' in window?requestIdleCallback(warmTabs,{timeout:4000}):warmTabs()),2500);if(pendMig){toast(T().migNote);pendMig=false}});
 </script>
 </body>
 </html>
