@@ -526,7 +526,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='106';
+const VER='107';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1439,7 +1439,9 @@ function saveTpl(i){
 }
 
 /* ================= النسخة الاحتياطية (.md) ================= */
-const FS='showSaveFilePicker' in window;
+const FS='showSaveFilePicker' in window&&!window.Android;
+/* الـ APK الجديد بيربط ملف ويقراه بنفسه (النسخة القديمة من الـ APK مفيهاش الدوال دي) */
+const NL=!!(window.Android&&Android.linkFile);
 const idb=(()=>{let p;const db=()=>p||(p=new Promise((res,rej)=>{const r=indexedDB.open('gymlog',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
   return{get:k=>db().then(d=>new Promise((res,rej)=>{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})),
          set:(k,v)=>db().then(d=>new Promise((res,rej)=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)}))}})();
@@ -1658,7 +1660,9 @@ async function shareBackup(){
   if(navigator.share&&t.length<60000){try{await navigator.share({text:t});markBackup();toast(T().sentText);refresh();return}catch(e){if(e.name==='AbortError')return;err=err||e.name}}
   download(`gym-backup-${today()}.md`,t,'text/markdown');markBackup();refresh();toast(T().shareFail(err));
 }
+window.__glLinked=(ok,name)=>{if(ok){S.settings.linked=name||'gym-log.md';markBackup();toast(T().linked)}else toast(T().linkFail);refresh()};
 async function linkFile(){
+  if(NL){try{Android.linkFile('gym-log.md',backupMD())}catch(e){toast(T().linkFail)}return}
   try{const h=await showSaveFilePicker({suggestedName:'gym-log.md',types:[{description:'Gym log',accept:{'text/markdown':['.md']}}]});
     await idb.set('fh',h);S.settings.linked=h.name;await writeLinked(h,true);toast(T().linked);refresh()}
   catch(e){if(e.name!=='AbortError')toast(T().linkFail)}
@@ -1669,7 +1673,7 @@ async function writeLinked(h,ask){
   if(p!=='granted')return false;
   const w=await h.createWritable();await w.write(backupMD());await w.close();markBackup();return true;
 }
-async function autoFile(){if(!FS)return;try{const h=await idb.get('fh');if(h)await writeLinked(h,true)}catch(e){}}
+async function autoFile(){if(NL){try{if(Android.linkedName()&&Android.writeLinked(backupMD()))markBackup()}catch(e){}return}if(!FS)return;try{const h=await idb.get('fh');if(h)await writeLinked(h,true)}catch(e){}}
 function exportCSV(){
   const q=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
   const rows=[T().csvH];
@@ -1712,15 +1716,20 @@ function csvMerge(txt){
   S.sessions=S.sessions.concat(fresh).sort((a,b)=>(a.ts||0)-(b.ts||0));
   save();queueBackup();toast(tr(`اتضاف ${fresh.length} جلسة ✓`,`Added ${fresh.length} session(s) ✓`));go('home');return true;
 }
+async function importText(txt){
+  if(txt==null){toast(tr('مقدرتش أقرا الملف','Could not read the file'));return}
+  let d;
+  try{d=parseBackup(txt);cleanRestore(d)}
+  catch(e){
+    let ok=false;try{ok=csvMerge(txt)}catch(e2){}
+    if(!ok)toast(String(txt).trim()?T().badFile:tr('الملف ده فاضي — احفظ نسخة جديدة','This file is empty — save a new backup'));
+    return}
+  await applyRestore(d);
+}
+window.__glOpen=t=>{importText(t)};
 function importFile(file){
   const r=new FileReader();
-  r.onload=async()=>{let d;
-    try{d=parseBackup(r.result);cleanRestore(d)}
-    catch(e){
-      let ok=false;try{ok=csvMerge(r.result)}catch(e2){}
-      if(!ok)toast(String(r.result||'').trim()?T().badFile:tr('الملف ده فاضي — احفظ نسخة جديدة','This file is empty — save a new backup'));
-      return}
-    await applyRestore(d)};
+  r.onload=()=>{if(window.Android&&!NL&&!String(r.result||'').trim()){toast(tr('نسخة الـ APK دي مش بتعرف تقرا الملفات — نزّل آخر نسخة من التطبيق','This APK version cannot read files — install the latest app'));return}importText(r.result)};r.onerror=()=>importText(null);
   r.readAsText(file);
 }
 function refresh(){if(tab==='data')renderData();if(tab==='home'){const o=[...document.querySelectorAll('#view details')].map(x=>x.open);renderHome();document.querySelectorAll('#view details').forEach((x,k)=>{if(o[k])x.open=true})}}
@@ -1760,7 +1769,7 @@ function renderData(){
       <div class="warn" style="margin:0 0 10px">${L.syncWarn}</div>
       <button class="btn pri w" data-a="syncOn">${L.syncEnable}</button>
       <button class="btn w mt" data-a="syncRestore">${L.syncRestore}</button><div class="mu mt">${L.syncRestoreHint}</div>`}</div></details>
-  ${FS?`<details class="fsec" data-fk="auto"${fOpen.has('auto')?' open':''}><summary>${L.autoT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${S.settings.linked?L.autoLinked('<span class="en">'+esc(S.settings.linked)+'</span>'):L.autoHint}</div><button class="btn w" data-a="link">${S.settings.linked?L.relinkB:L.linkB}</button></div></details>`:''}
+  ${FS||NL?`<details class="fsec" data-fk="auto"${fOpen.has('auto')?' open':''}><summary>${L.autoT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${S.settings.linked?L.autoLinked('<span class="en">'+esc(S.settings.linked)+'</span>'):L.autoHint}</div><button class="btn w" data-a="link">${S.settings.linked?L.relinkB:L.linkB}</button></div></details>`:''}
   <details class="fsec" data-fk="bk"${fOpen.has('bk')?' open':''}><summary>${L.bkT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${L.bkHint}</div>
     <button class="btn pri w" data-a="backup">${L.bkSave}</button>
     <button class="btn w mt" data-a="share">${L.bkShare}</button>

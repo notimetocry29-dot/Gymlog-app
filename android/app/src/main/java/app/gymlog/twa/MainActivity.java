@@ -62,7 +62,7 @@ public class MainActivity extends ComponentActivity {
 
     // حفظ ملف (النسخة الاحتياطية)
     private String pendingName, pendingMime, pendingContent;
-    private ActivityResultLauncher<Intent> saveLauncher, openLauncher;
+    private ActivityResultLauncher<Intent> saveLauncher, openLauncher, linkLauncher;
     private ValueCallback<Uri[]> fileCallback;
 
     @Override protected void onCreate(Bundle b) {
@@ -91,24 +91,32 @@ public class MainActivity extends ComponentActivity {
 
         saveLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), r -> {
             boolean ok = false;
-            try {
-                Uri u = r.getData() == null ? null : r.getData().getData();
-                if (r.getResultCode() == RESULT_OK && u != null && pendingContent != null) {
-                    try (OutputStream o = getContentResolver().openOutputStream(u, "wt")) {
-                        o.write(pendingContent.getBytes(StandardCharsets.UTF_8));
-                    }
-                    ok = true;
-                }
-            } catch (Exception ignored) {}
+            Uri u = r.getData() == null ? null : r.getData().getData();
+            if (r.getResultCode() == RESULT_OK && u != null && pendingContent != null) ok = writeUri(u, pendingContent);
             boolean cancelled = r.getResultCode() != RESULT_OK;
             pendingContent = null;
             if (!cancelled) js("window.__glSaved&&__glSaved(" + ok + ")");
         });
+        // الـ WebView ممنوع يقرا content:// (أمان)، فإحنا بنقرا الملف هنا ونديه للصفحة نصّ
         openLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), r -> {
-            if (fileCallback == null) return;
+            if (fileCallback != null) { fileCallback.onReceiveValue(null); fileCallback = null; }
             Uri u = r.getResultCode() == RESULT_OK && r.getData() != null ? r.getData().getData() : null;
-            fileCallback.onReceiveValue(u == null ? null : new Uri[]{u});
-            fileCallback = null;
+            if (u == null) return;
+            String t = readUri(u);
+            js("window.__glOpen&&__glOpen(" + (t == null ? "null" : org.json.JSONObject.quote(t)) + ")");
+        });
+        // ربط ملف للحفظ التلقائي: بناخد صلاحية دايمة عليه ونحفظ عنوانه
+        linkLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), r -> {
+            Uri u = r.getResultCode() == RESULT_OK && r.getData() != null ? r.getData().getData() : null;
+            if (u == null) { pendingContent = null; return; }
+            boolean ok = false;
+            try {
+                getContentResolver().takePersistableUriPermission(u, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                ok = pendingContent == null || writeUri(u, pendingContent);
+                if (ok) prefs.edit().putString("link", u.toString()).putString("linkName", pendingName == null ? "gym-log.md" : pendingName).apply();
+            } catch (Exception ignored) {}
+            pendingContent = null;
+            js("window.__glLinked&&__glLinked(" + ok + "," + org.json.JSONObject.quote(ok ? prefs.getString("linkName", "") : "") + ")");
         });
 
         WebSettings s = web.getSettings();
@@ -198,6 +206,26 @@ public class MainActivity extends ComponentActivity {
         return "https".equals(u.getScheme()) && HOST.equals(u.getHost()) && (p.equals(PATH) || p.startsWith(PATH + "/"));
     }
 
+    private boolean writeUri(Uri u, String content) {
+        byte[] data = content.getBytes(StandardCharsets.UTF_8);
+        for (String mode : new String[]{"wt", "w", "rwt"}) {   // بعض الأماكن (زي Drive) مش بتقبل "wt"
+            try (OutputStream o = getContentResolver().openOutputStream(u, mode)) {
+                if (o == null) continue;
+                o.write(data); o.flush(); return true;
+            } catch (Exception ignored) {}
+        }
+        return false;
+    }
+
+    private String readUri(Uri u) {
+        try (InputStream in = getContentResolver().openInputStream(u)) {
+            if (in == null) return null;
+            ByteArrayOutputStream o = new ByteArrayOutputStream(); byte[] buf = new byte[8192]; int k;
+            while ((k = in.read(buf)) > 0) { o.write(buf, 0, k); if (o.size() > MAX_FILE) return null; }
+            return o.toString("UTF-8");
+        } catch (Exception e) { return null; }
+    }
+
     private String readAsset(String n) {
         try (InputStream in = getAssets().open(n)) {
             ByteArrayOutputStream o = new ByteArrayOutputStream(); byte[] buf = new byte[4096]; int k;
@@ -233,6 +261,25 @@ public class MainActivity extends ComponentActivity {
                 Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(fm).putExtra(Intent.EXTRA_TITLE, fn);
                 try { saveLauncher.launch(i); } catch (Exception e) { pendingContent = null; js("window.__glSaved&&__glSaved(false)"); }
             });
+        }
+        @JavascriptInterface public void linkFile(String name, String content) {
+            if (!trusted || content == null || content.length() > MAX_FILE) return;
+            String safe = (name == null ? "gym-log.md" : name).replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", "_");
+            pendingName = safe; pendingContent = content;
+            runOnUiThread(() -> {
+                Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/markdown").putExtra(Intent.EXTRA_TITLE, safe)
+                        .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                try { linkLauncher.launch(i); } catch (Exception e) { pendingContent = null; js("window.__glLinked&&__glLinked(false,'')"); }
+            });
+        }
+        @JavascriptInterface public boolean writeLinked(String content) {
+            if (!trusted || content == null || content.length() > MAX_FILE) return false;
+            String l = prefs.getString("link", null);
+            return l != null && writeUri(Uri.parse(l), content);
+        }
+        @JavascriptInterface public String linkedName() {
+            if (!trusted || prefs.getString("link", null) == null) return "";
+            return prefs.getString("linkName", "");
         }
         @JavascriptInterface public boolean copyText(String t) {
             if (!trusted || t == null || t.length() > 1000000) return false;
