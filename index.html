@@ -8,8 +8,9 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>ماهر</title>
+<title>چيم لوج</title>
 <style>
+@font-face{font-family:"Oswald";src:url(fonts/oswald.woff2) format("woff2");font-weight:200 700;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215}
 @font-face{font-family:"Inter";src:url(fonts/inter.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215}
 :root{--scb:#000;--sci:#0c0c0c;--font:"Inter",system-ui,"Noto Naskh Arabic","Segoe UI",Tahoma,sans-serif;--fnum:inherit;--rad:14px;--radb:11px;--radp:99px;--bw:1px;--sh:none;--ttl:none;--ls:0;--bg:#0e0e0f;--s1:#17171a;--s2:#202024;--bd:#2d2d33;--tx:#ece8e1;--mu:#968f85;--ac:#c38d4f;--ac2:#e2b37c;--ok:#7bb072;--mid:#d6b05a;--bad:#d06c57;--onac:#160e05;--hero:#1d1810;--tx2:#cfc6b8;--ph:#55504a;--okbd:#3b5a37;--okbg:#1c2a1a;--midbd:#5c4d2a;--midbg:#2b2616;--badbg:#2a1a15;--acbd:#4a3a28;--acbg:#33261a;--oktx:#a6d69c;--midtx:#e5c97f;--badtx:#f0b3a3}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -424,7 +425,7 @@ html[data-th=granite] #sess .ex.wn{background:linear-gradient(180deg,#221e14,#1a
 #sess .exname{min-height:44px;display:flex;align-items:center}
 #sess .scell .inp::placeholder{color:var(--mu);opacity:.55;font-weight:500;font-size:17px}
 /* v78: الاسم «ماهر» بالعربي بخط جمهورية ممدود (كشيدة) كمسار SVG */
-.brand .wmk{font-family:"BasQ",var(--font);font-weight:700;font-size:23px;line-height:1.3;color:var(--tx2);opacity:.82;direction:rtl;flex:none;white-space:nowrap}
+.brand .wmk{font-family:"BasQ",var(--font);font-weight:700;font-size:23px;line-height:1.3;color:var(--tx2);opacity:.82;direction:rtl;flex:none;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
 /* v73: جملة تحت سطر Cycle */
 @font-face{font-family:"BasQ";src:url(fonts/ruqaa.woff2) format("woff2");font-weight:700;font-display:swap}
 .qt{margin:12px auto 0;max-width:360px;padding:0 10px;text-align:center;font-family:"BasQ",var(--font);font-weight:700;font-size:23px;line-height:1.8;color:var(--tx2);opacity:.82;direction:rtl;text-transform:none;letter-spacing:0;min-height:3.6em}
@@ -518,6 +519,7 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 .wnav .pri.wb{font-size:18px}
 .wnav .wb.wt{font-size:18px;font-weight:700}
 .wname.core{color:var(--ac2)}
+.wname{font-family:"Oswald","Inter",system-ui,sans-serif;font-weight:500;letter-spacing:.03em;color:var(--tx2);opacity:.85}.wname.core{opacity:.8}
 .wnav .wn1{flex:1}
 #sheet{position:fixed;inset:0;z-index:30}
 .sbk{position:absolute;inset:0;background:rgba(0,0,0,.55)}
@@ -601,7 +603,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 </head>
 <body>
 <header class="top">
-  <a class="brand" id="brand" href="https://www.facebook.com/share/1HWtZibWS7/" target="_blank" rel="noopener noreferrer"></a>
+  <div class="brand" id="brand"></div>
   <button class="btn sm pri" id="updBtn" hidden></button>
 </header>
 <main id="view"></main>
@@ -619,11 +621,11 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 <script src="quotes.js"></script>
 <script>
 'use strict';
-const VER='80';
+const VER='81';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
-en:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg><span class="wmk" aria-label="ماهر">ماهر</span>',title:"ماهر",langBtn:'عربي',tabs:['Home','Log','Program','Exercises','File'],update:'Update available — tap',
+en:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg><span class="wmk" data-a="credits" role="button" aria-label="چيم لوج">چيم لوج</span>',title:"چيم لوج",langBtn:'عربي',tabs:['Home','Log','Program','Exercises','File'],update:'Update available — tap',
  next:'Next session',coreL:'Core',start:'Start',draftOpen:'Unsaved session in progress',draftEdit:'Editing a session',resume:'Continue',
  last7:'Last 7 days',sessions:'sessions',lastSess:'Last session',min3:'Weekly minimum is 3 sessions.',
  bkNone:'No backup yet.',bkAgo:n=>`Last backup was ${n} day(s) ago.`,bkWarn:' If Chrome data is cleared, the log goes with it.',bkNowBtn:'Save a backup file now',
@@ -660,7 +662,7 @@ en:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor"
  aiTarget:'Target',aiWeight:'Weight',aiSets:'Sets',aiForm:'Form',aiClean:'clean (no momentum, full control)',aiNotClean:'not marked clean',
  aiLast:'Previous',aiStatus:'Status',aiNote:'Note',aiNotDone:'Not done',aiCoreTag:'[core]',bw:'bodyweight',
  st2:{q1:'qualified 1 of 2',up:'increase earned',stuck:n=>`${n} sessions at this weight without an increase`},
- mdTitle:"ماهر — Backup",mdExported:'Exported',mdSessions:'Sessions',mdProgram:'Program',mdLog:'Log (newest first)',
+ mdTitle:"چيم لوج — Backup",mdExported:'Exported',mdSessions:'Sessions',mdProgram:'Program',mdLog:'Log (newest first)',
  mdCols:['#','Exercise','Weight','Target','Core','Notes'],mdSCols:['Exercise','Weight','Sets','Clean','Note'],mdData:'Data used by “Restore” in the app — do not edit',yes:'✓',
  csvH:['Date','Cycle','Day','Exercise','Weight','Sets','Set count','Total reps','Clean','Core','Note'],coreLine:'Core',themeT:'Theme',histNote:n=>`${n} past session(s) from your earlier log were added.`,todayL:'Today',otherDay:'Start a different day',newInstead:'Start a new session instead',weekOf:n=>`${n} session(s) in the last 7 days · goal 3`,
  syncT:'Encrypted auto-backup (GitHub)',syncHint:'After every session the whole log is encrypted on this phone and uploaded to your repo. Without the passphrase the file is unreadable.',
@@ -675,7 +677,7 @@ en:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor"
  syncPub:'Your encrypted backups are going to a PUBLIC repo. Create a private repo, then tap Turn off and enable the backup again with the new repo name.',undoRestore:'Undo last restore',confUndoRestore:'Go back to the data you had before the last restore?',undoDone:'Back to your data before the restore ✓',
  restoredSkip:n=>`Restored ✓ (${n} damaged session(s) skipped)`,syncAfterRestore:'Turn on encrypted auto-backup on this phone with the same repo and passphrase?'
 },
-ar:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg><span class="wmk" aria-label="ماهر">ماهر</span>',title:"ماهر",langBtn:'EN',tabs:['الرئيسية','السجل','البرنامج','التمارين','الملف'],update:'فيه تحديث — اضغط',
+ar:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg><span class="wmk" data-a="credits" role="button" aria-label="چيم لوج">چيم لوج</span>',title:"چيم لوج",langBtn:'EN',tabs:['الرئيسية','السجل','البرنامج','التمارين','الملف'],update:'فيه تحديث — اضغط',
  next:'الجلسة الجاية',coreL:'الأساسي',start:'ابدأ',draftOpen:'جلسة مفتوحة لسه ماتحفظتش',draftEdit:'تعديل جلسة',resume:'كمّل',
  last7:'آخر ٧ أيام',sessions:'جلسات',lastSess:'آخر جلسة',min3:'الحد الأدنى في الأسبوع ٣ جلسات.',
  bkNone:'لسه ماعملتش ولا نسخة احتياطية.',bkAgo:n=>`آخر نسخة احتياطية من ${n} يوم.`,bkWarn:' لو بيانات Chrome اتمسحت، السجل هيضيع معاها.',bkNowBtn:'احفظ نسخة في ملف دلوقتي',
@@ -712,7 +714,7 @@ ar:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor"
  aiTarget:'الهدف',aiWeight:'الوزن',aiSets:'المجموعات',aiForm:'الأداء',aiClean:'نضيف (من غير مرجحة وبتحكّم كامل)',aiNotClean:'مش متعلّم نضيف',
  aiLast:'المرة اللي فاتت',aiStatus:'الحالة',aiNote:'ملاحظة',aiNotDone:'ماتلعبش',aiCoreTag:'[أساسي]',bw:'وزن الجسم',
  st2:{q1:'مؤهل ١ من ٢',up:'استحق زيادة',stuck:n=>`${n} جلسات على نفس الوزن من غير زيادة`},
- mdTitle:"ماهر — نسخة احتياطية",mdExported:'اتعملت',mdSessions:'الجلسات',mdProgram:'البرنامج',mdLog:'السجل (الأحدث الأول)',
+ mdTitle:"چيم لوج — نسخة احتياطية",mdExported:'اتعملت',mdSessions:'الجلسات',mdProgram:'البرنامج',mdLog:'السجل (الأحدث الأول)',
  mdCols:['#','التمرين','الوزن','الهدف','أساسي','تعليمات'],mdSCols:['التمرين','الوزن','المجموعات','نضيف','ملاحظة'],mdData:'بيانات بيستخدمها زرار «استرجاع» في التطبيق — ماتعدّلهاش',yes:'✓',
  csvH:['التاريخ','Cycle','اليوم','التمرين','الوزن','المجموعات','عدد المجموعات','إجمالي العدّات','نضيف','أساسي','ملاحظة'],coreLine:'الأساسي',themeT:'الشكل',histNote:n=>`اتضاف ${n} جلسة من سجلك القديم.`,todayL:'النهارده',otherDay:'ابدأ يوم تاني',newInstead:'ابدأ جلسة جديدة بدلها',weekOf:n=>`${n} جلسة في آخر ٧ أيام · الهدف ٣`,
  syncT:'نسخة أوتوماتيك مشفّرة (GitHub)',syncHint:'بعد كل جلسة السجل كله بيتشفّر على الموبايل وبيترفع للريبو بتاعك. من غير العبارة السرية الملف مش بيتفتح.',
@@ -939,6 +941,15 @@ function applyLang(){applyTheme();
   document.querySelectorAll('.tabs button').forEach((b,i)=>{b.innerHTML=TABICO[i]+'<span>'+L.tabs[i]+'</span>'});
 }
 function saveUI(){try{localStorage.setItem('gymlog.ui',JSON.stringify({t:tab,s:!$('#sess').hidden,y:window.scrollY,at:Date.now()}))}catch(e){}}
+function openCredits(){
+  const ar=LANG==='ar';
+  modal(`<div style="text-align:center;padding:6px 4px 2px">
+  <div style="font-family:'BasQ',var(--font);font-weight:700;font-size:34px;line-height:1.5;color:var(--tx2)">چيم لوج</div>
+  <div class="mu" style="margin:2px 0 18px">${tr('تطبيق من تطويري أنا','An app made by me')}</div>
+  <div style="font-size:20px;font-weight:700;margin-bottom:4px">${tr('أحمد ماهر','Ahmed Maher')}</div>
+  <div class="mu" style="margin-bottom:18px">${tr('صاحب التطبيق وصانعه','Creator of this app')}</div>
+  <a class="btn pri w" href="https://www.facebook.com/share/1HWtZibWS7/" target="_blank" rel="noopener noreferrer" style="display:block;text-decoration:none;text-align:center">${tr('صفحتي على فيسبوك','My Facebook page')}</a>
+  <div class="mu" style="margin-top:14px;font-size:12px">v${VER}</div></div>`)}
 async function hardRefresh(){
   const lg=document.querySelector('.brand .lg');if(lg)lg.classList.add('spin');
   saveUI();try{await sq}catch(e){}
@@ -1722,6 +1733,7 @@ document.addEventListener('touchend',e=>{if(!pok||pmode!==1){pok=false;return}po
 document.addEventListener('touchcancel',()=>{if(pmode===1){const v=$('#view');v.style.transform='';v.style.opacity='';}pok=false},{passive:true});
 document.addEventListener('click',ev=>{
   if(ev.target.closest('.brand .lg')){hardRefresh();return}
+  if(ev.target.closest('.brand .wmk')){openCredits();return}
   const tb=ev.target.closest('.tabs button');if(tb){navTab(tb.dataset.tab);return}
   if(ev.target.id==='modal'){closeModal();return}
   const b=ev.target.closest('[data-a]');if(!b)return;
