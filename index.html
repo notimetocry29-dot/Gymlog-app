@@ -526,7 +526,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='104';
+const VER='105';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1616,6 +1616,7 @@ function backupMD(){
   return o.join('\n');
 }
 function parseBackup(txt){
+  txt=String(txt).replace(/^\uFEFF/,'');
   const m=txt.match(/<!--\s*GYMLOG-DATA[^\n]*\n([\s\S]*?)\n?-->/);
   const o=JSON.parse(m?m[1]:txt);return o.data||o;
 }
@@ -1656,9 +1657,50 @@ function exportCSV(){
   for(const s of done().reverse())for(const e of s.ex)rows.push([s.date,s.cycle,s.dayName,e.name,e.w,e.sets.join('/'),e.sets.length,e.sets.reduce((a,b)=>a+b,0),e.clean?'1':'0',e.core?'1':'0',e.note]);
   download(`gym-log-${today()}.csv`,'﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n'),'text/csv');toast(T().csvDone);
 }
+/* ملف Excel (CSV) اللي التطبيق بيصدّره: بنقراه بالترتيب مش بأسماء الأعمدة، فبيشتغل عربي وإنجليزي */
+function parseCSV(txt){
+  txt=String(txt).replace(/^\uFEFF/,'');
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<txt.length;i++){
+    const c=txt[i];
+    if(q){if(c==='"'){if(txt[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;
+    else if(c===','){row.push(f);f=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&txt[i+1]==='\n')i++;row.push(f);f='';if(row.some(x=>x!==''))rows.push(row);row=[]}
+    else f+=c;
+  }
+  row.push(f);if(row.some(x=>x!==''))rows.push(row);
+  return rows;
+}
+function csvToSessions(txt){
+  const rows=parseCSV(txt).slice(1),map=new Map();
+  for(const r of rows){
+    if(r.length<9||!/^\d{4}-\d{2}-\d{2}$/.test(r[0]))continue;
+    const key=r[0]+'|'+r[1]+'|'+r[2];
+    let s=map.get(key);
+    if(!s){s={id:uid(),date:r[0],cycle:+r[1]||1,dayName:r[2]||'?',status:'imp',ts:new Date(r[0]+'T12:00:00').getTime(),ex:[]};map.set(key,s)}
+    const sets=String(r[5]).split('/').map(Number).filter(v=>!isNaN(v)&&String(v)!=='');
+    s.ex.push({name:r[3],exId:'h:'+r[3],w:+r[4]||0,sets,unit:'',clean:r[8]==='1',core:r[9]==='1',note:r[10]||''});
+  }
+  return[...map.values()].filter(s=>s.ex.length);
+}
+function csvMerge(txt){
+  const add=csvToSessions(txt);if(!add.length)return false;
+  const have=new Set(S.sessions.map(x=>x.date+'|'+x.cycle+'|'+x.dayName));
+  const fresh=add.filter(x=>!have.has(x.date+'|'+x.cycle+'|'+x.dayName));
+  if(!fresh.length){toast(tr('كل الجلسات دي موجودة عندك أصلًا','All these sessions are already in your log'));return true}
+  if(!confirm(tr(`ده ملف Excel (CSV) مش نسخة كاملة. هيتضاف ${fresh.length} جلسة لسجلك من غير ما يمسح حاجة، والبرنامج والإعدادات مش هيتغيروا. أكمّل؟`,`This is an Excel (CSV) file, not a full backup. ${fresh.length} session(s) will be added to your log; nothing is deleted and your program and settings stay as they are. Continue?`)))return true;
+  S.sessions=S.sessions.concat(fresh).sort((a,b)=>(a.ts||0)-(b.ts||0));
+  save();queueBackup();toast(tr(`اتضاف ${fresh.length} جلسة ✓`,`Added ${fresh.length} session(s) ✓`));go('home');return true;
+}
 function importFile(file){
   const r=new FileReader();
-  r.onload=async()=>{let d;try{d=parseBackup(r.result);cleanRestore(d)}catch(e){toast(T().badFile);return}
+  r.onload=async()=>{let d;
+    try{d=parseBackup(r.result);cleanRestore(d)}
+    catch(e){
+      let ok=false;try{ok=csvMerge(r.result)}catch(e2){}
+      if(!ok)toast(T().badFile);
+      return}
     await applyRestore(d)};
   r.readAsText(file);
 }
@@ -1703,7 +1745,7 @@ function renderData(){
   <details class="fsec" data-fk="bk"${fOpen.has('bk')?' open':''}><summary>${L.bkT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${L.bkHint}</div>
     <button class="btn pri w" data-a="backup">${L.bkSave}</button>
     <button class="btn w mt" data-a="share">${L.bkShare}</button>
-    <label class="btn w mt" style="cursor:pointer">${L.restore}<input type="file" id="imp" accept=".md,.txt,.json,text/markdown,text/plain,application/json" hidden></label>
+    <label class="btn w mt" style="cursor:pointer">${L.restore}<input type="file" id="imp" accept=".md,.txt,.json,.csv,text/markdown,text/plain,text/csv,application/json" hidden></label>
     ${canUndo?`<button class="btn w mt dan" data-a="undoRestore">${L.undoRestore}</button>`:''}</div></details>
   <details class="fsec" data-fk="csv"${fOpen.has('csv')?' open':''}><summary>${L.csvT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${L.csvHint}</div><button class="btn w" data-a="csv">${L.csvB}</button></div></details>
   <details class="fsec" data-fk="lang"${fOpen.has('lang')?' open':''}><summary>Language · اللغة<span class="pchev">⌄</span></summary><div class="fbody"><button class="btn w" data-a="lang">${L.langBtn}</button><div class="mu" style="margin:16px 0 8px">${tr("لغة «كيفية الأداء» (شرح التمارين)","Exercise guide (how to perform) language")}</div><div class="thseg" style="margin:0"><button class="${howLang()==='ar'?'on':''}" data-a="howLang" data-k="ar">عربي</button><button class="${howLang()==='en'?'on':''}" data-a="howLang" data-k="en">English</button></div></div></details>
