@@ -1,0 +1,38 @@
+name: Build Android APK + AAB
+on:
+  workflow_dispatch:
+  push:
+    paths: ['android/**', '.github/workflows/android.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: 8.9 }
+      - name: Restore signing key (if secrets are set)
+        env:
+          KS: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then echo "$KS" | base64 -d > "$RUNNER_TEMP/gymlog.jks"; echo "KEYSTORE_FILE=$RUNNER_TEMP/gymlog.jks" >> $GITHUB_ENV; fi
+      - name: Build
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          gradle -p android assembleRelease bundleRelease --no-daemon -PvCode=${{ github.run_number }}
+          mkdir out
+          cp android/app/build/outputs/apk/release/app-release.apk out/GymLog.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab out/GymLog.aab
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-${{ github.run_number }}
+          name: GymLog Android #${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          files: |
+            out/GymLog.apk
+            out/GymLog.aab

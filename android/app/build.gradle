@@ -1,0 +1,42 @@
+plugins { id 'com.android.application' }
+
+// رقم النسخة بييجي من index.html (const VER) عشان يفضل متطابق مع الصفحة والـ service worker
+def webVer = (file('../../index.html').text =~ /const VER='(\d+)'/)[0][1]
+
+android {
+    namespace 'app.gymlog.twa'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'app.gymlog.twa'
+        minSdk 24
+        targetSdk 35
+        versionCode = Integer.parseInt((project.findProperty('vCode') ?: '1').toString())
+        versionName = "1.0.${webVer}"
+    }
+    signingConfigs {
+        if (System.getenv('KEYSTORE_FILE')) {
+            release {
+                storeFile file(System.getenv('KEYSTORE_FILE'))
+                storePassword System.getenv('KEYSTORE_PASSWORD')
+                keyAlias System.getenv('KEY_ALIAS')
+                keyPassword System.getenv('KEYSTORE_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig System.getenv('KEYSTORE_FILE') ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+
+dependencies {
+    implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.22')
+    implementation 'androidx.activity:activity:1.9.3'
+    implementation 'androidx.core:core:1.13.1'
+    implementation 'androidx.core:core-splashscreen:1.0.1'
+    implementation 'androidx.webkit:webkit:1.12.1'
+}
