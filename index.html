@@ -610,7 +610,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 
 <script>
 'use strict';
-const VER='66';
+const VER='67';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1131,8 +1131,13 @@ function exHistModal(exId){
 /* ================= السجل ================= */
 const dayBase=n=>String(n||'').replace(/\b(light|lite)\b/gi,' ').replace(/لايت|خفيفة|خفيف/g,' ').replace(/[-–·()]+/g,' ').replace(/\s+/g,' ').trim();
 const dayKey=n=>dayBase(n).toLowerCase();
+let hsList=[],hsN=0,hsLast='';
+function histChunk(){const L=T(),part=hsList.slice(hsN,hsN+30);hsN+=part.length;
+  return part.map(s=>{
+    let mh='';try{const m=new Date(s.date+'T00:00:00').toLocaleDateString(LANG==='ar'?'ar-EG':'en-GB',{month:'long',year:'numeric'});if(m!==hsLast){hsLast=m;mh=`<div class="pmon">${m}</div>`}}catch(e){}
+    return `${mh}<div class="pr2"><div class="pr2b" data-a="sess" data-id="${s.id}"><div class="sp"><div class="pnm"><bdi>${esc(s.dayName)}</bdi></div><div class="mu">${fmtD(s.date)} · <span class="en">C${s.cycle}</span> · ${L.exN(s.ex.length)}</div></div><span class="pst ${s.status}">${L.st[s.status]||''}</span></div></div>`}).join('')}
 function renderHistory(){
-  const L=T(),ds=done();
+  const L=T(),ds=done();hsList=ds;hsN=0;hsLast='';
   const hm=histMap(),inProg=new Set(S.program.days.flatMap(d=>d.ex.map(t=>nk(t.name))));
   const old=Object.keys(hm).filter(k=>!inProg.has(k)).map(k=>[hm[k][0].name,hm[k].length]).sort((x,y)=>y[1]-x[1]);
   const dk=dayKey,dc={},dn={};
@@ -1142,10 +1147,9 @@ function renderHistory(){
   let h=`<div class="lsearch"><select id="exPick" class="psel"><option value="">${L.exPickPh}</option>${S.program.days.map(d=>`<optgroup label="${esc(d.name)}">${d.ex.map(t=>`<option value="${t.id}">${esc(t.name)} (${(hm[nk(t.name)]||[]).length})</option>`).join('')}</optgroup>`).join('')}${old.length?`<optgroup label="${tr('تمارين قديمة','Older exercises')}">${old.map(o=>`<option value="n:${esc(o[0])}">${esc(o[0])} (${o[1]})</option>`).join('')}</optgroup>`:''}</select><span class="pchev">⌄</span></div>
   <div class="lsearch"><select id="dayPick" class="psel"><option value="">${tr('اختار يوم تمرين…','Choose a workout day…')}</option>${dopts.map(k=>`<option value="${esc(k)}">${esc(dn[k])} (${dc[k]})</option>`).join('')}</select><span class="pchev">⌄</span></div>`;
   if(!ds.length)h+=`<div class="empty">${L.noSess}</div>`;
-  else{let last='';h+=`<div class="plist">${ds.map(s=>{
-    let mh='';try{const m=new Date(s.date+'T00:00:00').toLocaleDateString(LANG==='ar'?'ar-EG':'en-GB',{month:'long',year:'numeric'});if(m!==last){last=m;mh=`<div class="pmon">${m}</div>`}}catch(e){}
-    return `${mh}<div class="pr2"><div class="pr2b" data-a="sess" data-id="${s.id}"><div class="sp"><div class="pnm"><bdi>${esc(s.dayName)}</bdi></div><div class="mu">${fmtD(s.date)} · <span class="en">C${s.cycle}</span> · ${L.exN(s.ex.length)}</div></div><span class="pst ${s.status}">${L.st[s.status]||''}</span></div></div>`}).join('')}</div>`}
+  else h+=`<div class="plist" id="hsL">${histChunk()}</div>${hsN<ds.length?'<div id="hsMore" style="height:1px"></div>':''}`;
   $('#view').innerHTML=h;
+  const mo=$('#hsMore');if(mo){const io=new IntersectionObserver(es=>{if(!es[0].isIntersecting)return;const l=$('#hsL');if(!l||!mo.isConnected){io.disconnect();return}l.insertAdjacentHTML('beforeend',histChunk());if(hsN>=hsList.length){io.disconnect();mo.remove()}else{io.unobserve(mo);io.observe(mo)}},{rootMargin:'800px'});io.observe(mo)}
   $('#exPick').onchange=e=>{const v=e.target.value;if(v)v.startsWith('n:')?exHistName(v.slice(2)):exHistModal(v);e.target.value=''};
   $('#dayPick').onchange=e=>{const v=e.target.value;if(v)dayHistModal(v);e.target.value=''};
 }
@@ -1267,13 +1271,15 @@ function histBlock(h){
   return `<div class="lhist"><div class="lht"><b>${tr('سجلّك','Your log')}</b> · ${tr(h.length+' جلسة','' +h.length+' session(s)')}${best>0?` · ${tr('أعلى وزن','Best')} <span class="en">${fw(best)}</span>`:''}</div>
   <table class="h">${h.slice(0,10).map(x=>`<tr><td>${fmtD(x.date)}</td><td class="en">${fw(x.w)}</td><td class="en">${esc(setsStr(x))}</td></tr>`).join('')}</table>${h.length>10?`<div class="mu">+${h.length-10}</div>`:''}</div>`;
 }
+function lbBody(x,hm){return `<div class="howto">${detHtml(x)||`<span class="mu">${tr('مفيش شرح. اضغط تعديل واكتب شرحك.','No guide yet. Tap Edit and write yours.')}</span>`}</div>
+    ${histBlock(hm[nk(x[0])]||[])}
+    <div class="pact" style="border:0;padding-top:4px;margin-top:6px"><button class="plink" data-a="lbAdd" data-n="${esc(x[0])}">${tr('ضيف لبرنامجي…','Add to my program…')}</button>${x[9]?`<button class="plink" data-a="cuEdit" data-n="${esc(x[0])}">${tr('تعديل','Edit')}</button>`:''}</div>`}
+function lbFill(d){const b=d.querySelector('.lbody');if(!b||b.dataset.f)return;const n=d.dataset.n,x=allLib().find(q=>q[0]===n);if(!x)return;b.dataset.f='1';b.innerHTML=lbBody(x,histMap())}
 function libRows(){
   const q=lbQ.trim().toLowerCase(),inP=new Set(S.program.days.flatMap(d=>d.ex.map(t=>t.name))),hm=histMap();
   const r=allLib().filter(x=>(lbG==='all'||x[1]===lbG)&&(!q||x[0].toLowerCase().includes(q)));
-  return r.map(x=>`<details class="pr2 lbn"><summary><div class="sp"><div class="pnm en">${esc(x[0])}</div><div class="mu"><span class="en">${x[3]}×${x[4]}${x[5]?' '+esc(unitTxt(x[5])):''}</span> · ${(GRP[x[1]]||GRP.core)[LANG==='ar'?0:1]}${x[9]?' · '+tr('تمريني','Mine'):''}</div></div>${inP.has(x[0])?'<span class="pdot"></span>':''}<span class="pchev">⌄</span></summary>
-    <div class="lbody"><div class="howto">${detHtml(x)||`<span class="mu">${tr('مفيش شرح. اضغط تعديل واكتب شرحك.','No guide yet. Tap Edit and write yours.')}</span>`}</div>
-    ${histBlock(hm[nk(x[0])]||[])}
-    <div class="pact" style="border:0;padding-top:4px;margin-top:6px"><button class="plink" data-a="lbAdd" data-n="${esc(x[0])}">${tr('ضيف لبرنامجي…','Add to my program…')}</button>${x[9]?`<button class="plink" data-a="cuEdit" data-n="${esc(x[0])}">${tr('تعديل','Edit')}</button>`:''}</div></div></details>`).join('')||`<div class="empty">—</div>`;
+  return r.map(x=>`<details class="pr2 lbn" data-n="${esc(x[0])}"><summary><div class="sp"><div class="pnm en">${esc(x[0])}</div><div class="mu"><span class="en">${x[3]}×${x[4]}${x[5]?' '+esc(unitTxt(x[5])):''}</span> · ${(GRP[x[1]]||GRP.core)[LANG==='ar'?0:1]}${x[9]?' · '+tr('تمريني','Mine'):''}</div></div>${inP.has(x[0])?'<span class="pdot"></span>':''}<span class="pchev">⌄</span></summary>
+    <div class="lbody"></div></details>`).join('')||`<div class="empty">—</div>`;
 }
 function renderLib(){
   $('#view').innerHTML=`<div class="lsearch"><input id="lbS" dir="auto" placeholder="${tr('ابحث عن تمرين…','Search exercises…')}" value="${esc(lbQ)}" style="text-align:start"><button class="ptxt" data-a="cuNew">+ ${tr('تمرين مخصص','Custom')}</button></div>
@@ -1569,7 +1575,11 @@ function download(name,text,type){const b=new Blob([text],{type});const a=docume
 function markBackup(){S.settings.lastBackup=Date.now();save()}
 async function backupNow(){
   if(FS){try{const h=await idb.get('fh');if(h&&await writeLinked(h,true)){toast(T().savedFile);refresh();return}}catch(e){}}
-  download(`gym-backup-${today()}.md`,backupMD(),'text/markdown');markBackup();toast(T().dlDone);refresh();
+  const nm=`gym-backup-${today()}`,t=backupMD();
+  // بيسألك تحفظ فين: نافذة اختيار المكان لو المتصفح بيدعمها، وإلا قايمة المشاركة (Drive / Files) اللي بتختار منها المكان
+  if(FS){try{const h=await showSaveFilePicker({suggestedName:nm+'.md',types:[{description:'Gym log',accept:{'text/markdown':['.md']}}]});const w=await h.createWritable();await w.write(t);await w.close();markBackup();toast(T().savedFile);refresh();return}catch(e){if(e.name==='AbortError')return}}
+  try{const f=new File([t],nm+'.txt',{type:'text/plain'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});markBackup();toast(T().sent);refresh();return}}catch(e){if(e.name==='AbortError')return}
+  download(nm+'.md',t,'text/markdown');markBackup();toast(T().dlDone);refresh();
 }
 async function shareBackup(){
   const t=backupMD();let err='';
@@ -1605,12 +1615,16 @@ function importFile(file){
   r.readAsText(file);
 }
 function refresh(){if(tab==='data')renderData();if(tab==='home')renderHome()}
-async function renderData(){
+/* حالة «التخزين محمي» و«تراجع الاسترجاع»: بتتقرا في الخلفية والصفحة بتترسم فورًا بآخر قيمة معروفة */
+const DM={p:null,u:false};
+async function dataMeta(){let p=null,u=false;
+  try{p=navigator.storage&&navigator.storage.persisted?await navigator.storage.persisted():null}catch(e){}
+  try{const pre=await idb.get('state.prerestore');u=!!(pre&&pre.data&&Date.now()-pre.at<864e5)}catch(e){}
+  if(p!==DM.p||u!==DM.u){DM.p=p;DM.u=u;if(tab==='data')renderData()}}
+function renderData(){
   const L=T(),lb=S.settings.lastBackup,n=S.sessions.length;
-  let persisted=null;try{persisted=navigator.storage&&navigator.storage.persisted?await navigator.storage.persisted():null}catch(e){}
-  let pre=null;try{pre=await idb.get('state.prerestore')}catch(e){}
-  const canUndo=!!(pre&&pre.data&&Date.now()-pre.at<864e5);
-  if(tab!=='data')return;
+  const persisted=DM.p,canUndo=DM.u;
+  dataMeta();
   $('#view').innerHTML=`<div class="fhead"><div class="mu">${L.onPhone}</div><div class="fbig">${n} <span class="mu">${L.sessions}</span></div>
     <div class="mu">${L.lastBk}: ${lb?new Date(lb).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.never}</div>
     ${persisted===true?`<div class="mu">✓ ${L.persisted}</div>`:''}</div>
@@ -1658,7 +1672,7 @@ async function renderData(){
 
 /* ================= الأحداث ================= */
 document.addEventListener('input',ev=>{if(ev.target.id==='libS'){libQ=ev.target.value;const r=$('#libR');if(r)r.innerHTML=libRowsHtml()}else if(ev.target.id==='lbS'){lbQ=ev.target.value;const l=$('#lbL');if(l)l.innerHTML=libRows()}});
-document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('dtl')&&d.open)setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'start'}),30)},true);
+document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('lbn')&&d.open)lbFill(d);if(d.classList&&d.classList.contains('dtl')&&d.open)setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'start'}),30)},true);
 const TABS=['home','hist','prog','lib','data'];
 let px=0,py=0,pt=0,pok=false,pmode=0,pdx=0;
 const swOK=e=>$('#sess').hidden&&$('#modal').hidden&&e.touches.length===1&&!e.target.closest('input,select,textarea,.chips,.ptabs,table,[data-grip],.dd-list,.pr2.drag');
