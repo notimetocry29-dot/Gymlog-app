@@ -579,6 +579,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 .fsec>summary::-webkit-details-marker{display:none}
 .fsec[open]>summary .pchev{transform:rotate(180deg)}
 .fbody{padding:0 2px 16px}
+.pdot.er{background:var(--bad)!important}
 </style>
 </head>
 <body>
@@ -1567,7 +1568,7 @@ async function renderData(){
     <div class="mu">${L.lastBk}: ${lb?new Date(lb).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.never}</div>
     ${persisted===true?`<div class="mu">✓ ${L.persisted}</div>`:''}</div>
   <details class="fsec" data-fk="theme"${fOpen.has('theme')?' open':''}><summary>${L.themeT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="dd${thmOpen?' open':''}"><button class="dd-cur" data-a="thmTog">${swatch(S.settings.theme||'granite')}<span>${(THEMES[S.settings.theme]||THEMES.granite)[LANG]}</span><span class="ch">▾</span></button>${thmOpen?`<div class="dd-list">${Object.keys(THEMES).map(k=>`<button class="dd-opt${(S.settings.theme||'granite')===k?' on':''}" data-a="theme" data-k="${k}">${swatch(k)}<span>${THEMES[k][LANG]}<small>${THEMES[k][LANG==='ar'?'da':'de']}</small></span></button>`).join('')}</div>`:''}</div></div></details>
-  <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?'<span class="pdot" style="margin-inline-start:6px${SYNC.err?';background:var(--bad)':''}"></span>':''}<span class="pchev">⌄</span></summary><div class="fbody">
+  <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?`<span class="pdot${SYNC.err?' er':''}" style="margin-inline-start:6px"></span>`:''}<span class="pchev">⌄</span></summary><div class="fbody">
     ${SYNC.on?`<div class="note-ok" style="margin:0 0 10px">${L.syncOnL} · ${L.syncLast}: ${SYNC.last?new Date(SYNC.last).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.syncNever}${SYNC.dirty?' · '+L.syncWait(Math.max(1,SYNC.missed)):''}</div>${SYNC.err?`<div class="warn" style="margin:0 0 10px">${L.syncErr(esc(syncMsg(SYNC.err)))}</div>`:''}${syncPublic()?`<div class="warn" style="margin:0 0 10px">${L.syncPub}</div>`:''}
       <button class="btn pri w" data-a="syncNow">${L.syncNow}</button><button class="btn dan w mt" data-a="syncOff">${L.syncOffB}</button>`
     :`<div class="mu" style="margin-bottom:10px">${L.syncHint}</div>
