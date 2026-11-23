@@ -526,7 +526,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='105';
+const VER='106';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -878,7 +878,7 @@ async function hardRefresh(){
   location.reload();
 }
 /* زرار الرجوع في تطبيق الأندرويد: الويب بيتصرف الأول، ولو إنت في الرئيسية بيسأل «تخرج؟» */
-window.__glSaved=ok=>toast(ok?T().saved:T().copyFail);
+window.__glSaved=ok=>{const bk=window.__glBk;window.__glBk=false;if(ok&&bk){markBackup();refresh();toast(T().savedFile)}else toast(ok?T().saved:tr('مقدرتش أحفظ الملف','Could not save the file'))};
 function exitAsk(){
   modal(`<div style="text-align:center;font-weight:700;font-size:18px;margin:6px 0 18px">${tr('تخرج؟','Exit the app?')}</div><div style="display:flex;gap:10px"><button class="btn w" id="xNo">${tr('لأ','Stay')}</button><button class="btn w pri" id="xYes">${tr('خروج','Exit')}</button></div>`);
   $('#xNo').onclick=()=>closeModal();
@@ -1615,10 +1615,24 @@ function backupMD(){
   o.push('---','',`<!-- GYMLOG-DATA · ${L.mdData}`,data,'-->','');
   return o.join('\n');
 }
+function jsonAt(t,i){
+  let dep=0,str=false,esc=false;
+  for(let k=i;k<t.length;k++){const c=t[k];
+    if(str){if(esc)esc=false;else if(c==='\\')esc=true;else if(c==='"')str=false;continue}
+    if(c==='"')str=true;else if(c==='{')dep++;else if(c==='}'){dep--;if(!dep)return t.slice(i,k+1)}}
+  return null;
+}
 function parseBackup(txt){
-  txt=String(txt).replace(/^\uFEFF/,'');
-  const m=txt.match(/<!--\s*GYMLOG-DATA[^\n]*\n([\s\S]*?)\n?-->/);
-  const o=JSON.parse(m?m[1]:txt);return o.data||o;
+  let t=String(txt||'').replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n');
+  if(!t.trim())throw new Error('empty');
+  /* لو برنامج تاني حوّل الملف (CSV بيضاعف علامات التنصيص، أو HTML) نرجّعه */
+  if(t.indexOf('""app"":""gymlog""')>=0)t=t.replace(/""/g,'"');
+  if(t.indexOf('&quot;app&quot;')>=0)t=t.replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+  const m=t.match(/<!--\s*GYMLOG-DATA[^\n]*\n([\s\S]*?)\n?-->/);
+  if(m){try{const o=JSON.parse(m[1]);return o.data||o}catch(e){}}
+  const a=t.search(/\{\s*"app"\s*:\s*"gymlog"/);
+  if(a>=0){const j=jsonAt(t,a);if(j){const o=JSON.parse(j);return o.data||o}}
+  const o=JSON.parse(t);return o.data||o;
 }
 function download(name,text,type){if(window.Android){try{Android.saveFile(name,type||'text/plain',String(text));return}catch(e){}}const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
 function markBackup(){S.settings.lastBackup=Date.now();save()}
@@ -1626,12 +1640,17 @@ async function backupNow(){
   if(FS){try{const h=await idb.get('fh');if(h&&await writeLinked(h,true)){toast(T().savedFile);refresh();return}}catch(e){}}
   const nm=`gym-backup-${today()}`,t=backupMD();
   // بيسألك تحفظ فين: نافذة اختيار المكان لو المتصفح بيدعمها، وإلا قايمة المشاركة (Drive / Files) اللي بتختار منها المكان
+  if(window.Android){nativeSave(nm+'.md',t);return}
   if(FS){try{const h=await showSaveFilePicker({suggestedName:nm+'.md',types:[{description:'Gym log',accept:{'text/markdown':['.md']}}]});const w=await h.createWritable();await w.write(t);await w.close();markBackup();toast(T().savedFile);refresh();return}catch(e){if(e.name==='AbortError')return}}
-  try{const f=new File([t],nm+'.txt',{type:'text/plain'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});markBackup();toast(T().sent);refresh();return}}catch(e){if(e.name==='AbortError')return}
+  const t0=Date.now();
+  try{const f=new File([t],nm+'.txt',{type:'text/plain'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});markBackup();toast(T().sent);refresh();return}}catch(e){if(e.name==='AbortError'&&Date.now()-t0>900)return}
   download(nm+'.md',t,'text/markdown');markBackup();toast(T().dlDone);refresh();
 }
+/* داخل الـ APK: نافذة «احفظ في» بتاعة أندرويد (تقدر تختار Drive أو أي فولدر) */
+function nativeSave(name,t){window.__glBk=true;try{Android.saveFile(name,'text/markdown',t)}catch(e){window.__glBk=false;download(name,t,'text/markdown')}}
 async function shareBackup(){
   const t=backupMD();let err='';
+  if(window.Android){nativeSave(`gym-backup-${today()}.md`,t);return}
   // أندرويد مش بيسمح بمشاركة .md، فبنبعته .txt (نفس المحتوى بالظبط)
   try{const f=new File([t],`gym-backup-${today()}.txt`,{type:'text/plain'});
     if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});markBackup();toast(T().sent);refresh();return}
@@ -1699,7 +1718,7 @@ function importFile(file){
     try{d=parseBackup(r.result);cleanRestore(d)}
     catch(e){
       let ok=false;try{ok=csvMerge(r.result)}catch(e2){}
-      if(!ok)toast(T().badFile);
+      if(!ok)toast(String(r.result||'').trim()?T().badFile:tr('الملف ده فاضي — احفظ نسخة جديدة','This file is empty — save a new backup'));
       return}
     await applyRestore(d)};
   r.readAsText(file);
