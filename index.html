@@ -429,7 +429,8 @@ a.brand,a.brand:visited{color:inherit;text-decoration:none;-webkit-tap-highlight
 .tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabs button.on{font-weight:700}
 html[data-th] .tabs button.on{box-shadow:none}
-.homew{display:flex;flex-direction:column;align-items:center;padding:3vh 0 20px}
+.homew{display:grid;grid-template-rows:minmax(0,1fr) auto minmax(0,1fr);justify-items:center;min-height:calc(100dvh - 160px);padding-top:28px}
+.hb{width:100%;display:flex;flex-direction:column;align-items:center;align-self:start}
 .orb{position:relative;width:min(86vw,380px);aspect-ratio:1;border-radius:50%;border:0;background:var(--s1);color:var(--tx);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;transition:transform .15s}
 .orb{box-shadow:none;transition:transform .07s ease-out,background .07s}
 .orb:active{transform:scale(.96);background:var(--s2)}
@@ -442,7 +443,7 @@ html[data-th] .tabs button.on{box-shadow:none}
 .oc{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:0 12%}
 .on1{font-size:clamp(32px,10vw,46px);font-weight:800;line-height:1.1}
 .on2{font-size:15px;color:var(--mu)}
-.oline{margin-top:22px;font-size:14px;color:var(--mu);text-align:center}
+.oline{margin-top:20px;font-size:14px;color:var(--mu);text-align:center}
 .oline.lo{color:var(--ac2)}
 .dtl{width:100%;margin-top:12px}
 .dtl>summary{list-style:none;text-align:center;color:var(--mu);font-size:14px;padding:12px;min-height:48px;cursor:pointer}
@@ -602,7 +603,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 
 <script>
 'use strict';
-const VER='63';
+const VER='64';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -965,19 +966,19 @@ function renderHome(){
   if(SYNC.on&&SYNC.missed>=3)al+=`<div class="warn">${L.syncMiss}</div>`;
   const lb=S.settings.lastBackup;
   if(ds.length&&!SYNC.on&&(!lb||Date.now()-lb>7*864e5))al+=`<div class="bkn"><div>${lb?L.bkAgo(Math.floor((Date.now()-lb)/864e5)):L.bkNone}</div><button class="btn sm" data-a="backup">${L.bkNowBtn}</button></div>`;
-  const h=`<div class="homew">
+  const h=`<div class="homew"><div></div>
     <button class="orb" data-a="${dr?'resume':'start'}"${dr?'':` data-d="${d.id}"`}>
       <svg viewBox="0 0 300 300" aria-hidden="true">${arcs}</svg>
       <span class="oc"><span class="on1"><bdi>${esc(d.name)}</bdi></span><span class="on2">${dr?L.resume:L.exN(d.ex.length)}</span></span>
     </button>
-    <div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
+    <div class="hb"><div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
     <details class="dtl"><summary>${tr('التفاصيل','Details')}${al?'<i class="aldot"></i>':''}</summary>
       <div class="dl">${rows}</div>
       <div class="coreline">${L.coreL}: <span class="en">${esc(coreNames(d).join(' + '))}</span></div>
       <div class="dwk">${L.weekOf(wk)}</div>
       ${al}
       <details class="alt"><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd).map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
-    </details>
+    </details></div>
   </div>`;
   $('#view').innerHTML=h;
 }
@@ -1645,6 +1646,13 @@ async function renderData(){
 
 /* ================= الأحداث ================= */
 document.addEventListener('input',ev=>{if(ev.target.id==='libS'){libQ=ev.target.value;const r=$('#libR');if(r)r.innerHTML=libRowsHtml()}else if(ev.target.id==='lbS'){lbQ=ev.target.value;const l=$('#lbL');if(l)l.innerHTML=libRows()}});
+const TABS=['home','hist','prog','lib','data'];
+let px=0,py=0,pt=0,pok=false;
+document.addEventListener('touchstart',e=>{const t=e.touches[0];px=t.clientX;py=t.clientY;pt=Date.now();pok=$('#sess').hidden&&$('#modal').hidden&&e.touches.length===1&&!e.target.closest('input,select,textarea,.chips,.ptabs,table,[data-grip],.dd-list,.pr2.drag')},{passive:true});
+document.addEventListener('touchend',e=>{if(!pok)return;pok=false;const t=e.changedTouches[0],dx=t.clientX-px,dy=t.clientY-py,fast=Date.now()-pt<300;
+  if(Math.abs(dx)<(fast?30:55)||Math.abs(dx)<Math.abs(dy)*1.3)return;
+  const nx=TABS.indexOf(tab)+((LANG==='ar'?dx>0:dx<0)?1:-1);if(nx<0||nx>=TABS.length)return;
+  navTab(TABS[nx]);const v=$('#view');try{v.animate([{opacity:0,transform:`translateX(${dx<0?28:-28}px)`},{opacity:1,transform:'none'}],{duration:140,easing:'ease-out'})}catch(_){}},{passive:true});
 document.addEventListener('click',ev=>{
   if(ev.target.closest('.brand .lg')){hardRefresh();return}
   const tb=ev.target.closest('.tabs button');if(tb){navTab(tb.dataset.tab);return}
