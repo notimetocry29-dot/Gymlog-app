@@ -1,7 +1,7 @@
 // رقم النسخة بييجي من index.html (sw.js?v=VER): غيّر VER هناك بس
 const V=new URL(self.location.href).searchParams.get('v')||'0';
 const C='gym-v'+V;
-const FILES=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./quotes.js','./exlib.js','./figs.js','./fonts/ruqaa.woff2','./fonts/figtree.woff2'];
+const FILES=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./quotes.js','./exlib.js','./fonts/ruqaa.woff2','./fonts/figtree.woff2'];
 // النسخة الجديدة بتستنى: التطبيق بيظهر زرار «فيه تحديث» وانت اللي تدوس (مفيش إعادة تحميل في نص التمرين)
 self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(FILES.map(f=>new Request(f,{cache:'reload'}))))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('gym-')&&k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));

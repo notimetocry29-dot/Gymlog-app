@@ -411,16 +411,11 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 .wnav .wb.wt{font-size:18px;font-weight:700}
 .wname{padding:10px 18px 8px}.wgh{display:block;font-family:"Figtree",system-ui,sans-serif;font-size:10.5px;font-weight:500;letter-spacing:.05em;color:var(--mu);opacity:.75;margin-top:3px}
 .wname.core{color:var(--ac2)}
-.fbd{stroke:var(--mu);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;fill:none}.fhl{stroke:var(--ac);stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round;fill:none}.ffar{opacity:.3}.fq{stroke:var(--tx2);stroke-width:1.5;fill:none;opacity:.55}.fw{stroke-width:2.2}.fb{fill:var(--tx2);opacity:.6;stroke:none}.fh{stroke:var(--mu);stroke-width:2.2;fill:none}
-.fsv{display:block;overflow:visible}
 .wwt.earn::after{content:'↑';display:block;position:absolute;inset-inline-end:-14px;top:2px;color:var(--ok);font-size:20px;font-weight:800}.wwt.earn{position:relative}
 .cbn{margin:0 16px 6px;padding:8px 12px;border-radius:12px;background:var(--s2);color:var(--tx2);font-size:12.5px;line-height:1.55;text-align:center}
 .bdt{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}.bdt td{padding:5px 4px;border-bottom:1px solid var(--bd)}.bdt button{background:none;border:0;color:var(--mu);padding:4px 8px}.bspark{width:100%;height:64px;margin-top:8px}.bspark .a{stroke:var(--ac);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.bspark .b{stroke:var(--mu);fill:none;stroke-width:1.6;stroke-dasharray:3 3;stroke-linecap:round}
 .stp{display:flex;gap:6px;justify-content:center;align-items:center;margin:0 0 10px;font-size:12px;color:var(--mu)}.stp button{border:1px solid var(--bd);background:var(--s1);color:var(--tx);border-radius:99px;padding:4px 10px;font-size:12px}.stp button.on{background:var(--ac);color:var(--onac);border-color:var(--ac)}
-.wfig{display:flex;justify-content:center;margin:0 auto 4px;height:112px;cursor:pointer;-webkit-tap-highlight-color:transparent}.wfig .fsv{height:100%;width:auto;max-width:100%}
-.lfig{display:flex;justify-content:center;height:120px;margin:0 0 10px}.lfig .fsv{height:100%;width:auto;max-width:100%}
-.orb .ofig{position:absolute;left:50%;top:50%;width:64%;aspect-ratio:1;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;opacity:.3;pointer-events:none}.orb .ofig svg.fsv{position:static;inset:auto;width:100%;height:100%;overflow:visible}
-.orb .oc{z-index:1}
+
 .wname{font-family:"Figtree",system-ui,sans-serif;font-weight:600;letter-spacing:-.005em;color:var(--tx2);opacity:.9}.wname.core{opacity:.88}
 .wnav .wn1{flex:1}
 #sheet{position:fixed;inset:0;z-index:30}
@@ -520,10 +515,9 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 
 <script src="quotes.js"></script>
 <script src="exlib.js"></script>
-<script src="figs.js"></script>
 <script>
 'use strict';
-const VER='98';
+const VER='99';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -953,10 +947,6 @@ function copyQuote(el){
 let qx=0,qy=0,qOn=false,qSw=0;
 document.addEventListener('touchstart',e=>{qOn=qGestOn()&&tab==='home'&&e.touches.length===1&&!!e.target.closest('.qt');if(qOn){qx=e.touches[0].clientX;qy=e.touches[0].clientY}},{passive:true});
 document.addEventListener('touchend',e=>{if(!qOn)return;qOn=false;const t=e.changedTouches[0],dx=t.clientX-qx,dy=t.clientY-qy;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){qSw=Date.now();quoteNav(dx<0?-1:1)}},{passive:true});
-function homeFig(dr,d){if(!figOn()||!window.Figs)return '';let nm='';
-  if(dr&&dr.ex&&dr.ex.length){const k0=dr.ex.findIndex(e=>!fullyIn(e));nm=dr.ex[dr.editing?0:(k0<0?dr.ex.length-1:k0)].name}else if(d.ex[0])nm=d.ex[0].name;
-  return Figs.has(nm)?`<span class="ofig" aria-hidden="true">${Figs.svg(nm)}</span>`:''}
-const figOn=()=>S.settings.fig!==0;
 function renderHome(){
   const L=T(),dr=S.draft,nd=dr?(dr.day||nextDayId()):nextDayId(),d=day(nd),ds=done();
   const wk=ds.filter(s=>daysAgo(s.date)>=0&&daysAgo(s.date)<7).length,days=S.program.days,cc=dr?dr.cycle:calcCycle(nd);
@@ -976,7 +966,6 @@ function renderHome(){
   const h=`<div class="homew"><div class="hs">
     <button class="orb" data-a="${dr?'resume':'start'}"${dr?'':` data-d="${d.id}"`}>
       <svg viewBox="0 0 300 300" aria-hidden="true">${arcs}</svg>
-      ${homeFig(dr,d)}
       <span class="oc"><span class="on1"><bdi>${esc(d.name)}</bdi></span><span class="on2">${dr?L.resume:L.exN(d.ex.length)}</span></span>
     </button>
     <div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
@@ -1063,7 +1052,7 @@ function openPick(kind,j){
 }
 function openMenu(){
   const d=S.draft,L=T(),sh=$('#sheet');sh.hidden=false;
-  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="meta2"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div><button class="btn w ghost mt" data-a="figS">${tr('الرسم التوضيحي: ','Illustration: ')}${figOn()?tr('شغّال','On'):tr('مقفول','Off')}</button>${d.editing||!d.ex.some(x=>x.core)||d.ex.every(x=>x.core)?'':`<button class="btn w ghost mt" data-a="coreOnly">${tr('الأساسي بس','Core only')}</button>`}<button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="meta2"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div>${d.editing||!d.ex.some(x=>x.core)||d.ex.every(x=>x.core)?'':`<button class="btn w ghost mt" data-a="coreOnly">${tr('الأساسي بس','Core only')}</button>`}<button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
 }
 function openGuide(){
   const d=S.draft;if(!d)return;const e=d.ex[curEx];if(!e)return;const x=libGet(e.name),sh=$('#sheet');
@@ -1086,7 +1075,6 @@ function renderSession(){
   ${d.cb?`<div class="cbn">${T().cbN(d.cb,85)}</div>`:''}
   <div class="wmain${wAnim?' wa':''}" data-i="${i}">
     <button class="wname en${e.core?' core':''}" data-a="guide" aria-label="${tr('طريقة الأداء','How to perform')}">${esc(e.name)}<span class="wgh">Tap to see how to perform</span></button>
-    ${figOn()&&window.Figs&&Figs.has(e.name)?`<div class="wfig" data-a="figT" role="button" aria-label="${tr('إخفاء الرسم','Hide illustration')}">${Figs.svg(e.name)}</div>`:''}
     <div class="wtg">${showW?`<button class="wwt en${earn?' earn':''}" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>`:''}<span class="wsr en">${e.tsets}×${e.treps}${u}</span></div>
     <div class="wsets">${cir}</div>
     <div class="wrest">${swHtml(e)}</div>
@@ -1254,7 +1242,7 @@ function histBlock(h){
   return `<div class="lhist"><div class="lht"><b>${tr('سجلّك','Your log')}</b> · ${tr(h.length+' جلسة','' +h.length+' session(s)')}${best>0?` · ${tr('أعلى وزن','Best')} <span class="en">${fw(best)}</span>`:''}</div>
   <table class="h">${h.slice(0,10).map(x=>`<tr><td>${fmtD(x.date)}</td><td class="en">${fw(x.w)}</td><td class="en">${esc(setsStr(x))}</td></tr>`).join('')}</table>${h.length>10?`<div class="mu">+${h.length-10}</div>`:''}</div>`;
 }
-function lbBody(x,hm){return `${window.Figs&&Figs.has(x[0])?`<div class="lfig">${Figs.svg(x[0])}</div>`:''}<div class="howto">${detHtml(x)||`<span class="mu">${tr('مفيش شرح. اضغط تعديل واكتب شرحك.','No guide yet. Tap Edit and write yours.')}</span>`}</div>${notesHtml(x[0])}
+function lbBody(x,hm){return `<div class="howto">${detHtml(x)||`<span class="mu">${tr('مفيش شرح. اضغط تعديل واكتب شرحك.','No guide yet. Tap Edit and write yours.')}</span>`}</div>${notesHtml(x[0])}
     ${histBlock(hm[nk(x[0])]||[])}
     <div class="pact" style="border:0;padding-top:4px;margin-top:6px"><button class="plink" data-a="lbAdd" data-n="${esc(x[0])}">${tr('ضيف لبرنامجي…','Add to my program…')}</button><button class="plink" data-a="hwEdit" data-n="${esc(x[0])}">${tr('تعديل الشرح','Edit guide')}</button>${x[9]?`<button class="plink" data-a="cuEdit" data-n="${esc(x[0])}">${tr('تعديل التمرين','Edit exercise')}</button>`:''}</div>`}
 function lbFill(d){const b=d.querySelector('.lbody');if(!b||b.dataset.f)return;const n=d.dataset.n,x=allLib().find(q=>q[0]===n);if(!x)return;b.dataset.f='1';b.innerHTML=lbBody(x,histMap())}
@@ -1660,7 +1648,6 @@ function renderData(){
     <div class="mu">${L.lastBk}: ${lb?new Date(lb).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.never}</div>
     ${persisted===true?`<div class="mu">✓ ${L.persisted}</div>`:''}</div>
   <div class="thseg" role="group" aria-label="${L.themeT}"><button class="${(S.settings.theme||'iron')==='iron'?'on':''}" data-a="theme" data-k="iron">${THEMES.iron[LANG]}</button><button class="${S.settings.theme==='morning'?'on':''}" data-a="theme" data-k="morning">${THEMES.morning[LANG]}</button></div>
-  <div class="qrow"><div class="mu">${tr('الرسم التوضيحي للتمرين','Exercise illustration')}</div><div class="thseg"><button class="${figOn()?'on':''}" data-a="figS" data-k="on">${tr('شغّال','On')}</button><button class="${figOn()?'':'on'}" data-a="figS" data-k="off">${tr('مقفول','Off')}</button></div></div>
   <div class="qrow"><div class="mu">${tr('بيت الشعر: دوسة = نسخ · سحب = تنقل','Verse: tap = copy · swipe = browse')}</div><div class="thseg"><button class="${qGestOn()?'on':''}" data-a="qGest" data-k="on">${tr('شغّال','On')}</button><button class="${qGestOn()?'':'on'}" data-a="qGest" data-k="off">${tr('مقفول','Off')}</button></div></div>
   ${bodySec()}
   <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?`<span class="pdot${SYNC.err?' er':''}" style="margin-inline-start:6px"></span>`:''}<span class="pchev">⌄</span></summary><div class="fbody">
@@ -1766,8 +1753,6 @@ document.addEventListener('click',ev=>{
     case 'tgl':{const k=b.dataset.k;openTips.has(k)?openTips.delete(k):openTips.add(k);renderSession();break}
     case 'hist':closeSheet();exHistModal(b.dataset.id);break;
     case 'guide':openGuide();break;
-    case 'figT':S.settings.fig=0;save();renderSession();toast(tr('الرسم اتخبّى — ترجّعه من ⋯ أو من الملف','Hidden — bring it back from ⋯ or File'));break;
-    case 'figS':{const on=b.dataset.k?b.dataset.k==='on':!figOn();S.settings.fig=on?1:0;save();if(!$('#sess').hidden){renderSession();closeSheet()}else renderData();break}
     case 'sess':sessModal(b.dataset.id);break;
     case 'copyS':copy(cardText(S.sessions.find(x=>x.id===b.dataset.id)));break;
     case 'aiS':{const s=S.sessions.find(x=>x.id===b.dataset.id);if(s)shareText(aiText(s,s.id));break}
