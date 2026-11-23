@@ -1106,13 +1106,15 @@ function exHistModal(exId){
 }
 
 /* ================= السجل ================= */
+const dayBase=n=>String(n||'').replace(/\b(light|lite)\b/gi,' ').replace(/لايت|خفيفة|خفيف/g,' ').replace(/[-–·()]+/g,' ').replace(/\s+/g,' ').trim();
+const dayKey=n=>dayBase(n).toLowerCase();
 function renderHistory(){
   const L=T(),ds=done();
   const hm=histMap(),inProg=new Set(S.program.days.flatMap(d=>d.ex.map(t=>nk(t.name))));
   const old=Object.keys(hm).filter(k=>!inProg.has(k)).map(k=>[hm[k][0].name,hm[k].length]).sort((x,y)=>y[1]-x[1]);
-  const dk=n=>String(n||'').trim().toLowerCase(),dc={},dn={};
-  S.program.days.forEach(d=>{dn[dk(d.name)]=d.name;dc[dk(d.name)]=0});
-  ds.forEach(x=>{const k=dk(x.dayName);if(!k)return;if(!dn[k])dn[k]=x.dayName;dc[k]=(dc[k]||0)+1});
+  const dk=dayKey,dc={},dn={};
+  S.program.days.forEach(d=>{const k=dk(d.name);if(!dn[k]){dn[k]=dayBase(d.name);dc[k]=0}});
+  ds.forEach(x=>{const k=dk(x.dayName);if(!k)return;if(!dn[k])dn[k]=dayBase(x.dayName);dc[k]=(dc[k]||0)+1});
   const dopts=Object.keys(dn).sort((x,y)=>dc[y]-dc[x]);
   let h=`<div class="lsearch"><select id="exPick" class="psel"><option value="">${L.exPickPh}</option>${S.program.days.map(d=>`<optgroup label="${esc(d.name)}">${d.ex.map(t=>`<option value="${t.id}">${esc(t.name)} (${(hm[nk(t.name)]||[]).length})</option>`).join('')}</optgroup>`).join('')}${old.length?`<optgroup label="${tr('تمارين قديمة','Older exercises')}">${old.map(o=>`<option value="n:${esc(o[0])}">${esc(o[0])} (${o[1]})</option>`).join('')}</optgroup>`:''}</select><span class="pchev">⌄</span></div>
   <div class="lsearch"><select id="dayPick" class="psel"><option value="">${tr('اختار يوم تمرين…','Choose a workout day…')}</option>${dopts.map(k=>`<option value="${esc(k)}">${esc(dn[k])} (${dc[k]})</option>`).join('')}</select><span class="pchev">⌄</span></div>`;
@@ -1131,12 +1133,12 @@ function exHistName(nm){
   <button class="btn w mt" data-a="closeM">${L.close}</button>`);
 }
 function dayHistModal(k){
-  const L=T(),dk=n=>String(n||'').trim().toLowerCase();
-  const ss=done().filter(x=>dk(x.dayName)===k),nm=ss[0]?ss[0].dayName:(S.program.days.find(d=>dk(d.name)===k)||{}).name||k;
+  const L=T(),dk=dayKey;
+  const ss=done().filter(x=>dk(x.dayName)===k),nm=ss[0]?dayBase(ss[0].dayName):dayBase((S.program.days.find(d=>dk(d.name)===k)||{}).name)||k;
   const cnt=st=>ss.filter(x=>x.status===st).length;
   modal(`<h3 class="en" style="text-align:start">${esc(nm)}</h3>
   <div class="mu" style="margin-bottom:8px">${tr('اتلعب','Played')} <b style="color:var(--tx)">${ss.length}</b> ${tr('مرة','times')}${ss.length?` · ${tr('آخر مرة','Last')} ${fmtD(ss[0].date)}`:''}</div>
-  ${ss.length?`<div class="plist" style="max-height:48vh;overflow-y:auto">${ss.map(x=>`<div class="pr2"><div class="pr2b" data-a="sess" data-id="${x.id}"><div class="sp"><div class="mu">${fmtD(x.date)} · <span class="en">C${x.cycle}</span> · ${L.exN(x.ex.length)}</div></div><span class="pst ${x.status}">${L.st[x.status]||''}</span></div></div>`).join('')}</div>`:`<div class="empty">${L.noData}</div>`}
+  ${ss.length?`<div class="plist" style="max-height:48vh;overflow-y:auto">${ss.map(x=>`<div class="pr2"><div class="pr2b" data-a="sess" data-id="${x.id}"><div class="sp"><div class="mu">${fmtD(x.date)} · <span class="en">C${x.cycle}</span> · ${L.exN(x.ex.length)}${dayBase(x.dayName).toLowerCase()!==String(x.dayName).trim().toLowerCase()?` · <span class="en">${esc(x.dayName)}</span>`:''}</div></div><span class="pst ${x.status}">${L.st[x.status]||''}</span></div></div>`).join('')}</div>`:`<div class="empty">${L.noData}</div>`}
   <button class="btn w mt" data-a="closeM">${L.close}</button>`);
 }
 function sessModal(id){
