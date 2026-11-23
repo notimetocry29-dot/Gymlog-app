@@ -601,7 +601,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 
 <script>
 'use strict';
-const VER='62';
+const VER='63';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1109,13 +1109,36 @@ function exHistModal(exId){
 /* ================= السجل ================= */
 function renderHistory(){
   const L=T(),ds=done();
-  let h=`<div class="lsearch"><select id="exPick" class="psel"><option value="">${L.exPickPh}</option>${S.program.days.map(d=>`<optgroup label="${esc(d.name)}">${d.ex.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</optgroup>`).join('')}</select><span class="pchev">⌄</span></div>`;
+  const hm=histMap(),inProg=new Set(S.program.days.flatMap(d=>d.ex.map(t=>nk(t.name))));
+  const old=Object.keys(hm).filter(k=>!inProg.has(k)).map(k=>[hm[k][0].name,hm[k].length]).sort((x,y)=>y[1]-x[1]);
+  const dk=n=>String(n||'').trim().toLowerCase(),dc={},dn={};
+  S.program.days.forEach(d=>{dn[dk(d.name)]=d.name;dc[dk(d.name)]=0});
+  ds.forEach(x=>{const k=dk(x.dayName);if(!k)return;if(!dn[k])dn[k]=x.dayName;dc[k]=(dc[k]||0)+1});
+  const dopts=Object.keys(dn).sort((x,y)=>dc[y]-dc[x]);
+  let h=`<div class="lsearch"><select id="exPick" class="psel"><option value="">${L.exPickPh}</option>${S.program.days.map(d=>`<optgroup label="${esc(d.name)}">${d.ex.map(t=>`<option value="${t.id}">${esc(t.name)} (${(hm[nk(t.name)]||[]).length})</option>`).join('')}</optgroup>`).join('')}${old.length?`<optgroup label="${tr('تمارين قديمة','Older exercises')}">${old.map(o=>`<option value="n:${esc(o[0])}">${esc(o[0])} (${o[1]})</option>`).join('')}</optgroup>`:''}</select><span class="pchev">⌄</span></div>
+  <div class="lsearch"><select id="dayPick" class="psel"><option value="">${tr('اختار يوم تمرين…','Choose a workout day…')}</option>${dopts.map(k=>`<option value="${esc(k)}">${esc(dn[k])} (${dc[k]})</option>`).join('')}</select><span class="pchev">⌄</span></div>`;
   if(!ds.length)h+=`<div class="empty">${L.noSess}</div>`;
   else{let last='';h+=`<div class="plist">${ds.map(s=>{
     let mh='';try{const m=new Date(s.date+'T00:00:00').toLocaleDateString(LANG==='ar'?'ar-EG':'en-GB',{month:'long',year:'numeric'});if(m!==last){last=m;mh=`<div class="pmon">${m}</div>`}}catch(e){}
     return `${mh}<div class="pr2"><div class="pr2b" data-a="sess" data-id="${s.id}"><div class="sp"><div class="pnm"><bdi>${esc(s.dayName)}</bdi></div><div class="mu">${fmtD(s.date)} · <span class="en">C${s.cycle}</span> · ${L.exN(s.ex.length)}</div></div><span class="pst ${s.status}">${L.st[s.status]||''}</span></div></div>`}).join('')}</div>`}
   $('#view').innerHTML=h;
-  $('#exPick').onchange=e=>{if(e.target.value)exHistModal(e.target.value);e.target.value=''};
+  $('#exPick').onchange=e=>{const v=e.target.value;if(v)v.startsWith('n:')?exHistName(v.slice(2)):exHistModal(v);e.target.value=''};
+  $('#dayPick').onchange=e=>{const v=e.target.value;if(v)dayHistModal(v);e.target.value=''};
+}
+function exHistName(nm){
+  const L=T(),h=histMap()[nk(nm)]||[];
+  modal(`<h3 class="en" style="text-align:start">${esc(nm)}</h3><div class="mu" style="margin-bottom:8px">${L.sessCount(h.length)}</div>
+  ${h.length?`<table class="h">${h.map(x=>`<tr><td>${fmtD(x.date)}</td><td class="en">${fw(x.w)}</td><td class="en">${esc(setsStr(x))}</td><td>${x.clean?`<span style="color:var(--ok)">${L.clean}</span>`:''}</td></tr>`).join('')}</table>`:`<div class="empty">${L.noData}</div>`}
+  <button class="btn w mt" data-a="closeM">${L.close}</button>`);
+}
+function dayHistModal(k){
+  const L=T(),dk=n=>String(n||'').trim().toLowerCase();
+  const ss=done().filter(x=>dk(x.dayName)===k),nm=ss[0]?ss[0].dayName:(S.program.days.find(d=>dk(d.name)===k)||{}).name||k;
+  const cnt=st=>ss.filter(x=>x.status===st).length;
+  modal(`<h3 class="en" style="text-align:start">${esc(nm)}</h3>
+  <div class="mu" style="margin-bottom:8px">${tr('اتلعب','Played')} <b style="color:var(--tx)">${ss.length}</b> ${tr('مرة','times')}${ss.length?` · ${tr('آخر مرة','Last')} ${fmtD(ss[0].date)}`:''}</div>
+  ${ss.length?`<div class="plist" style="max-height:48vh;overflow-y:auto">${ss.map(x=>`<div class="pr2"><div class="pr2b" data-a="sess" data-id="${x.id}"><div class="sp"><div class="mu">${fmtD(x.date)} · <span class="en">C${x.cycle}</span> · ${L.exN(x.ex.length)}</div></div><span class="pst ${x.status}">${L.st[x.status]||''}</span></div></div>`).join('')}</div>`:`<div class="empty">${L.noData}</div>`}
+  <button class="btn w mt" data-a="closeM">${L.close}</button>`);
 }
 function sessModal(id){
   const L=T(),s=S.sessions.find(x=>x.id===id);if(!s)return;
