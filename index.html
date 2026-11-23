@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0e0e0f">
 <meta name="robots" content="noindex,nofollow">
 <link rel="manifest" href="manifest.webmanifest">
@@ -491,6 +491,12 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 .fsec[open]>summary .pchev{transform:rotate(180deg)}
 .fbody{padding:0 2px 16px}
 .pdot.er{background:var(--bad)!important}
+/* شكل التطبيق الأصلي: من غير سكرول بار ولا overscroll، ولمس نضيف */
+*{scrollbar-width:none}
+*::-webkit-scrollbar{display:none;width:0;height:0}
+html,body{overscroll-behavior:none}
+button,.btn,.tabs,.top,.chips,summary,label,.brand{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,[contenteditable],[contenteditable] *{-webkit-user-select:text;user-select:text}
 </style>
 </head>
 <body>
@@ -518,11 +524,11 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='101';
+const VER='102';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
-en:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg><span class="wmk" data-a="credits" role="button" aria-label="چيم لوج">چيم لوج</span>',title:"چيم لوج",langBtn:'عربي',tabs:['Home','Log','Program','Exercises','File'],update:'Update available — tap',
+en:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg><span class="wmk" data-a="credits" role="button" aria-label="چيم لوج">چيم لوج</span>',title:"چيم لوج",langBtn:'عربي',tabs:['Home','Log','Program','Exercises','File'],update:'New update ready — tap to update',
  next:'Next session',coreL:'Essentials',start:'Start',draftOpen:'Unsaved session in progress',draftEdit:'Editing a session',resume:'Continue',
  last7:'Last 7 days',sessions:'sessions',lastSess:'Last session',min3:'Weekly minimum is 3 sessions.',
  bkNone:'No backup yet.',bkAgo:n=>`Last backup was ${n} day(s) ago.`,bkWarn:' If Chrome data is cleared, the log goes with it.',bkNowBtn:'Save a backup file now',
@@ -574,7 +580,7 @@ en:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor"
  syncPub:'Your encrypted backups are going to a PUBLIC repo. Create a private repo, then tap Turn off and enable the backup again with the new repo name.',undoRestore:'Undo last restore',confUndoRestore:'Go back to the data you had before the last restore?',undoDone:'Back to your data before the restore ✓',
  restoredSkip:n=>`Restored ✓ (${n} damaged session(s) skipped)`,syncAfterRestore:'Turn on encrypted auto-backup on this phone with the same repo and passphrase?'
 },
-ar:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg><span class="wmk" data-a="credits" role="button" aria-label="چيم لوج">چيم لوج</span>',title:"چيم لوج",langBtn:'EN',tabs:['الرئيسية','السجل','البرنامج','التمارين','الملف'],update:'فيه تحديث — اضغط',
+ar:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg><span class="wmk" data-a="credits" role="button" aria-label="چيم لوج">چيم لوج</span>',title:"چيم لوج",langBtn:'EN',tabs:['الرئيسية','السجل','البرنامج','التمارين','الملف'],update:'تحديث جديد جاهز — اضغط للتحديث',
  next:'الجلسة الجاية',coreL:'الأساسي',start:'ابدأ',draftOpen:'جلسة مفتوحة لسه ماتحفظتش',draftEdit:'تعديل جلسة',resume:'كمّل',
  last7:'آخر ٧ أيام',sessions:'جلسات',lastSess:'آخر جلسة',min3:'الحد الأدنى في الأسبوع ٣ جلسات.',
  bkNone:'لسه ماعملتش ولا نسخة احتياطية.',bkAgo:n=>`آخر نسخة احتياطية من ${n} يوم.`,bkWarn:' لو بيانات Chrome اتمسحت، السجل هيضيع معاها.',bkNowBtn:'احفظ نسخة في ملف دلوقتي',
@@ -823,7 +829,7 @@ function aiText(s,skip){
   if(miss.length)out.push(`${L.aiNotDone}: ${miss.join(', ')}`);
   return out.join('\n').trim();
 }
-async function copy(t){try{await navigator.clipboard.writeText(t);toast(T().copied);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();toast(ok?T().copied:T().copyFail);return ok}}
+async function copy(t){if(window.Android){try{if(Android.copyText(String(t))){toast(T().copied);return true}}catch(e){}}try{await navigator.clipboard.writeText(t);toast(T().copied);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();toast(ok?T().copied:T().copyFail);return ok}}
 async function shareText(t){
   if(navigator.share){try{await navigator.share({text:t});toast(T().shared);return}catch(e){if(e.name==='AbortError')return}}
   try{await navigator.clipboard.writeText(t);toast(T().copiedInstead)}catch(e){copy(t)}
@@ -832,7 +838,7 @@ async function shareText(t){
 const THEMES={iron:{ar:"ليل",en:"Night",bg:"#0e0e0f"},morning:{ar:"صبح",en:"Morning",bg:"#f3eee5"}};
 const fOpen=new Set();document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.fk){d.open?fOpen.add(d.dataset.fk):fOpen.delete(d.dataset.fk)}},true);
 function migTheme(){const t=S.settings.theme;if(!THEMES[t]){S.settings.theme=(t==='sand'||t==='book')?'morning':'iron';return true}return false}
-function applyTheme(){const t=THEMES[S.settings.theme]?S.settings.theme:'iron';document.documentElement.dataset.th=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEMES[t].bg}
+function applyTheme(){const t=THEMES[S.settings.theme]?S.settings.theme:'iron';document.documentElement.dataset.th=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEMES[t].bg;try{window.Android&&Android.setBarsTheme(t!=='morning')}catch(e){}}
 /* ================= التنقل ================= */
 let tab='home';
 const TABICO=['<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>'];
@@ -869,6 +875,20 @@ async function hardRefresh(){
   try{if('serviceWorker' in navigator){const reg=await navigator.serviceWorker.getRegistration();if(reg){await reg.update();if(reg.waiting){reg.waiting.postMessage('skip');setTimeout(()=>location.reload(),1800);return}}}}catch(e){}
   location.reload();
 }
+/* زرار الرجوع في تطبيق الأندرويد: الويب بيتصرف الأول، ولو إنت في الرئيسية بيسأل «تخرج؟» */
+window.__glSaved=ok=>toast(ok?T().saved:T().copyFail);
+function exitAsk(){
+  modal(`<div style="text-align:center;font-weight:700;font-size:18px;margin:6px 0 18px">${tr('تخرج؟','Exit the app?')}</div><div style="display:flex;gap:10px"><button class="btn w" id="xNo">${tr('لأ','Stay')}</button><button class="btn w pri" id="xYes">${tr('خروج','Exit')}</button></div>`);
+  $('#xNo').onclick=()=>closeModal();
+  $('#xYes').onclick=()=>{try{Android.exitApp()}catch(e){}};
+}
+window.glBack=function(){
+  const M=$('#modal'),Sx=$('#sess');
+  if(!M.hidden){if(hs().modal)history.back();else closeModal(true);return true}
+  if(!Sx.hidden){if(hs().sess)history.back();else closeSession();return true}
+  if(tab!=='home'){go('home');return true}
+  exitAsk();return true;
+};
 /* زرار الرجوع في الموبايل: يرجّع خطوة جوّه التطبيق بدل ما يخرج */
 const hs=()=>history.state||{};
 function navTab(t){
@@ -990,8 +1010,8 @@ function editSession(id){
   S.draft.ex=ex;openTips.clear();save();closeModal(true);openSession();
 }
 function openSession(){const dd=S.draft,k0=dd.ex.findIndex(e=>!fullyIn(e));curEx=dd.editing?0:(k0<0?dd.ex.length-1:k0);finishing=false;renderSession();$('#sess').hidden=false;$('#sess').classList.remove('in');void $('#sess').offsetWidth;$('#sess').classList.add('in');$('#sess').scrollTop=0;document.body.style.overflow='hidden';wakeOn();if(!hs().sess){const n=Object.assign({tab:tab},hs(),{sess:1});delete n.modal;if(hs().modal)history.replaceState(n,'');else history.pushState(n,'')}saveUI()}
-let WL=null;async function wakeOn(){try{if('wakeLock' in navigator&&!WL&&!document.hidden){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}}catch(e){}}
-function wakeOff(){try{WL&&WL.release()}catch(e){}WL=null}
+let WL=null;async function wakeOn(){try{window.Android&&Android.keepAwake(true)}catch(e){}try{if('wakeLock' in navigator&&!WL&&!document.hidden){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}}catch(e){}}
+function wakeOff(){try{window.Android&&Android.keepAwake(false)}catch(e){}try{WL&&WL.release()}catch(e){}WL=null}
 function closeSession(){wakeOff();swHalt();flushSave();$('#sess').hidden=true;document.body.style.overflow='';if(tab==='home')renderHome();saveUI();if(hs().sess)history.back()}
 const openTips=new Set();
 /* ===== شاشة التمرين (v57): تمرين واحد في الشاشة ===== */
@@ -1579,7 +1599,7 @@ function parseBackup(txt){
   const m=txt.match(/<!--\s*GYMLOG-DATA[^\n]*\n([\s\S]*?)\n?-->/);
   const o=JSON.parse(m?m[1]:txt);return o.data||o;
 }
-function download(name,text,type){const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
+function download(name,text,type){if(window.Android){try{Android.saveFile(name,type||'text/plain',String(text));return}catch(e){}}const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
 function markBackup(){S.settings.lastBackup=Date.now();save()}
 async function backupNow(){
   if(FS){try{const h=await idb.get('fh');if(h&&await writeLinked(h,true)){toast(T().savedFile);refresh();return}}catch(e){}}
@@ -1822,6 +1842,7 @@ sess.addEventListener('keydown',ev=>{if(ev.key!=='Enter'||ev.target.tagName!=='I
 let updating=false,r=false;
 if('serviceWorker' in navigator&&location.protocol!=='file:'){
   navigator.serviceWorker.register('sw.js?v='+VER).then(reg=>{
+    reg.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)reg.update().catch(()=>{})});
     const show=()=>{if(reg.waiting&&navigator.serviceWorker.controller){const u=$('#updBtn');u.hidden=false;u.onclick=()=>{updating=true;saveUI();flushSave();reg.waiting&&reg.waiting.postMessage('skip')}}};
     show();reg.addEventListener('updatefound',()=>{const w=reg.installing;w&&w.addEventListener('statechange',()=>{if(w.state==='installed')show()})});
   }).catch(()=>{});
