@@ -455,7 +455,7 @@ html[data-th] .tabs button.on{box-shadow:none}
 .dwk{margin:10px 0 12px;font-size:13px;color:var(--mu);text-align:center}
 .dtl .warn,.dtl .bkn{margin:0 0 10px}
 /* --- شاشة التمرين --- */
-#sess{display:flex;flex-direction:column}
+#sess{display:flex;flex-direction:column;touch-action:pan-y}
 .wtop{display:flex;align-items:center;gap:6px;padding:calc(8px + env(safe-area-inset-top)) 8px 0}
 .wx{flex:none;width:48px;height:48px;border:0;background:none;color:var(--mu);font-size:22px;display:flex;align-items:center;justify-content:center;padding:0}
 .wseg{flex:1;display:flex;gap:4px;direction:ltr}
@@ -491,12 +491,15 @@ html[data-th] .tabs button.on{box-shadow:none}
 .whint:empty{display:none}
 .wlinks{display:flex;gap:4px;justify-content:center;margin-top:6px;flex-wrap:wrap}
 .wlinks button{background:none;border:0;color:var(--mu);font-size:14px;padding:12px 10px;min-height:48px}
+.wlinks button[data-a=addset]{background:var(--ac);color:var(--onac);border-radius:var(--radp);font-weight:700}
 .wmain .tnote{text-align:start;width:100%}
 .wmain .noteI{width:100%;margin-top:6px}
 .wnav{position:sticky;bottom:0;background:var(--bg);display:flex;align-items:center;gap:10px;padding:10px 16px calc(18px + env(safe-area-inset-bottom));max-width:560px;width:100%;margin:0 auto}
 .wnav .btn{min-height:56px;font-size:17px}
-.wnav .wp{flex:none;width:56px;font-size:24px}
-.wnav .wp[hidden]{display:none}
+.wnav .wb{flex:1;min-height:60px;font-size:26px}
+.wnav .wb:disabled{opacity:.3}
+.wnav .pri.wb{font-size:18px}
+.wname.core{color:var(--ac2)}
 .wnav .wn1{flex:1}
 #sheet{position:fixed;inset:0;z-index:30}
 .sbk{position:absolute;inset:0;background:rgba(0,0,0,.55)}
@@ -535,7 +538,7 @@ html[data-th] .tabs button.on{box-shadow:none}
 
 <script>
 'use strict';
-const VER='57';
+const VER='58';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -891,7 +894,7 @@ function renderHome(){
     return `<path class="ar${x.id===nd?' cur':dn?' dn':''}" d="${arcP(136,k*360/n+g/2,(k+1)*360/n-g/2)}"/>`}).join(''):`<circle class="ar cur" cx="150" cy="150" r="136"/>`;
   let last='';
   if(ds[0]){const k=Math.max(0,daysAgo(ds[0].date));last=' · '+tr('آخر جلسة: ','Last: ')+(k===0?tr('النهارده','today'):k===1?tr('امبارح','yesterday'):tr(`من ${k} يوم`,`${k} days ago`))}
-  const rows=d.ex.map(t=>{const l=exHist(t.id)[0];return `<div class="dr${t.core?' c':''}"><span class="dn2 en">${t.core?'★ ':''}${esc(t.name)}</span><span class="dw en">${t.unit?'':fw(l?l.w:t.w)+' · '}${t.sets}×${t.reps}${t.unit?' '+esc(unitTxt(t.unit)):''}</span></div>`}).join('');
+  const rows=d.ex.map(t=>{const l=exHist(t.id)[0];return `<div class="dr${t.core?' c':''}"><span class="dn2 en">${esc(t.name)}</span><span class="dw en">${t.unit?'':fw(l?l.w:t.w)+' · '}${t.sets}×${t.reps}${t.unit?' '+esc(unitTxt(t.unit)):''}</span></div>`}).join('');
   /* تنبيهات: جوّه التفاصيل، ونقطة صغيرة على الزرار لو فيه حاجة */
   let al='';
   if(syncPublic())al+=`<div class="warn">${L.syncPub}</div>`;
@@ -906,7 +909,7 @@ function renderHome(){
     <div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
     <details class="dtl"${dr?' open':''}><summary>${tr('التفاصيل','Details')}${al?'<i class="aldot"></i>':''}</summary>
       <div class="dl">${rows}</div>
-      <div class="coreline">★ ${L.coreL}: <span class="en">${esc(coreNames(d).join(' + '))}</span></div>
+      <div class="coreline">${L.coreL}: <span class="en">${esc(coreNames(d).join(' + '))}</span></div>
       <div class="dwk">${L.weekOf(wk)}</div>
       ${al}
       <details class="alt"${dr?' open':''}><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd).map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
@@ -976,7 +979,7 @@ function renderSession(){
   $('#sess').innerHTML=`<div class="wtop"><button class="wx" data-a="closeS" aria-label="${L.back}">✕</button><div class="wseg">${seg}</div><button class="wx" data-a="menu" aria-label="${tr('خيارات','Options')}">⋯</button></div>
   <div class="corec" id="corec" aria-live="polite"></div>
   <div class="wmain${wAnim?' wa':''}" data-i="${i}">
-    <button class="wname en" data-a="hist" data-id="${e.exId}">${esc(e.name)}${e.core?' <span class="wst">★</span>':''}</button>
+    <button class="wname en${e.core?' core':''}" data-a="hist" data-id="${e.exId}">${esc(e.name)}</button>
     <div class="wtg">${showW?`<button class="wwt en" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>`:''}<span class="wsr en">${e.tsets}×${e.treps}${u}</span></div>
     <div class="wsets">${cir}</div>
     <div class="wrest" id="wrest"></div>
@@ -985,7 +988,7 @@ function renderSession(){
     ${showL?`<div class="tnote">${lastP}${p?`<div class="pmsg ${p.c}">${p.t}</div>`:''}</div>`:''}
     ${showN?`<input class="inp noteI" data-f="n" value="${esc(e.note)}" placeholder="${L.notePh}">`:''}
   </div>
-  <div class="wnav"><button class="btn wp" data-a="exGo" data-i="${i-1}"${i===0?' hidden':''} aria-label="${tr('اللي قبله','Previous')}">${ar?'›':'‹'}</button>${last?`<button class="btn pri wn1" data-a="finish">${d.editing?L.saveEdit:tr('خلّص','Finish')}</button>`:`<button class="btn wn1" data-a="exGo" data-i="${i+1}">${tr('اللي بعده','Next')} ${ar?'‹':'›'}</button>`}</div>
+  <div class="wnav"><button class="btn wb" data-a="exGo" data-i="${i-1}"${i===0?' disabled':''} aria-label="${tr('اللي قبله','Previous')}">${ar?'›':'‹'}</button>${last?`<button class="btn pri wb" data-a="finish">${d.editing?L.saveEdit:tr('خلّص','Finish')}</button>`:`<button class="btn wb" data-a="exGo" data-i="${i+1}" aria-label="${tr('اللي بعده','Next')}">${ar?'‹':'›'}</button>`}</div>
   <div id="sheet" hidden></div>`;
   updCore();
   if(restEnd>Date.now())buildRest();
@@ -1598,8 +1601,9 @@ function onField(ev){
 }
 sess.addEventListener('input',onField);sess.addEventListener('change',onField);
 let tx=0,ty=0,tsh=false;
-sess.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY;tsh=!!e.target.closest('#sheet,input')},{passive:true});
-sess.addEventListener('touchend',e=>{if(!S.draft||tsh)return;const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.6)return;goEx(curEx+((LANG==='ar'?dx>0:dx<0)?1:-1))},{passive:true});
+let tt=0;
+sess.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY;tt=Date.now();tsh=!!e.target.closest('#sheet,input')},{passive:true});
+sess.addEventListener('touchend',e=>{if(!S.draft||tsh)return;const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty,fast=Date.now()-tt<300;if(Math.abs(dx)<(fast?24:42)||Math.abs(dx)<Math.abs(dy))return;goEx(curEx+((LANG==='ar'?dx>0:dx<0)?1:-1))},{passive:true});
 sess.addEventListener('keydown',ev=>{if(ev.key!=='Enter'||ev.target.tagName!=='INPUT')return;const all=[...sess.querySelectorAll('input.inp')];const k=all.indexOf(ev.target);if(k>-1&&all[k+1]){ev.preventDefault();all[k+1].focus()}});
 
 /* ================= التثبيت والتحديث ================= */
