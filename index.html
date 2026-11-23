@@ -433,9 +433,9 @@ html{overflow-x:hidden;max-width:100%;scrollbar-width:none;-ms-overflow-style:no
 html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
 body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 #view{overflow-x:clip}
-.homew{display:grid;grid-template-rows:minmax(0,1fr) auto minmax(0,1fr);justify-items:center;min-height:calc(100dvh - 160px);padding-bottom:34px}
-.hb{width:100%;display:flex;flex-direction:column;align-items:center;align-self:start}
-.orb{position:relative;width:min(86vw,380px);aspect-ratio:1;border-radius:50%;border:0;background:var(--s1);color:var(--tx);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;transition:transform .15s}
+.homew{display:block}
+.hs{height:calc(100dvh - 232px);min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.orb{position:relative;width:min(86vw,380px,calc(100dvh - 330px));aspect-ratio:1;border-radius:50%;border:0;background:var(--s1);color:var(--tx);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;transition:transform .15s}
 .orb{box-shadow:none;transition:transform .07s ease-out,background .07s}
 .orb:active{transform:scale(.96);background:var(--s2)}
 .orb .ar{transition:stroke-width .07s}
@@ -449,7 +449,7 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 .on2{font-size:15px;color:var(--mu)}
 .oline{margin-top:20px;font-size:14px;color:var(--mu);text-align:center}
 .oline.lo{color:var(--ac2)}
-.dtl{width:100%;margin-top:12px}
+.dtl{width:100%;margin-top:12px;scroll-margin-top:72px}
 .dtl>summary{list-style:none;text-align:center;color:var(--mu);font-size:14px;padding:12px;min-height:48px;cursor:pointer}
 .dtl>summary::-webkit-details-marker{display:none}
 .dtl>summary::after{content:' ▾'}
@@ -610,7 +610,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 
 <script>
 'use strict';
-const VER='65';
+const VER='66';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -973,19 +973,20 @@ function renderHome(){
   if(SYNC.on&&SYNC.missed>=3)al+=`<div class="warn">${L.syncMiss}</div>`;
   const lb=S.settings.lastBackup;
   if(ds.length&&!SYNC.on&&(!lb||Date.now()-lb>7*864e5))al+=`<div class="bkn"><div>${lb?L.bkAgo(Math.floor((Date.now()-lb)/864e5)):L.bkNone}</div><button class="btn sm" data-a="backup">${L.bkNowBtn}</button></div>`;
-  const h=`<div class="homew"><div></div>
+  const h=`<div class="homew"><div class="hs">
     <button class="orb" data-a="${dr?'resume':'start'}"${dr?'':` data-d="${d.id}"`}>
       <svg viewBox="0 0 300 300" aria-hidden="true">${arcs}</svg>
       <span class="oc"><span class="on1"><bdi>${esc(d.name)}</bdi></span><span class="on2">${dr?L.resume:L.exN(d.ex.length)}</span></span>
     </button>
-    <div class="hb"><div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
+    <div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
+    </div>
     <details class="dtl"><summary>${tr('التفاصيل','Details')}${al?'<i class="aldot"></i>':''}</summary>
       <div class="dl">${rows}</div>
       <div class="coreline">${L.coreL}: <span class="en">${esc(coreNames(d).join(' + '))}</span></div>
       <div class="dwk">${L.weekOf(wk)}</div>
       ${al}
       <details class="alt"><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd).map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
-    </details></div>
+    </details>
   </div>`;
   $('#view').innerHTML=h;
 }
@@ -1657,6 +1658,7 @@ async function renderData(){
 
 /* ================= الأحداث ================= */
 document.addEventListener('input',ev=>{if(ev.target.id==='libS'){libQ=ev.target.value;const r=$('#libR');if(r)r.innerHTML=libRowsHtml()}else if(ev.target.id==='lbS'){lbQ=ev.target.value;const l=$('#lbL');if(l)l.innerHTML=libRows()}});
+document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('dtl')&&d.open)setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'start'}),30)},true);
 const TABS=['home','hist','prog','lib','data'];
 let px=0,py=0,pt=0,pok=false,pmode=0,pdx=0;
 const swOK=e=>$('#sess').hidden&&$('#modal').hidden&&e.touches.length===1&&!e.target.closest('input,select,textarea,.chips,.ptabs,table,[data-grip],.dd-list,.pr2.drag');
