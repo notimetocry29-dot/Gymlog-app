@@ -517,6 +517,38 @@ html[data-th] .tabs button.on{box-shadow:none}
 .wchk{width:110px;height:110px;border-radius:50%;background:var(--ac);color:var(--onac);font-size:56px;display:flex;align-items:center;justify-content:center}
 .wdt{font-size:28px;font-weight:800}
 .wds{color:var(--mu);font-size:14px}
+
+/* ===== Program v59: هادية، للقراءة، والتعديل وضع منفصل ===== */
+.psys{display:flex;align-items:center;gap:4px;width:100%;background:none;border:0;padding:4px 2px 12px;color:var(--tx);font-weight:700;font-size:16px;text-align:start;white-space:nowrap;overflow:hidden}
+.psys .mu{font-weight:400;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pchev{margin-inline-start:auto;color:var(--mu);font-size:14px;flex:none}
+.ptabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:14px}
+.ptabs button{flex:1;min-width:0;background:none;border:0;border-bottom:2px solid transparent;padding:10px 2px;color:var(--mu);font-weight:600;font-size:15px;margin-bottom:-1px}
+.ptabs button.on{color:var(--ac2);border-bottom-color:var(--ac);font-weight:800}
+.phead{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.pdn{font-size:20px;font-weight:700}
+.ptxt,.plink{background:none;border:0;color:var(--ac2);font-size:14px;padding:6px 4px}
+.plist{margin-bottom:12px}
+.pr2{display:block;border-bottom:1px solid var(--bd)}
+.pr2:last-child{border-bottom:0}
+.pr2>summary,.pr2b{display:flex;align-items:center;gap:12px;padding:13px 2px;list-style:none;cursor:pointer}
+.pr2>summary::-webkit-details-marker{display:none}
+.pr2 .pnm{font-weight:700;font-size:16px}
+.pno{flex:none;width:22px;text-align:center;color:var(--mu);font-weight:600}
+.pno.cr{color:var(--ac2);font-weight:800}
+.pr2[open] .pchev{transform:rotate(180deg)}
+.pdrop{padding:0 2px 12px 36px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+[dir=rtl] .pdrop,html[lang=ar] .pdrop{padding:0 36px 12px 2px}
+.pr2:has(.pgrip){display:flex;align-items:center}
+.pgrip{flex:none;width:36px;text-align:center;color:var(--mu);font-size:22px;touch-action:none;user-select:none;padding:8px 0}
+.pr2.drag{background:var(--s2);opacity:.9}
+.pr2b{flex:1;min-width:0}
+.pact{display:flex;gap:6px;justify-content:space-between;border-top:1px solid var(--bd);padding-top:8px}
+.pcore{color:var(--tx2);font-size:14px;margin:6px 2px 14px;line-height:1.6}
+.pcore b{color:var(--ac2)}
+.pgo{margin-bottom:8px}
+html[data-th=granite] .pno.cr,html[data-th=granite] .pcore b,html[data-th=granite] .ptxt,html[data-th=granite] .plink{color:var(--gd)}
+html[data-th=granite] .ptabs button.on{color:var(--gd);border-bottom-color:var(--gd)}
 </style>
 </head>
 <body>
@@ -538,7 +570,7 @@ html[data-th] .tabs button.on{box-shadow:none}
 
 <script>
 'use strict';
-const VER='58';
+const VER='59';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1190,19 +1222,32 @@ function cuSave(old){
   save();queueBackup();closeModal();if(tab==='prog')renderProgram();else renderLib();toast(td?tr('اتحفظ واتضاف لـ ','Saved and added to ')+td.name+' ✓':tr('اتحفظ في المكتبة ✓','Saved to library ✓'));
 }
 /* ================= شاشة البرنامج ================= */
-let pDay='U1';
+let pDay='U1',pEdit=false,pInit=false;
+function shortDay(n){
+  const m=String(n).trim().match(/^(upper|lower|push|pull|legs?)\s*(\d*)$/i);
+  if(m){const k=m[1].toLowerCase();return (k==='upper'?'U':k==='lower'?'L':k==='push'?'Push':k==='pull'?'Pull':'Legs')+m[2]}
+  n=String(n).trim();return n.length>6?n.slice(0,5)+'…':n;
+}
 function renderProgram(){
   sysInit();const L=T(),days=S.program.days;
+  if(!pInit){pInit=true;try{pDay=nextDayId()}catch(e){}}
   if(!days.some(d=>d.id===pDay))pDay=days[0].id;
   const d=day(pDay),sp=SYSTEMS.find(x=>x.id===S.sys.cur)||SYSTEMS[0];
-  $('#view').innerHTML=`<div class="card sysc"><div class="mu">${tr('النظام الحالي','Current system')}</div><div class="big">${esc(sysName(sp))}</div><div class="mu">${esc(sysDesc(sp))}</div>
-    <button class="btn w mt" data-a="sysOpen">${tr('غيّر النظام','Change system')}</button></div>
-  <div class="chips">${days.map((x,k)=>`<button class="en${x.id===pDay?' on':''}" data-a="pday" data-d="${x.id}">${k+1}. ${esc(x.name)}</button>`).join('')}<button data-a="dayAdd">+</button></div>
-  <div class="card prl">${d.ex.map((t,i)=>{const l=exHist(t.id)[0],lb=libGet(t.name);return `<div class="prow" data-a="exInfo" data-i="${i}"><span class="exno">${i+1}</span><div class="sp"><div class="nm"><span class="en">${esc(t.name)}</span> ${t.core?`<span class="tag">★ ${L.coreL}</span>`:''}</div><div class="mu"><span class="en">${fw(l?l.w:t.w)} | ${t.sets}×${t.reps}${t.unit?' '+esc(unitTxt(t.unit)):''}</span>${lb?` · ${GRP[lb[1]][LANG==='ar'?0:1]}`:''}</div></div>
-    <button class="icb" data-a="up" data-i="${i}" aria-label="${tr('فوق','Move up')}">▲</button><button class="icb" data-a="down" data-i="${i}" aria-label="${tr('تحت','Move down')}">▼</button><button class="icb" data-a="editT" data-i="${i}" aria-label="${tr('تعديل','Edit')}">✎</button></div>`}).join('')||`<div class="empty">${tr('اليوم فاضي. ضيف تمارين من المكتبة.','Empty day. Add exercises from the library.')}</div>`}</div>
-  <button class="btn pri w" data-a="libOpen">+ ${tr('ضيف تمرين من المكتبة','Add from library')}</button>
-  <div class="row mt"><button class="btn sp" data-a="dayEdit">${tr('تعديل اليوم','Edit day')}</button><button class="btn sp" data-a="copyT">${L.copyTpl}</button></div>
-  <div class="mu mt" style="padding:0 4px">${tr('دوس على أي تمرين تشوف بيتلعب إزاي. الوزن المعروض هو آخر وزن اتسجل للتمرين ده في أي يوم.','Tap any exercise to see how it is performed. The weight shown is the last one logged for this exercise on any day.')}</div>`;
+  const cores=d.ex.filter(t=>t.core).map(t=>esc(t.name));
+  const rows=d.ex.map((t,i)=>{
+    const l=exHist(t.id)[0],lb=libGet(t.name);
+    const meta=`<span class="en">${fw(l?l.w:t.w)} · ${t.sets}×${t.reps}${t.unit?' '+esc(unitTxt(t.unit)):''}</span>`;
+    if(pEdit)return `<div class="pr2" data-i="${i}"><span class="pgrip" data-grip aria-label="${tr('اسحب للترتيب','Drag to reorder')}">≡</span><div class="pr2b" data-a="editT" data-i="${i}"><span class="pno${t.core?' cr':''}">${i+1}</span><div class="sp"><div class="pnm en">${esc(t.name)}</div><div class="mu">${meta}</div></div><span class="pchev">✎</span></div></div>`;
+    const last=l?`${setsStr(l)?setsStr(l)+' · ':''}${fw(l.w)} · ${esc(l.date||'')}`:tr('لسه ماتلعبش','Not logged yet');
+    return `<details class="pr2"><summary><span class="pno${t.core?' cr':''}">${i+1}</span><div class="sp"><div class="pnm en">${esc(t.name)}</div><div class="mu">${meta}${lb?` · ${GRP[lb[1]][LANG==='ar'?0:1]}`:''}</div></div><span class="pchev">⌄</span></summary><div class="pdrop"><div class="mu">${tr('آخر أداء','Last time')}: <span class="en">${last}</span></div><button class="plink" data-a="exInfo" data-i="${i}">${tr('طريقة اللعب','How to perform')}</button></div></details>`;
+  }).join('')||`<div class="empty">${tr('اليوم فاضي.','Empty day.')}</div>`;
+  const tabs=days.map((x,k)=>`<button class="${x.id===pDay?'on':''}" data-a="pday" data-d="${x.id}">${esc(shortDay(x.name))}</button>`).join('')+(pEdit?`<button data-a="dayAdd" aria-label="${tr('يوم جديد','New day')}">+</button>`:'');
+  $('#view').innerHTML=`<button class="psys" data-a="sysOpen"><span class="en">${esc(sysName(sp))}</span><span class="pchev">⌄</span></button>
+  <div class="ptabs">${tabs}</div>
+  <div class="phead"><div class="pdn en">${esc(d.name)}</div><button class="ptxt" data-a="pedit">${pEdit?tr('تم','Done'):tr('تعديل','Edit')}</button></div>
+  <div class="plist${pEdit?' ed':''}">${rows}</div>
+  ${pEdit?`<div class="pact"><button class="plink" data-a="libOpen">+ ${tr('تمرين','Exercise')}</button><button class="plink" data-a="dayEdit">${tr('اسم اليوم','Rename day')}</button><button class="plink" data-a="copyT">${L.copyTpl}</button></div>`
+  :`${cores.length?`<div class="pcore"><b>${tr('الأساسي','Core')}:</b> <span class="en">${cores.join(' + ')}</span></div>`:''}${d.ex.length?`<button class="btn pri w pgo" data-a="start" data-d="${d.id}">${tr('ابدأ اليوم ده','Start this day')}</button>`:`<button class="btn pri w pgo" data-a="libOpen">+ ${tr('ضيف تمرين من المكتبة','Add from library')}</button>`}`}`;
 }
 function infoModal(i){
   const d=day(pDay),t=d.ex[i];if(!t)return;const lb=libGet(t.name),how=libHow(t.name),l=exHist(t.id)[0];
@@ -1514,6 +1559,21 @@ async function renderData(){
   $('#cyc0').onchange=e=>{const v=num(e.target.value);if(v>0){S.settings.cycle=v;save();toast(L.cycleSaved)}};
 }
 
+
+/* سحب لإعادة ترتيب التمارين في وضع التعديل */
+(function(){
+  let row=null;
+  document.addEventListener('pointerdown',e=>{const g=e.target.closest('[data-grip]');if(!g)return;row=g.closest('.pr2');row.classList.add('drag');try{g.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()});
+  document.addEventListener('pointermove',e=>{if(!row)return;const list=row.parentNode;const rs=[...list.children].filter(x=>x!==row);
+    let before=null;for(const r of rs){const b=r.getBoundingClientRect();if(e.clientY<b.top+b.height/2){before=r;break}}
+    if(before!==row.nextSibling)list.insertBefore(row,before)});
+  const end=()=>{if(!row)return;const list=row.parentNode;row.classList.remove('drag');
+    const order=[...list.children].map(x=>+x.dataset.i);const ex=day(pDay).ex;
+    if(order.some((v,k)=>v!==k)){const ne=order.map(k=>ex[k]);ex.splice(0,ex.length,...ne);save();queueBackup()}
+    row=null;renderProgram()};
+  document.addEventListener('pointerup',end);document.addEventListener('pointercancel',end);
+})();
+
 /* ================= الأحداث ================= */
 document.addEventListener('input',ev=>{if(ev.target.id==='libS'){libQ=ev.target.value;const r=$('#libR');if(r)r.innerHTML=libRowsHtml()}else if(ev.target.id==='lbS'){lbQ=ev.target.value;const l=$('#lbL');if(l)l.innerHTML=libRows()}});
 document.addEventListener('click',ev=>{
@@ -1557,6 +1617,7 @@ document.addEventListener('click',ev=>{
     case 'pday':pDay=b.dataset.d;renderProgram();break;
     case 'exInfo':infoModal(i);break;
     case 'sysOpen':sysModal();break;
+    case 'pedit':pEdit=!pEdit;renderProgram();break;
     case 'sysPick':if(confirm(tr('هتبدّل النظام. تمارينك الحالية محفوظة وترجعلها. تكمّل؟','Switch system? Your current exercises are kept. Continue?'))){switchSys(b.dataset.id);closeModal();renderProgram();toast(tr('النظام اتغيّر ✓','System changed ✓'))}break;
     case 'libOpen':libQ='';libG='all';libModal();break;
     case 'libG':libG=b.dataset.g;libModal();break;
