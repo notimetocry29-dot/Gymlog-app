@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>BA'S — بأس</title>
+<title>بأس</title>
 <style>
 :root{--scb:#000;--sci:#0c0c0c;--font:system-ui,"Noto Naskh Arabic","Segoe UI",Tahoma,sans-serif;--fnum:inherit;--rad:14px;--radb:11px;--radp:99px;--bw:1px;--sh:none;--ttl:none;--ls:0;--bg:#0e0e0f;--s1:#17171a;--s2:#202024;--bd:#2d2d33;--tx:#ece8e1;--mu:#968f85;--ac:#c38d4f;--ac2:#e2b37c;--ok:#7bb072;--mid:#d6b05a;--bad:#d06c57;--onac:#160e05;--hero:#1d1810;--tx2:#cfc6b8;--ph:#55504a;--okbd:#3b5a37;--okbg:#1c2a1a;--midbd:#5c4d2a;--midbg:#2b2616;--badbg:#2a1a15;--acbd:#4a3a28;--acbg:#33261a;--oktx:#a6d69c;--midtx:#e5c97f;--badtx:#f0b3a3}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -423,8 +423,7 @@ html[data-th=granite] #sess .ex.wn{background:linear-gradient(180deg,#221e14,#1a
 #sess .exname{min-height:44px;display:flex;align-items:center}
 #sess .scell .inp::placeholder{color:var(--mu);opacity:.55;font-weight:500;font-size:17px}
 /* v69: الاسم بأس */
-.brand .bas{font-size:21px;font-weight:800;letter-spacing:0;line-height:1;color:var(--ac2);text-transform:none}
-.brand .bas.en{font-size:19px;font-weight:800;letter-spacing:.18em}
+html .brand .wm b.bas,html[data-th] .brand .wm b.bas{font-size:21px;font-weight:800;letter-spacing:0;line-height:1;color:var(--ac2);text-transform:none}
 a.brand,a.brand:visited{color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
 
 /* ===== v57: بساطة — دايرة واحدة وتمرين واحد في الشاشة ===== */
@@ -613,11 +612,11 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 
 <script>
 'use strict';
-const VER='70';
+const VER='71';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
-en:{brand:'<span class="bas en">BA\'S</span>',title:"BA'S",langBtn:'عربي',tabs:['Home','Log','Program','Exercises','File'],update:'Update available — tap',
+en:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg><span class="wm"><b class="bas">بأس</b></span>',title:'بأس',langBtn:'عربي',tabs:['Home','Log','Program','Exercises','File'],update:'Update available — tap',
  next:'Next session',coreL:'Core',start:'Start',draftOpen:'Unsaved session in progress',draftEdit:'Editing a session',resume:'Continue',
  last7:'Last 7 days',sessions:'sessions',lastSess:'Last session',min3:'Weekly minimum is 3 sessions.',
  bkNone:'No backup yet.',bkAgo:n=>`Last backup was ${n} day(s) ago.`,bkWarn:' If Chrome data is cleared, the log goes with it.',bkNowBtn:'Save a backup file now',
@@ -654,7 +653,7 @@ en:{brand:'<span class="bas en">BA\'S</span>',title:"BA'S",langBtn:'عربي',ta
  aiTarget:'Target',aiWeight:'Weight',aiSets:'Sets',aiForm:'Form',aiClean:'clean (no momentum, full control)',aiNotClean:'not marked clean',
  aiLast:'Previous',aiStatus:'Status',aiNote:'Note',aiNotDone:'Not done',aiCoreTag:'[core]',bw:'bodyweight',
  st2:{q1:'qualified 1 of 2',up:'increase earned',stuck:n=>`${n} sessions at this weight without an increase`},
- mdTitle:"BA'S — Backup",mdExported:'Exported',mdSessions:'Sessions',mdProgram:'Program',mdLog:'Log (newest first)',
+ mdTitle:'بأس — Backup',mdExported:'Exported',mdSessions:'Sessions',mdProgram:'Program',mdLog:'Log (newest first)',
  mdCols:['#','Exercise','Weight','Target','Core','Notes'],mdSCols:['Exercise','Weight','Sets','Clean','Note'],mdData:'Data used by “Restore” in the app — do not edit',yes:'✓',
  csvH:['Date','Cycle','Day','Exercise','Weight','Sets','Set count','Total reps','Clean','Core','Note'],coreLine:'Core',themeT:'Theme',histNote:n=>`${n} past session(s) from your earlier log were added.`,todayL:'Today',otherDay:'Start a different day',newInstead:'Start a new session instead',weekOf:n=>`${n} session(s) in the last 7 days · goal 3`,
  syncT:'Encrypted auto-backup (GitHub)',syncHint:'After every session the whole log is encrypted on this phone and uploaded to your repo. Without the passphrase the file is unreadable.',
@@ -669,7 +668,7 @@ en:{brand:'<span class="bas en">BA\'S</span>',title:"BA'S",langBtn:'عربي',ta
  syncPub:'Your encrypted backups are going to a PUBLIC repo. Create a private repo, then tap Turn off and enable the backup again with the new repo name.',undoRestore:'Undo last restore',confUndoRestore:'Go back to the data you had before the last restore?',undoDone:'Back to your data before the restore ✓',
  restoredSkip:n=>`Restored ✓ (${n} damaged session(s) skipped)`,syncAfterRestore:'Turn on encrypted auto-backup on this phone with the same repo and passphrase?'
 },
-ar:{brand:'<span class="bas">بأس</span>',title:'بأس',langBtn:'EN',tabs:['الرئيسية','السجل','البرنامج','التمارين','الملف'],update:'فيه تحديث — اضغط',
+ar:{brand:'<svg class="lg" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg><span class="wm"><b class="bas">بأس</b></span>',title:'بأس',langBtn:'EN',tabs:['الرئيسية','السجل','البرنامج','التمارين','الملف'],update:'فيه تحديث — اضغط',
  next:'الجلسة الجاية',coreL:'الأساسي',start:'ابدأ',draftOpen:'جلسة مفتوحة لسه ماتحفظتش',draftEdit:'تعديل جلسة',resume:'كمّل',
  last7:'آخر ٧ أيام',sessions:'جلسات',lastSess:'آخر جلسة',min3:'الحد الأدنى في الأسبوع ٣ جلسات.',
  bkNone:'لسه ماعملتش ولا نسخة احتياطية.',bkAgo:n=>`آخر نسخة احتياطية من ${n} يوم.`,bkWarn:' لو بيانات Chrome اتمسحت، السجل هيضيع معاها.',bkNowBtn:'احفظ نسخة في ملف دلوقتي',
