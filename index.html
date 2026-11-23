@@ -344,7 +344,7 @@ html[data-th] .brand .wm b,html .brand .wm b{font-size:12px;letter-spacing:.02em
 .ex.wn .chk{color:var(--mid)}
 html[data-th=dawn] .ex.wn{background:rgba(220,200,150,.13)}
 .brand .lg{cursor:pointer;padding:9px 8px;box-sizing:content-box;margin:-9px -8px;-webkit-tap-highlight-color:transparent}
-.brand .lg.spin{animation:lgspin .7s linear infinite}
+.brand .lg.spin{animation:lgspin .38s ease-out}
 @keyframes lgspin{to{transform:rotate(360deg)}}
 .sysopt{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--bd);border-radius:var(--rad);margin-bottom:8px;background:var(--s1)}
 .sysopt.on{border-color:var(--ac);background:var(--acbg)}
@@ -426,6 +426,17 @@ html[data-th=granite] #sess .ex.wn{background:linear-gradient(180deg,#221e14,#1a
 #sess .scell .inp::placeholder{color:var(--mu);opacity:.55;font-weight:500;font-size:17px}
 /* v78: الاسم «ماهر» بالعربي بخط جمهورية ممدود (كشيدة) كمسار SVG */
 .brand .wmk{font-family:"BasQ",var(--font);font-weight:700;font-size:23px;line-height:1.3;color:var(--tx2);opacity:.82;direction:rtl;flex:none;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
+/* v83: صفحة الكريدتس */
+.cr{text-align:center;padding:14px 4px 4px}
+.cr .crl{width:34px;height:22px;color:var(--ac);opacity:.9}
+.cr .crn{font-family:"BasQ",var(--font);font-weight:700;font-size:38px;line-height:1.5;color:var(--tx2);opacity:.9;margin-top:6px;direction:rtl}
+.cr .crd{width:44px;height:1px;background:var(--ac);opacity:.55;margin:10px auto 18px}
+.cr .crk{font-size:11px;letter-spacing:.32em;color:var(--mu);text-indent:.32em}
+.cr .cra{font-family:"Oswald","Inter",sans-serif;font-weight:500;font-size:30px;letter-spacing:.06em;color:var(--tx);margin:6px 0 22px}
+.cr .crf{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-width:210px;min-height:48px;padding:0 22px;border:1px solid var(--ac);border-radius:99px;color:var(--ac2);text-decoration:none;font-size:15px;letter-spacing:.08em;-webkit-tap-highlight-color:transparent}
+.cr .crf:active{background:rgba(255,255,255,.06)}
+.cr .crv{margin-top:22px;font-size:11px;letter-spacing:.12em;color:var(--mu);opacity:.7}
+.cr .crv span{text-decoration:underline;cursor:pointer;padding:6px 4px}
 /* v73: جملة تحت سطر Cycle */
 @font-face{font-family:"BasQ";src:url(fonts/ruqaa.woff2) format("woff2");font-weight:700;font-display:swap}
 .qt{margin:12px auto 0;max-width:360px;padding:0 10px;text-align:center;font-family:"BasQ",var(--font);font-weight:700;font-size:23px;line-height:1.8;color:var(--tx2);opacity:.82;direction:rtl;text-transform:none;letter-spacing:0;min-height:3.6em}
@@ -621,7 +632,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 <script src="quotes.js"></script>
 <script>
 'use strict';
-const VER='82';
+const VER='83';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -941,13 +952,20 @@ function applyLang(){applyTheme();
   document.querySelectorAll('.tabs button').forEach((b,i)=>{b.innerHTML=TABICO[i]+'<span>'+L.tabs[i]+'</span>'});
 }
 function saveUI(){try{localStorage.setItem('gymlog.ui',JSON.stringify({t:tab,s:!$('#sess').hidden,y:window.scrollY,at:Date.now()}))}catch(e){}}
+/* الدامبل: بيت جديد من غير ما يدخل أي صفحة */
+function newQuote(){
+  const lg=document.querySelector('.brand .lg');
+  if(lg){lg.classList.remove('spin');void lg.getBoundingClientRect();lg.classList.add('spin');setTimeout(()=>lg.classList.remove('spin'),380)}
+  QSEL=null;if(tab==='home')renderHome()}
 function openCredits(){
-  modal(`<div class="en" style="text-align:center;padding:10px 4px 6px">
-  <div style="font-family:'BasQ',var(--font);font-weight:700;font-size:34px;line-height:1.5;color:var(--tx2);margin-bottom:14px">چيم لوج</div>
-  <div class="mu" style="font-size:15px;margin-bottom:4px">An app made by:</div>
-  <div style="font-size:22px;font-weight:700;margin-bottom:16px">Ahmed Maher</div>
-  <a href="https://www.facebook.com/share/1HWtZibWS7/" target="_blank" rel="noopener noreferrer" style="color:var(--ac2);font-size:16px">facebook.com/share/1HWtZibWS7</a>
-  <div class="mu" style="margin-top:18px;font-size:12px">v${VER}</div></div>`)}
+  modal(`<div class="cr en">
+  <svg class="crl" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 11h12"/><rect x="5" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><rect x="25" y="5" width="4" height="12" rx="1.2" fill="currentColor"/><path d="M2 8.5v5M32 8.5v5"/></svg>
+  <div class="crn">چيم لوج</div>
+  <div class="crd"></div>
+  <div class="crk">AN APP MADE BY</div>
+  <div class="cra">Ahmed Maher</div>
+  <a class="crf" href="https://www.facebook.com/share/1HWtZibWS7/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M13.5 22v-8h2.7l.5-3.4h-3.2V8.5c0-1 .4-1.7 1.8-1.7h1.5V3.9c-.3 0-1.2-.2-2.2-.2-2.3 0-3.9 1.4-3.9 4v2.5H7.5V14h2.9v8z"/></svg><span>Facebook</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="crv">v${VER} · <span data-hr="1">Reload</span></div></div>`)}
 async function hardRefresh(){
   const lg=document.querySelector('.brand .lg');if(lg)lg.classList.add('spin');
   saveUI();try{await sq}catch(e){}
@@ -1730,8 +1748,9 @@ document.addEventListener('touchend',e=>{if(!pok||pmode!==1){pok=false;return}po
   v.style.transition='transform .16s cubic-bezier(.2,.8,.2,1),opacity .14s';v.style.transform='';v.style.opacity='';setTimeout(()=>{v.style.transition=''},190)},{passive:true});
 document.addEventListener('touchcancel',()=>{if(pmode===1){const v=$('#view');v.style.transform='';v.style.opacity='';}pok=false},{passive:true});
 document.addEventListener('click',ev=>{
-  if(ev.target.closest('.brand .lg')){hardRefresh();return}
+  if(ev.target.closest('.brand .lg')){newQuote();return}
   if(ev.target.closest('.brand .wmk')){openCredits();return}
+  if(ev.target.closest('[data-hr]')){hardRefresh();return}
   const tb=ev.target.closest('.tabs button');if(tb){navTab(tb.dataset.tab);return}
   if(ev.target.id==='modal'){closeModal();return}
   const b=ev.target.closest('[data-a]');if(!b)return;
