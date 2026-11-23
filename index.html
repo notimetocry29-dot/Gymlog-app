@@ -423,6 +423,97 @@ html[data-th=granite] #sess .ex.wn{background:linear-gradient(180deg,#221e14,#1a
 #sess .exname{min-height:44px;display:flex;align-items:center}
 #sess .scell .inp::placeholder{color:var(--mu);opacity:.55;font-weight:500;font-size:17px}
 a.brand,a.brand:visited{color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}
+
+/* ===== v57: بساطة — دايرة واحدة وتمرين واحد في الشاشة ===== */
+.tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 2px 8px;min-height:56px;font-size:11.5px}
+.tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs button.on{font-weight:700}
+html[data-th] .tabs button.on{box-shadow:none}
+.homew{display:flex;flex-direction:column;align-items:center;padding:3vh 0 8px}
+.orb{position:relative;width:min(86vw,380px);aspect-ratio:1;border-radius:50%;border:0;background:var(--s1);color:var(--tx);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;transition:transform .15s}
+.orb:active{transform:scale(.97)}
+.orb svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.orb .ar{fill:none;stroke:var(--bd);stroke-width:7;stroke-linecap:round}
+.orb .ar.dn{stroke:var(--ac)}
+.orb .ar.cur{stroke:var(--ac2);stroke-width:10}
+.oc{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:0 12%}
+.on1{font-size:clamp(32px,10vw,46px);font-weight:800;line-height:1.1}
+.on2{font-size:15px;color:var(--mu)}
+.oline{margin-top:22px;font-size:14px;color:var(--mu);text-align:center}
+.oline.lo{color:var(--ac2)}
+.dtl{width:100%;margin-top:12px}
+.dtl>summary{list-style:none;text-align:center;color:var(--mu);font-size:14px;padding:12px;min-height:48px;cursor:pointer}
+.dtl>summary::-webkit-details-marker{display:none}
+.dtl>summary::after{content:' ▾'}
+.dtl[open]>summary::after{content:' ▴'}
+.aldot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ac2);margin-inline-start:6px;vertical-align:middle}
+.dl{border-top:1px solid var(--bd)}
+.dr{display:flex;gap:8px;padding:11px 2px;border-bottom:1px solid var(--bd);font-size:15px}
+.dr .dn2{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dr.c .dn2{color:var(--ac2)}
+.dr .dw{color:var(--mu);font-size:13.5px;white-space:nowrap}
+.dwk{margin:10px 0 12px;font-size:13px;color:var(--mu);text-align:center}
+.dtl .warn,.dtl .bkn{margin:0 0 10px}
+/* --- شاشة التمرين --- */
+#sess{display:flex;flex-direction:column}
+.wtop{display:flex;align-items:center;gap:6px;padding:calc(8px + env(safe-area-inset-top)) 8px 0}
+.wx{flex:none;width:48px;height:48px;border:0;background:none;color:var(--mu);font-size:22px;display:flex;align-items:center;justify-content:center;padding:0}
+.wseg{flex:1;display:flex;gap:4px;direction:ltr}
+.sg{flex:1;background:none;border:0;padding:20px 0;cursor:pointer}
+.sg i{display:block;height:4px;border-radius:4px;background:var(--bd)}
+.sg.dn i{background:var(--ac)}
+.sg.wn i{background:var(--mid)}
+.sg.cur i{height:7px;margin:-1px 0}
+.sg.cur:not(.dn):not(.wn) i{background:var(--tx2)}
+#sess .corec{display:table;margin:0 auto;background:none;font-size:12.5px}
+#sess .corec[hidden]{display:none}
+.wmain{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;width:100%;max-width:560px;margin:0 auto;padding:3vh 20px 10px}
+.wmain.wa{animation:wfade .16s ease-out}
+@keyframes wfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.wname{background:none;border:0;color:var(--tx);font-size:clamp(24px,7.4vw,34px);font-weight:800;line-height:1.2;padding:8px 4px;min-height:48px}
+.wst{color:var(--ac2);font-size:.7em}
+.wtg{display:flex;align-items:baseline;justify-content:center;gap:16px;margin-top:6px}
+.wwt{background:none;border:0;border-bottom:2px dotted var(--acbd);color:var(--ac2);font-size:44px;font-weight:800;padding:0 2px;line-height:1.2;min-height:52px}
+.wwt small{font-size:16px;font-weight:600;margin-inline-start:4px;color:var(--mu)}
+.wsr{font-size:20px;font-weight:600;color:var(--tx2)}
+.wsets{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin:28px 0 8px;width:100%}
+.cir{width:min(27vw,104px);aspect-ratio:1;border-radius:50%;border:2px dashed var(--bd);background:none;color:var(--ph);font-size:30px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.cir.on{background:var(--ac);border:2px solid var(--ac);color:var(--onac)}
+.cir:active{transform:scale(.95)}
+.wrest{height:100px;display:flex;align-items:center;justify-content:center}
+.rst{position:relative;width:92px;height:92px;background:none;border:0;padding:0;color:var(--tx)}
+.rst svg{width:100%;height:100%}
+.rst .rb{fill:none;stroke:var(--bd);stroke-width:5}
+.rst .rf{fill:none;stroke:var(--ac2);stroke-width:5;stroke-linecap:round}
+.rst span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700}
+.whint{font-size:13px;line-height:1.7;color:var(--mu);opacity:.85;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:4px;max-width:100%;cursor:pointer}
+.whint.open{display:block}
+.whint:empty{display:none}
+.wlinks{display:flex;gap:4px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+.wlinks button{background:none;border:0;color:var(--mu);font-size:14px;padding:12px 10px;min-height:48px}
+.wmain .tnote{text-align:start;width:100%}
+.wmain .noteI{width:100%;margin-top:6px}
+.wnav{position:sticky;bottom:0;background:var(--bg);display:flex;align-items:center;gap:10px;padding:10px 16px calc(18px + env(safe-area-inset-bottom));max-width:560px;width:100%;margin:0 auto}
+.wnav .btn{min-height:56px;font-size:17px}
+.wnav .wp{flex:none;width:56px;font-size:24px}
+.wnav .wp[hidden]{display:none}
+.wnav .wn1{flex:1}
+#sheet{position:fixed;inset:0;z-index:30}
+.sbk{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+.sbx{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;background:var(--s1);border:1px solid var(--bd);border-radius:20px 20px 0 0;padding:16px 18px calc(18px + env(safe-area-inset-bottom))}
+.pkt{text-align:center;color:var(--mu);font-size:14px}
+.pk{position:relative;margin:6px 0 14px}
+.pkl{height:220px;overflow-y:auto;scroll-snap-type:y mandatory;padding:88px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.pkl::-webkit-scrollbar{display:none}
+.pki{height:44px;line-height:44px;text-align:center;font-size:22px;color:var(--mu);scroll-snap-align:center}
+.pki.sel{color:var(--tx);font-weight:800;font-size:26px}
+.pkb{position:absolute;left:0;right:0;top:88px;height:44px;border-top:1px solid var(--ac);border-bottom:1px solid var(--ac);pointer-events:none}
+.pkx{display:flex;justify-content:center;gap:10px;margin-top:4px}
+.pkx button{background:none;border:0;color:var(--mu);padding:12px;min-height:48px;font-size:14px}
+.wdone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.wchk{width:110px;height:110px;border-radius:50%;background:var(--ac);color:var(--onac);font-size:56px;display:flex;align-items:center;justify-content:center}
+.wdt{font-size:28px;font-weight:800}
+.wds{color:var(--mu);font-size:14px}
 </style>
 </head>
 <body>
@@ -444,7 +535,7 @@ a.brand,a.brand:visited{color:inherit;text-decoration:none;-webkit-tap-highlight
 
 <script>
 'use strict';
-const VER='56';
+const VER='57';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -757,10 +848,11 @@ const swatch=k=>{const t=THEMES[k]||THEMES.granite;return `<span class="sw" styl
 function applyTheme(){const t=THEMES[S.settings.theme]?S.settings.theme:'granite';document.documentElement.dataset.th=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEMES[t].bg}
 /* ================= التنقل ================= */
 let tab='home';
+const TABICO=['<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>'];
 function applyLang(){applyTheme();
   const L=T();document.documentElement.lang=LANG;document.documentElement.dir=LANG==='ar'?'rtl':'ltr';document.title=L.title;
   $('#brand').innerHTML=L.brand;$('#updBtn').textContent=L.update;
-  document.querySelectorAll('.tabs button').forEach((b,i)=>b.textContent=L.tabs[i]);
+  document.querySelectorAll('.tabs button').forEach((b,i)=>{b.innerHTML=TABICO[i]+'<span>'+L.tabs[i]+'</span>'});
 }
 function saveUI(){try{localStorage.setItem('gymlog.ui',JSON.stringify({t:tab,s:!$('#sess').hidden,y:window.scrollY,at:Date.now()}))}catch(e){}}
 async function hardRefresh(){
@@ -788,31 +880,38 @@ function go(t){tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.clas
 function modal(h){const m=$('#modal');m.querySelector('.mbox').innerHTML=h;if(m.hidden&&!hs().modal)history.pushState(Object.assign({tab:tab},hs(),{modal:1}),'');m.hidden=false}
 function closeModal(silent){$('#modal').hidden=true;if(!silent&&hs().modal)history.back()}
 
-/* ================= الرئيسية ================= */
+/* ================= الرئيسية (v57: دايرة واحدة) ================= */
+const arcP=(r,a0,a1)=>{const p=a=>{const t=(a-90)*Math.PI/180;return[150+r*Math.cos(t),150+r*Math.sin(t)]};const[x0,y0]=p(a0),[x1,y1]=p(a1);return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${a1-a0>180?1:0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`};
 function renderHome(){
   const L=T(),dr=S.draft,nd=dr?(dr.day||nextDayId()):nextDayId(),d=day(nd),ds=done();
   const wk=ds.filter(s=>daysAgo(s.date)>=0&&daysAgo(s.date)<7).length,days=S.program.days,cc=dr?dr.cycle:calcCycle(nd);
-  let h='';
-  /* ١) جلسة النهارده: الإجابة الأولى على الشاشة */
-  h+=`<div class="card hero">
-    <div class="rot" dir="ltr"><span class="cyb en">Cycle ${cc}</span>${days.map(x=>{const dn=x.id!==nd&&ds.some(q=>q.cycle===cc&&(q.day===x.id||(!q.day&&q.dayName===x.name)));return `<span class="rs${x.id===nd?' nx':''}${dn?' ld':''}">${dn?'✓ ':''}${esc(x.name)}</span>`}).join('')}</div>
-    <div class="mu">${dr?(dr.editing?L.draftEdit:L.draftOpen):L.todayL}</div>
-    <div class="big"><bdi>${esc(d.name)}</bdi></div>
-    <div class="xl">${d.ex.map((t,i)=>{const l=exHist(t.id)[0];return `<div class="xr${t.core?' c':''}"><span class="xn en">${esc(t.name)}</span>${t.core?'<i class="xs">★</i>':''}<span class="xw en">${t.unit?'':fw(l?l.w:t.w)+' · '}${t.sets}×${t.reps}${t.unit?' '+esc(unitTxt(t.unit)):''}</span></div>`}).join('')}</div>
-    <div class="coreline">★ ${L.coreL}: <span class="en">${esc(coreNames(d).join(' + '))}</span></div>
-    ${dr?`<button class="btn pri w mt big2" data-a="resume">${L.resume}</button>`:`<button class="btn pri w mt big2" data-a="start" data-d="${d.id}">${L.start} <bdi>${esc(d.name)}</bdi></button>`}
-    <details class="alt"${dr?' open':''}><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd).map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
-  </div>`;
-  /* ٢) الأسبوع في سطر واحد */
-  h+=`<div class="card wkc"><div class="dots">${[0,1,2,3].map(k=>`<i class="${k<wk?'on':''}${k===2?' goal':''}"></i>`).join('')}</div><div class="sp"><div class="wkt">${L.weekOf(wk)}</div><div class="mu">${ds[0]?`${L.lastSess}: <bdi>${esc(ds[0].dayName)}</bdi> · ${fmtD(ds[0].date)}`:L.noData}</div></div></div>`;
-  if(ds.length&&wk<3)h+=`<div class="warn" style="margin:-4px 0 12px">${L.min3}</div>`;
-  /* ٣) تنبيهات */
-  if(syncPublic())h+=`<div class="warn" style="margin:0 0 12px">${L.syncPub}</div>`;
-  if(SYNC.on&&SYNC.missed>=3)h+=`<div class="warn" style="margin:0 0 12px">${L.syncMiss}</div>`;
+  const n=days.length,g=n>1?9:0;
+  /* الدايرة: كل قوس يوم من الدورة. مليان = خلص، منوّر = النهارده، باهت = لسه */
+  const arcs=n>1?days.map((x,k)=>{const dn=x.id!==nd&&ds.some(q=>q.cycle===cc&&(q.day===x.id||(!q.day&&q.dayName===x.name)));
+    return `<path class="ar${x.id===nd?' cur':dn?' dn':''}" d="${arcP(136,k*360/n+g/2,(k+1)*360/n-g/2)}"/>`}).join(''):`<circle class="ar cur" cx="150" cy="150" r="136"/>`;
+  let last='';
+  if(ds[0]){const k=Math.max(0,daysAgo(ds[0].date));last=' · '+tr('آخر جلسة: ','Last: ')+(k===0?tr('النهارده','today'):k===1?tr('امبارح','yesterday'):tr(`من ${k} يوم`,`${k} days ago`))}
+  const rows=d.ex.map(t=>{const l=exHist(t.id)[0];return `<div class="dr${t.core?' c':''}"><span class="dn2 en">${t.core?'★ ':''}${esc(t.name)}</span><span class="dw en">${t.unit?'':fw(l?l.w:t.w)+' · '}${t.sets}×${t.reps}${t.unit?' '+esc(unitTxt(t.unit)):''}</span></div>`}).join('');
+  /* تنبيهات: جوّه التفاصيل، ونقطة صغيرة على الزرار لو فيه حاجة */
+  let al='';
+  if(syncPublic())al+=`<div class="warn">${L.syncPub}</div>`;
+  if(SYNC.on&&SYNC.missed>=3)al+=`<div class="warn">${L.syncMiss}</div>`;
   const lb=S.settings.lastBackup;
-  if(ds.length&&!SYNC.on&&(!lb||Date.now()-lb>7*864e5))h+=`<div class="bkn"><div>${lb?L.bkAgo(Math.floor((Date.now()-lb)/864e5)):L.bkNone}</div><button class="btn sm" data-a="backup">${L.bkNowBtn}</button></div>`;
-  /* ٤) آخر الجلسات */
-  if(ds.length){h+=`<h2>${L.recent}</h2><div class="sl">`+ds.slice(0,4).map(s=>`<div class="sc ${s.status}" data-a="sess" data-id="${s.id}"><div class="sp"><div class="n"><bdi>${esc(s.dayName)}</bdi></div><div class="d">${fmtD(s.date)} · <span class="en">C${s.cycle}</span></div></div><span class="st">${T().st[s.status]||''}</span></div>`).join('')+'</div>'}
+  if(ds.length&&!SYNC.on&&(!lb||Date.now()-lb>7*864e5))al+=`<div class="bkn"><div>${lb?L.bkAgo(Math.floor((Date.now()-lb)/864e5)):L.bkNone}</div><button class="btn sm" data-a="backup">${L.bkNowBtn}</button></div>`;
+  const h=`<div class="homew">
+    <button class="orb" data-a="${dr?'resume':'start'}"${dr?'':` data-d="${d.id}"`}>
+      <svg viewBox="0 0 300 300" aria-hidden="true">${arcs}</svg>
+      <span class="oc"><span class="on1"><bdi>${esc(d.name)}</bdi></span><span class="on2">${dr?L.resume:L.exN(d.ex.length)}</span></span>
+    </button>
+    <div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
+    <details class="dtl"${dr?' open':''}><summary>${tr('التفاصيل','Details')}${al?'<i class="aldot"></i>':''}</summary>
+      <div class="dl">${rows}</div>
+      <div class="coreline">★ ${L.coreL}: <span class="en">${esc(coreNames(d).join(' + '))}</span></div>
+      <div class="dwk">${L.weekOf(wk)}</div>
+      ${al}
+      <details class="alt"${dr?' open':''}><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd).map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
+    </details>
+  </div>`;
   $('#view').innerHTML=h;
 }
 
@@ -834,38 +933,68 @@ function editSession(id){
   if(d)for(const t of d.ex)if(!ex.some(e=>e.exId===t.id))ex.push(draftEx(t));
   S.draft.ex=ex;openTips.clear();save();closeModal(true);openSession();
 }
-function openSession(){renderSession();$('#sess').hidden=false;$('#sess').scrollTop=0;document.body.style.overflow='hidden';if(!hs().sess){const n=Object.assign({tab:tab},hs(),{sess:1});delete n.modal;if(hs().modal)history.replaceState(n,'');else history.pushState(n,'')}saveUI()}
-function closeSession(){flushSave();$('#sess').hidden=true;document.body.style.overflow='';if(tab==='home')renderHome();saveUI();if(hs().sess)history.back()}
+function openSession(){const dd=S.draft,k0=dd.ex.findIndex(e=>!fullyIn(e));curEx=dd.editing?0:(k0<0?dd.ex.length-1:k0);finishing=false;renderSession();$('#sess').hidden=false;$('#sess').scrollTop=0;document.body.style.overflow='hidden';if(!hs().sess){const n=Object.assign({tab:tab},hs(),{sess:1});delete n.modal;if(hs().modal)history.replaceState(n,'');else history.pushState(n,'')}saveUI()}
+function closeSession(){endRest(false);flushSave();$('#sess').hidden=true;document.body.style.overflow='';if(tab==='home')renderHome();saveUI();if(hs().sess)history.back()}
 const openTips=new Set();
-function exBlock(e,i){
-  const L=T(),h=exHist(e.exId,S.draft.editing),l=h[0],p=progMsg({sets:e.tsets,goal:e.goal},h,e.unit);
-  const u=e.unit?' '+esc(unitTxt(e.unit)):'';
-  const showL=openTips.has('l'+i);
-  const wv=(e.w===''||e.w==null||(noW(e.w)&&e.unit))?'':esc(e.w);
-  const lastP=h.length?h.slice(0,3).map(x=>`<div><bdi>${fmtD(x.date)}</bdi> · <bdi class="en">${fw(x.w)} | ${esc(setsStr(x))}</bdi></div>`).join(''):`<div>${L.first}</div>`;
-  return `<div class="card ex cx${e.core?' core':''}${stCls(e)}" data-i="${i}">
-  <div class="exh"><span class="exno">${i+1}</span><button class="exname en" data-a="hist" data-id="${e.exId}">${esc(e.name)}</button>${e.core?'<span class="cstar">★</span>':''}<span class="chk" id="ok${i}">${stMark(e)}</span></div>
-  <div class="r2"><div class="tgt"><b class="en">${e.tsets}×${e.treps}${u}</b></div>
-    <div class="wrow"><input class="inp wi" data-f="w" inputmode="decimal" enterkeyhint="next" value="${wv}" placeholder="—"><span class="un">${L.wt}</span></div></div>
-  <div class="sets">${e.sets.map((r,j)=>`<div class="scell"><input class="inp" data-f="s" data-j="${j}" inputmode="numeric" enterkeyhint="next" value="${esc(r)}" placeholder="${l&&l.sets[j]!=null?l.sets[j]:e.treps}" aria-label="${j+1}"></div>`).join('')}
-    <div class="sadd"><button class="sb" data-a="addset" data-i="${i}" aria-label="${tr('زوّد مجموعة','Add set')}">+</button><button class="sb" data-a="rmset" data-i="${i}" aria-label="${tr('شيل مجموعة','Remove set')}">−</button></div></div>
-  <div class="nrow"><input class="inp noteI" data-f="n" value="${esc(e.note)}" placeholder="${L.notePh}"><button class="mini${showL?' on':''}" data-a="tgl" data-k="l${i}" aria-label="${tr('آخر أداء','Last performance')}">↺ ${tr('آخر أداء','Last')}</button></div>
-  ${showL?`<div class="tnote">${lastP}${p?`<div class="pmsg ${p.c}">${p.t}</div>`:''}</div>`:''}
-  </div>`;
+/* ===== شاشة التمرين (v57): تمرين واحد في الشاشة ===== */
+let curEx=0,pk=null,restEnd=0,restTot=90,restIv=null,wAnim=false,finishing=false;
+const REST=90,RC=2*Math.PI*40;
+function buildRest(){const el=$('#wrest');if(!el)return;el.innerHTML=`<button class="rst" data-a="skipRest" aria-label="skip"><svg viewBox="0 0 100 100"><circle class="rb" cx="50" cy="50" r="40"/><circle class="rf" id="rf" cx="50" cy="50" r="40" stroke-dasharray="${RC.toFixed(1)}" stroke-dashoffset="0" transform="rotate(-90 50 50)"/></svg><span class="en" id="rn"></span></button>`;tickRest()}
+function tickRest(){const ms=restEnd-Date.now();if(!restEnd||ms<=0){endRest(!!restEnd);return}const rf=$('#rf'),rn=$('#rn');if(rf)rf.setAttribute('stroke-dashoffset',(RC*(1-ms/1000/restTot)).toFixed(1));if(rn)rn.textContent=Math.ceil(ms/1000)}
+function endRest(buzz){clearInterval(restIv);restIv=null;restEnd=0;const el=$('#wrest');if(el)el.innerHTML='';if(buzz){try{navigator.vibrate&&navigator.vibrate([180,90,180])}catch(e){}}}
+function startRest(){restTot=REST;restEnd=Date.now()+REST*1000;clearInterval(restIv);restIv=setInterval(tickRest,250);buildRest()}
+function goEx(k){const d=S.draft;if(!d||k<0||k>=d.ex.length||k===curEx)return;endRest(false);closeSheet();curEx=k;wAnim=true;renderSession();wAnim=false;$('#sess').scrollTop=0}
+function closeSheet(){const s=$('#sheet');if(s){s.hidden=true;s.innerHTML=''}pk=null}
+function openPick(kind,j){
+  const d=S.draft,e=d.ex[curEx],L=T();let cur,step,min,max;
+  if(kind==='w'){cur=num(e.w);if(isNaN(cur))cur=0;step=.5;min=0;max=Math.max(250,cur)}
+  else{cur=num(e.sets[j]);if(!(cur>0))cur=+e.treps||10;const un=!!e.unit;step=un?5:1;min=un?5:1;max=Math.max(un?300:60,cur)}
+  const vals=[];for(let v=min;v<=max+1e-9;v+=step)vals.push(Math.round(v*100)/100);
+  if(!vals.includes(cur)){vals.push(cur);vals.sort((a,b)=>a-b)}
+  pk={kind,j,vals};
+  const ttl=kind==='w'?`<span class="en">${esc(e.name)}</span> · ${L.wt}`:`${tr('المجموعة','Set')} ${j+1}`;
+  const sh=$('#sheet');sh.hidden=false;
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="pkt">${ttl}</div><div class="pk"><div class="pkl" id="pkl">${vals.map(v=>`<div class="pki en">${v}</div>`).join('')}</div><div class="pkb"></div></div><button class="btn pri w" data-a="pickOk">${tr('تم','Done')}</button>${kind==='s'?`<div class="pkx"><button data-a="pickClr">${tr('امسح','Clear')}</button>${e.sets.length>1?`<button data-a="pickRm">${tr('شيل المجموعة','Remove set')}</button>`:''}</div>`:''}</div>`;
+  const l=$('#pkl'),mark=()=>{const k=Math.round(l.scrollTop/44);[...l.children].forEach((c,x)=>c.classList.toggle('sel',x===k))};
+  l.scrollTop=vals.indexOf(cur)*44;mark();
+  let raf=0;l.addEventListener('scroll',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(mark)},{passive:true});
+}
+function openMenu(){
+  const d=S.draft,L=T(),sh=$('#sheet');sh.hidden=false;
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="meta2"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div><button class="btn w" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
 }
 function renderSession(){
   const d=S.draft,L=T();
-  const st=$('#sess').scrollTop;
-  $('#sess').innerHTML=`<div class="shead"><button class="btn sm" data-a="closeS">${L.back}</button><div class="stitle"><bdi>${esc(d.dayName)}</bdi></div><div class="corec" id="corec" aria-live="polite"></div></div>
-  <div class="pbar"><i id="pfill"></i></div>
-  <div class="sbody">
-    <div class="meta2"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div>
-    ${d.ex.map(exBlock).join('')}
-    <button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button>
+  if(curEx>=d.ex.length)curEx=d.ex.length-1;if(curEx<0)curEx=0;
+  const i=curEx,e=d.ex[i],n=d.ex.length,last=i===n-1,h=exHist(e.exId,d.editing),l=h[0],p=progMsg({sets:e.tsets,goal:e.goal},h,e.unit);
+  const u=e.unit?' '+esc(unitTxt(e.unit)):'',showW=!(noW(e.w)&&e.unit);
+  const showL=openTips.has('l'+i),showH=openTips.has('h'+i),showN=openTips.has('n'+i)||!!e.note;
+  const seg=d.ex.map((x,k)=>{const s=exSt(x);return `<button class="sg${k===i?' cur':''}${fullyIn(x)?' dn':s==='part'?' wn':''}" data-a="exGo" data-i="${k}" aria-label="${k+1}"><i></i></button>`}).join('');
+  const cir=e.sets.map((r,j)=>{const v=num(r)>0;return `<button class="cir${v?' on':''}" data-a="setTap" data-j="${j}" aria-label="${tr('مجموعة','Set')} ${j+1}"><span class="en">${v?esc(r):e.treps}</span></button>`}).join('');
+  const lastP=h.length?h.slice(0,3).map(x=>`<div><bdi>${fmtD(x.date)}</bdi> · <bdi class="en">${fw(x.w)} | ${esc(setsStr(x))}</bdi></div>`).join(''):`<div>${L.first}</div>`;
+  const ar=LANG==='ar';
+  $('#sess').innerHTML=`<div class="wtop"><button class="wx" data-a="closeS" aria-label="${L.back}">✕</button><div class="wseg">${seg}</div><button class="wx" data-a="menu" aria-label="${tr('خيارات','Options')}">⋯</button></div>
+  <div class="corec" id="corec" aria-live="polite"></div>
+  <div class="wmain${wAnim?' wa':''}" data-i="${i}">
+    <button class="wname en" data-a="hist" data-id="${e.exId}">${esc(e.name)}${e.core?' <span class="wst">★</span>':''}</button>
+    <div class="wtg">${showW?`<button class="wwt en" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>`:''}<span class="wsr en">${e.tsets}×${e.treps}${u}</span></div>
+    <div class="wsets">${cir}</div>
+    <div class="wrest" id="wrest"></div>
+    <div class="whint${showH?' open':''}" dir="auto" data-a="tgl" data-k="h${i}">${esc(e.note0||'')}</div>
+    <div class="wlinks"><button data-a="tgl" data-k="l${i}">↺ ${tr('آخر أداء','Last')}</button><button data-a="tgl" data-k="n${i}">✎ ${L.note}</button><button data-a="addset" data-i="${i}">+ ${tr('مجموعة','Set')}</button></div>
+    ${showL?`<div class="tnote">${lastP}${p?`<div class="pmsg ${p.c}">${p.t}</div>`:''}</div>`:''}
+    ${showN?`<input class="inp noteI" data-f="n" value="${esc(e.note)}" placeholder="${L.notePh}">`:''}
   </div>
-  <div class="sfoot"><button class="btn" data-a="shareDraft">${L.shareW}</button><button class="btn pri sp" data-a="commit">${d.editing?L.saveEdit:L.save}</button></div>`;
-  $('#sess').scrollTop=st;
+  <div class="wnav"><button class="btn wp" data-a="exGo" data-i="${i-1}"${i===0?' hidden':''} aria-label="${tr('اللي قبله','Previous')}">${ar?'›':'‹'}</button>${last?`<button class="btn pri wn1" data-a="finish">${d.editing?L.saveEdit:tr('خلّص','Finish')}</button>`:`<button class="btn wn1" data-a="exGo" data-i="${i+1}">${tr('اللي بعده','Next')} ${ar?'‹':'›'}</button>`}</div>
+  <div id="sheet" hidden></div>`;
   updCore();
+  if(restEnd>Date.now())buildRest();
+}
+function finishSession(){
+  const s=buildFromDraft();if(!s){toast(T().noSets);return}
+  if(finishing)return;finishing=true;endRest(false);closeSheet();
+  $('#sess').innerHTML=`<div class="wdone"><div class="wchk">✓</div><div class="wdt"><bdi>${esc(S.draft.dayName)}</bdi></div><div class="wds">${T().st[s.status]||''}</div></div>`;
+  setTimeout(()=>{finishing=false;if(S.draft)commit()},1100);
 }
 const logged=e=>e.sets.some(r=>num(r)>0);
 /* حالة التمرين: none | part (ناقص خانات) | low (كل الخانات مليانة بس أقل من الهدف) | ok */
@@ -877,9 +1006,8 @@ const stMark=e=>({none:'',part:'…',low:'↓',ok:'✓'})[exSt(e)];
 const fullyIn=e=>{const k=exSt(e);return k==='low'||k==='ok'};
 function updCore(){
   const d=S.draft;if(!d)return;const c=d.ex.filter(e=>e.core),k=c.filter(fullyIn).length;
-  const el=$('#corec');if(el){el.textContent=k===c.length&&c.length?T().coreDone:T().coreN(k,c.length);el.classList.toggle('done',k===c.length&&c.length>0)}
-  d.ex.forEach((e,i)=>{const o=$('#ok'+i);if(o){o.textContent=stMark(e);const k=exSt(e),c=o.closest('.ex');o.style.color=k==='ok'?'':'var(--mid)';if(c){c.classList.toggle('dn',k==='ok');c.classList.toggle('wn',k==='part'||k==='low')}}});
-  const pf=$('#pfill');if(pf)pf.style.width=(d.ex.length?Math.round(d.ex.filter(fullyIn).length/d.ex.length*100):0)+'%';
+  const el=$('#corec');if(el){el.textContent=k===c.length&&c.length?T().coreDone:T().coreN(k,c.length);el.classList.toggle('done',k===c.length&&c.length>0);el.hidden=!c.length}
+  document.querySelectorAll('#sess .sg').forEach((b,x)=>{const e=d.ex[x];if(!e)return;b.classList.toggle('dn',fullyIn(e));b.classList.toggle('wn',exSt(e)==='part')});
 }
 /* تحويل المسودة لجلسة (من غير حفظ) */
 function buildFromDraft(){
@@ -1400,6 +1528,19 @@ document.addEventListener('click',ev=>{
     case 'shareDraft':shareDraft();break;
     case 'discard':if(confirm(d.editing?L.confCancelEdit:L.confDiscard)){S.draft=null;openTips.clear();save();closeSession()}break;
     case 'addset':d.ex[i].sets.push('');save();renderSession();break;
+    case 'exGo':goEx(i);break;
+    case 'setTap':{const j=+b.dataset.j,e=d.ex[curEx];if(num(e.sets[j])>0){openPick('s',j);break}
+      e.sets[j]=String(e.treps);b.classList.add('on');b.firstElementChild.textContent=e.treps;saveSoon();updCore();
+      if(e.sets.every(r=>num(r)>0))endRest(false);else startRest();break}
+    case 'pickW':openPick('w');break;
+    case 'pickOk':{const l=$('#pkl');if(!l||!pk)break;const v=pk.vals[Math.max(0,Math.min(pk.vals.length-1,Math.round(l.scrollTop/44)))],e=d.ex[curEx];
+      if(pk.kind==='w')e.w=String(v);else e.sets[pk.j]=String(v);saveSoon();closeSheet();renderSession();break}
+    case 'pickClr':{if(pk){d.ex[curEx].sets[pk.j]='';saveSoon();closeSheet();renderSession()}break}
+    case 'pickRm':{if(pk&&d.ex[curEx].sets.length>1){d.ex[curEx].sets.splice(pk.j,1);saveSoon();closeSheet();renderSession()}break}
+    case 'closeSheet':closeSheet();break;
+    case 'menu':openMenu();break;
+    case 'skipRest':endRest(false);break;
+    case 'finish':finishSession();break;
     case 'rmset':if(d.ex[i].sets.length>1){d.ex[i].sets.pop();save();renderSession()}break;
     case 'tgl':{const k=b.dataset.k;openTips.has(k)?openTips.delete(k):openTips.add(k);renderSession();break}
     case 'hist':exHistModal(b.dataset.id);break;
@@ -1451,11 +1592,14 @@ function onField(ev){
   const t=ev.target,d=S.draft;if(!d)return;
   if(t.id==='sDate'){d.date=t.value;saveSoon();return}
   if(t.id==='sCyc'){const n=num(t.value);if(n>0)d.cycle=n;save();return}
-  const c=t.closest('.ex');if(!c)return;const e=d.ex[+c.dataset.i],f=t.dataset.f;
+  const c=t.closest('.wmain');if(!c)return;const e=d.ex[+c.dataset.i],f=t.dataset.f;
   if(f==='w')e.w=t.value;else if(f==='s')e.sets[+t.dataset.j]=t.value;else if(f==='n')e.note=t.value;else return;
   saveSoon();updCore();
 }
 sess.addEventListener('input',onField);sess.addEventListener('change',onField);
+let tx=0,ty=0,tsh=false;
+sess.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY;tsh=!!e.target.closest('#sheet,input')},{passive:true});
+sess.addEventListener('touchend',e=>{if(!S.draft||tsh)return;const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.6)return;goEx(curEx+((LANG==='ar'?dx>0:dx<0)?1:-1))},{passive:true});
 sess.addEventListener('keydown',ev=>{if(ev.key!=='Enter'||ev.target.tagName!=='INPUT')return;const all=[...sess.querySelectorAll('input.inp')];const k=all.indexOf(ev.target);if(k>-1&&all[k+1]){ev.preventDefault();all[k+1].focus()}});
 
 /* ================= التثبيت والتحديث ================= */
