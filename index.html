@@ -503,6 +503,7 @@ html[data-th] .tabs button.on{box-shadow:none}
 .wnav .wb{flex:1;min-height:60px;font-size:26px}
 .wnav .wb:disabled{opacity:.3}
 .wnav .pri.wb{font-size:18px}
+.wnav .wb.wt{font-size:18px;font-weight:700}
 .wname.core{color:var(--ac2)}
 .wnav .wn1{flex:1}
 #sheet{position:fixed;inset:0;z-index:30}
@@ -601,7 +602,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 
 <script>
 'use strict';
-const VER='62';
+const VER='63';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1057,11 +1058,13 @@ function renderSession(){
   updCore();
   if(restEnd>Date.now())buildRest();
 }
+let lastDone=null;
 function finishSession(){
-  const s=buildFromDraft();if(!s){toast(T().noSets);return}
-  if(finishing)return;finishing=true;endRest(false);closeSheet();
-  $('#sess').innerHTML=`<div class="wdone"><div class="wchk">✓</div><div class="wdt"><bdi>${esc(S.draft.dayName)}</bdi></div><div class="wds">${T().st[s.status]||''}</div></div>`;
-  setTimeout(()=>{finishing=false;if(S.draft)commit()},1100);
+  if(finishing||!buildFromDraft()){if(!finishing)toast(T().noSets);return}
+  finishing=true;endRest(false);closeSheet();
+  const nm=S.draft.dayName,L=T(),s=persistDraft();lastDone=s;finishing=false;
+  $('#sess').innerHTML=`<div class="wdone"><div class="wchk">✓</div><div class="wdt"><bdi>${esc(nm)}</bdi></div><div class="wds">${s.status==='full'?L.savedFull:s.status==='core'?L.savedCore:L.saved}</div></div>
+  <div class="wnav"><button class="btn wb wt" data-a="copyDone">${tr('كوبي','Copy')}</button><button class="btn pri wb wt" data-a="doneClose">${tr('تمام','Done')}</button></div>`;
 }
 const logged=e=>e.sets.some(r=>num(r)>0);
 /* حالة التمرين: none | part (ناقص خانات) | low (كل الخانات مليانة بس أقل من الهدف) | ok */
@@ -1085,6 +1088,14 @@ function buildFromDraft(){
   const core=d.ex.filter(e=>e.core).every(e=>ex.some(x=>x.exId===e.exId));
   const all=d.ex.every(e=>ex.some(x=>x.exId===e.exId));
   return{id:d.editing||d.id,date:d.date||today(),day:d.day,dayName:d.dayName,cycle:+num(d.cycle)||1,ex,status:all?'full':core?'core':'part',ts:Date.now()};
+}
+function persistDraft(){
+  const d=S.draft,s=buildFromDraft();
+  if(!s)return null;
+  const i=d.editing?S.sessions.findIndex(x=>x.id===d.editing):-1;
+  if(i>-1){s.ts=S.sessions[i].ts;S.sessions[i]=s}else S.sessions.push(s);
+  S.draft=null;openTips.clear();save();autoFile();queueBackup(true);
+  return s;
 }
 function commit(){
   const d=S.draft,s=buildFromDraft();
@@ -1662,6 +1673,8 @@ document.addEventListener('click',ev=>{
     case 'menu':openMenu();break;
     case 'skipRest':endRest(false);break;
     case 'finish':finishSession();break;
+    case 'copyDone':if(lastDone)copy(cardText(lastDone));break;
+    case 'doneClose':closeSession();go('home');break;
     case 'rmset':if(d.ex[i].sets.length>1){d.ex[i].sets.pop();save();renderSession()}break;
     case 'tgl':{const k=b.dataset.k;openTips.has(k)?openTips.delete(k):openTips.add(k);renderSession();break}
     case 'hist':exHistModal(b.dataset.id);break;
