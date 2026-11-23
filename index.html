@@ -429,9 +429,14 @@ a.brand,a.brand:visited{color:inherit;text-decoration:none;-webkit-tap-highlight
 .tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabs button.on{font-weight:700}
 html[data-th] .tabs button.on{box-shadow:none}
-.homew{display:flex;flex-direction:column;align-items:center;padding:3vh 0 8px}
+.homew{display:flex;flex-direction:column;align-items:center;padding:3vh 0 20px}
 .orb{position:relative;width:min(86vw,380px);aspect-ratio:1;border-radius:50%;border:0;background:var(--s1);color:var(--tx);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;transition:transform .15s}
-.orb:active{transform:scale(.97)}
+.orb{--sd:color-mix(in srgb,var(--bg) 40%,#000);box-shadow:0 11px 0 var(--sd),0 22px 30px rgba(0,0,0,.45);transition:transform .09s,box-shadow .09s}
+.orb:active,.orb.press{transform:translateY(10px) scale(.965);box-shadow:0 1px 0 var(--sd),0 5px 10px rgba(0,0,0,.4)}
+.orb.press{animation:orbp .28s ease-out}
+.orb.press .ar.cur{stroke-width:15}
+.orb .ar{transition:stroke-width .12s}
+@keyframes orbp{0%{transform:none;box-shadow:0 11px 0 var(--sd),0 22px 30px rgba(0,0,0,.45)}38%{transform:translateY(12px) scale(.95);box-shadow:0 0 0 var(--sd),0 2px 6px rgba(0,0,0,.4)}100%{transform:translateY(10px) scale(.965);box-shadow:0 1px 0 var(--sd),0 5px 10px rgba(0,0,0,.4)}}
 .orb svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .orb .ar{fill:none;stroke:var(--bd);stroke-width:7;stroke-linecap:round}
 .orb .ar.dn{stroke:var(--ac)}
@@ -491,7 +496,6 @@ html[data-th] .tabs button.on{box-shadow:none}
 .whint:empty{display:none}
 .wlinks{display:flex;gap:4px;justify-content:center;margin-top:6px;flex-wrap:wrap}
 .wlinks button{background:none;border:0;color:var(--mu);font-size:14px;padding:12px 10px;min-height:48px}
-.wlinks button[data-a=addset]{background:var(--ac);color:var(--onac);border-radius:var(--radp);font-weight:700}
 .wmain .tnote{text-align:start;width:100%}
 .wmain .noteI{width:100%;margin-top:6px}
 .wnav{position:sticky;bottom:0;background:var(--bg);display:flex;align-items:center;gap:10px;padding:10px 16px calc(18px + env(safe-area-inset-bottom));max-width:560px;width:100%;margin:0 auto}
@@ -581,7 +585,7 @@ html[data-th=granite] .pdot{background:var(--gd)}
 
 <script>
 'use strict';
-const VER='60';
+const VER='61';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -950,12 +954,12 @@ function renderHome(){
       <span class="oc"><span class="on1"><bdi>${esc(d.name)}</bdi></span><span class="on2">${dr?L.resume:L.exN(d.ex.length)}</span></span>
     </button>
     <div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
-    <details class="dtl"${dr?' open':''}><summary>${tr('التفاصيل','Details')}${al?'<i class="aldot"></i>':''}</summary>
+    <details class="dtl"><summary>${tr('التفاصيل','Details')}${al?'<i class="aldot"></i>':''}</summary>
       <div class="dl">${rows}</div>
       <div class="coreline">${L.coreL}: <span class="en">${esc(coreNames(d).join(' + '))}</span></div>
       <div class="dwk">${L.weekOf(wk)}</div>
       ${al}
-      <details class="alt"${dr?' open':''}><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd).map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
+      <details class="alt"><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd).map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
     </details>
   </div>`;
   $('#view').innerHTML=h;
@@ -990,6 +994,8 @@ function tickRest(){const ms=restEnd-Date.now();if(!restEnd||ms<=0){endRest(!!re
 function endRest(buzz){clearInterval(restIv);restIv=null;restEnd=0;const el=$('#wrest');if(el)el.innerHTML='';if(buzz){try{navigator.vibrate&&navigator.vibrate([180,90,180])}catch(e){}}}
 function startRest(){restTot=REST;restEnd=Date.now()+REST*1000;clearInterval(restIv);restIv=setInterval(tickRest,250);buildRest()}
 function goEx(k){const d=S.draft;if(!d||k<0||k>=d.ex.length||k===curEx)return;endRest(false);closeSheet();curEx=k;wAnim=true;renderSession();wAnim=false;$('#sess').scrollTop=0}
+function orbGo(b,fn){if(b.dataset.busy)return;b.dataset.busy='1';b.classList.add('press');try{navigator.vibrate&&navigator.vibrate(20)}catch(e){}
+  setTimeout(()=>{fn();b.classList.remove('press');delete b.dataset.busy},280)}
 function closeSheet(){const s=$('#sheet');if(s){s.hidden=true;s.innerHTML=''}pk=null}
 function openPick(kind,j){
   const d=S.draft,e=d.ex[curEx],L=T();let cur,step,min,max;
@@ -1595,8 +1601,8 @@ document.addEventListener('click',ev=>{
   const a=b.dataset.a,i=+b.dataset.i,d=S.draft,L=T();
   switch(a){
     case 'lang':$('#toast').classList.remove('on');LANG=LANG==='en'?'ar':'en';S.settings.lang=LANG;save();applyLang();if(!$('#sess').hidden)renderSession();if(!$('#modal').hidden)closeModal();go(tab);break;
-    case 'start':startSession(b.dataset.d);break;
-    case 'resume':openSession();break;
+    case 'start':if(b.classList.contains('orb'))orbGo(b,()=>startSession(b.dataset.d));else startSession(b.dataset.d);break;
+    case 'resume':if(b.classList.contains('orb'))orbGo(b,openSession);else openSession();break;
     case 'closeS':flushSave();closeSession();if(S.draft)queueDraftBackup();break;
     case 'commit':commit();break;
     case 'shareDraft':shareDraft();break;
