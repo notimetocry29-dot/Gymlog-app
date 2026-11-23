@@ -429,7 +429,11 @@ a.brand,a.brand:visited{color:inherit;text-decoration:none;-webkit-tap-highlight
 .tabs svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabs button.on{font-weight:700}
 html[data-th] .tabs button.on{box-shadow:none}
-.homew{display:grid;grid-template-rows:minmax(0,1fr) auto minmax(0,1fr);justify-items:center;min-height:calc(100dvh - 160px);padding-top:28px}
+html{overflow-x:hidden;max-width:100%;scrollbar-width:none;-ms-overflow-style:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}
+body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
+#view{overflow-x:clip}
+.homew{display:grid;grid-template-rows:minmax(0,1fr) auto minmax(0,1fr);justify-items:center;min-height:calc(100dvh - 160px);padding-bottom:34px}
 .hb{width:100%;display:flex;flex-direction:column;align-items:center;align-self:start}
 .orb{position:relative;width:min(86vw,380px);aspect-ratio:1;border-radius:50%;border:0;background:var(--s1);color:var(--tx);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;transition:transform .15s}
 .orb{box-shadow:none;transition:transform .07s ease-out,background .07s}
@@ -517,6 +521,9 @@ html[data-th] .tabs button.on{box-shadow:none}
 .pki{height:44px;line-height:44px;text-align:center;font-size:22px;color:var(--mu);scroll-snap-align:center}
 .pki.sel{color:var(--tx);font-weight:800;font-size:26px}
 .pkb{position:absolute;left:0;right:0;top:88px;height:44px;border-top:1px solid var(--ac);border-bottom:1px solid var(--ac);pointer-events:none}
+.rchips{display:flex;flex-wrap:wrap;gap:8px}
+.rchips button{border:1px solid var(--bd);background:var(--s1);border-radius:99px;padding:8px 14px;min-height:44px;color:var(--mu)}
+.rchips button.on{background:var(--ac);border-color:var(--ac);color:var(--onac);font-weight:800}
 .pkx{display:flex;justify-content:center;gap:10px;margin-top:4px}
 .pkx button{background:none;border:0;color:var(--mu);padding:12px;min-height:48px;font-size:14px}
 .wdone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
@@ -603,7 +610,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 
 <script>
 'use strict';
-const VER='64';
+const VER='65';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1006,11 +1013,14 @@ function closeSession(){endRest(false);flushSave();$('#sess').hidden=true;docume
 const openTips=new Set();
 /* ===== شاشة التمرين (v57): تمرين واحد في الشاشة ===== */
 let curEx=0,pk=null,restEnd=0,restTot=90,restIv=null,wAnim=false,finishing=false;
-const REST=90,RC=2*Math.PI*40;
+const RC=2*Math.PI*40;
+const restSecs=()=>{const v=S.settings.rest;return v==null?90:+v};
+const RESTS=[0,30,45,60,90,120,150,180,240,300];
+const restChips=()=>`<div class="rchips">${RESTS.map(v=>`<button class="${restSecs()===v?'on':''}" data-a="setRest" data-s="${v}">${v?(LANG==='ar'?v+' ث':v+'s'):tr('بدون','Off')}</button>`).join('')}</div>`;
 function buildRest(){const el=$('#wrest');if(!el)return;el.innerHTML=`<button class="rst" data-a="skipRest" aria-label="skip"><svg viewBox="0 0 100 100"><circle class="rb" cx="50" cy="50" r="40"/><circle class="rf" id="rf" cx="50" cy="50" r="40" stroke-dasharray="${RC.toFixed(1)}" stroke-dashoffset="0" transform="rotate(-90 50 50)"/></svg><span class="en" id="rn"></span></button>`;tickRest()}
 function tickRest(){const ms=restEnd-Date.now();if(!restEnd||ms<=0){endRest(!!restEnd);return}const rf=$('#rf'),rn=$('#rn');if(rf)rf.setAttribute('stroke-dashoffset',(RC*(1-ms/1000/restTot)).toFixed(1));if(rn)rn.textContent=Math.ceil(ms/1000)}
 function endRest(buzz){clearInterval(restIv);restIv=null;restEnd=0;const el=$('#wrest');if(el)el.innerHTML='';if(buzz){try{navigator.vibrate&&navigator.vibrate([180,90,180])}catch(e){}}}
-function startRest(){restTot=REST;restEnd=Date.now()+REST*1000;clearInterval(restIv);restIv=setInterval(tickRest,250);buildRest()}
+function startRest(){restTot=restSecs();if(!restTot){endRest(false);return}restEnd=Date.now()+restTot*1000;clearInterval(restIv);restIv=setInterval(tickRest,250);buildRest()}
 function goEx(k){const d=S.draft;if(!d||k<0||k>=d.ex.length||k===curEx)return;endRest(false);closeSheet();curEx=k;wAnim=true;renderSession();wAnim=false;$('#sess').scrollTop=0}
 function orbGo(b,fn){try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}fn()}
 function closeSheet(){const s=$('#sheet');if(s){s.hidden=true;s.innerHTML=''}pk=null}
@@ -1030,7 +1040,7 @@ function openPick(kind,j){
 }
 function openMenu(){
   const d=S.draft,L=T(),sh=$('#sheet');sh.hidden=false;
-  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="meta2"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div><button class="btn w" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="meta2"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div><div class="mu" style="margin:4px 2px 8px">${tr('الراحة بين المجموعات','Rest between sets')}</div>${restChips()}<button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
 }
 function renderSession(){
   const d=S.draft,L=T();
@@ -1604,6 +1614,7 @@ async function renderData(){
     <div class="mu">${L.lastBk}: ${lb?new Date(lb).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.never}</div>
     ${persisted===true?`<div class="mu">✓ ${L.persisted}</div>`:''}</div>
   <details class="fsec" data-fk="theme"${fOpen.has('theme')?' open':''}><summary>${L.themeT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="dd${thmOpen?' open':''}"><button class="dd-cur" data-a="thmTog">${swatch(S.settings.theme||'granite')}<span>${(THEMES[S.settings.theme]||THEMES.granite)[LANG]}</span><span class="ch">▾</span></button>${thmOpen?`<div class="dd-list">${Object.keys(THEMES).map(k=>`<button class="dd-opt${(S.settings.theme||'granite')===k?' on':''}" data-a="theme" data-k="${k}">${swatch(k)}<span>${THEMES[k][LANG]}<small>${THEMES[k][LANG==='ar'?'da':'de']}</small></span></button>`).join('')}</div>`:''}</div></div></details>
+  <details class="fsec" data-fk="rest"${fOpen.has('rest')?' open':''}><summary>${tr('الراحة بين المجموعات','Rest between sets')}<span class="pchev">⌄</span></summary><div class="fbody">${restChips()}</div></details>
   <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?`<span class="pdot${SYNC.err?' er':''}" style="margin-inline-start:6px"></span>`:''}<span class="pchev">⌄</span></summary><div class="fbody">
     ${SYNC.on?`<div class="note-ok" style="margin:0 0 10px">${L.syncOnL} · ${L.syncLast}: ${SYNC.last?new Date(SYNC.last).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.syncNever}${SYNC.dirty?' · '+L.syncWait(Math.max(1,SYNC.missed)):''}</div>${SYNC.err?`<div class="warn" style="margin:0 0 10px">${L.syncErr(esc(syncMsg(SYNC.err)))}</div>`:''}${syncPublic()?`<div class="warn" style="margin:0 0 10px">${L.syncPub}</div>`:''}
       <button class="btn pri w" data-a="syncNow">${L.syncNow}</button><button class="btn dan w mt" data-a="syncOff">${L.syncOffB}</button>`
@@ -1647,12 +1658,23 @@ async function renderData(){
 /* ================= الأحداث ================= */
 document.addEventListener('input',ev=>{if(ev.target.id==='libS'){libQ=ev.target.value;const r=$('#libR');if(r)r.innerHTML=libRowsHtml()}else if(ev.target.id==='lbS'){lbQ=ev.target.value;const l=$('#lbL');if(l)l.innerHTML=libRows()}});
 const TABS=['home','hist','prog','lib','data'];
-let px=0,py=0,pt=0,pok=false;
-document.addEventListener('touchstart',e=>{const t=e.touches[0];px=t.clientX;py=t.clientY;pt=Date.now();pok=$('#sess').hidden&&$('#modal').hidden&&e.touches.length===1&&!e.target.closest('input,select,textarea,.chips,.ptabs,table,[data-grip],.dd-list,.pr2.drag')},{passive:true});
-document.addEventListener('touchend',e=>{if(!pok)return;pok=false;const t=e.changedTouches[0],dx=t.clientX-px,dy=t.clientY-py,fast=Date.now()-pt<300;
-  if(Math.abs(dx)<(fast?30:55)||Math.abs(dx)<Math.abs(dy)*1.3)return;
-  const nx=TABS.indexOf(tab)+((LANG==='ar'?dx>0:dx<0)?1:-1);if(nx<0||nx>=TABS.length)return;
-  navTab(TABS[nx]);const v=$('#view');try{v.animate([{opacity:0,transform:`translateX(${dx<0?28:-28}px)`},{opacity:1,transform:'none'}],{duration:140,easing:'ease-out'})}catch(_){}},{passive:true});
+let px=0,py=0,pt=0,pok=false,pmode=0,pdx=0;
+const swOK=e=>$('#sess').hidden&&$('#modal').hidden&&e.touches.length===1&&!e.target.closest('input,select,textarea,.chips,.ptabs,table,[data-grip],.dd-list,.pr2.drag');
+document.addEventListener('touchstart',e=>{const t=e.touches[0];px=t.clientX;py=t.clientY;pt=Date.now();pmode=0;pdx=0;pok=swOK(e)},{passive:true});
+document.addEventListener('touchmove',e=>{if(!pok)return;const t=e.touches[0],dx=t.clientX-px,dy=t.clientY-py;
+  if(!pmode){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.3)pmode=1;else if(Math.abs(dy)>10)pmode=2;else return}
+  if(pmode!==1)return;pdx=dx;
+  const i=TABS.indexOf(tab),nx=i+((LANG==='ar'?dx>0:dx<0)?1:-1),edge=nx<0||nx>=TABS.length,v=$('#view'),W=innerWidth;
+  const m=edge?dx*.22:dx*.85;v.style.transition='none';v.style.transform=`translateX(${m}px)`;v.style.opacity=String(1-Math.min(.55,Math.abs(m)/W*.9))},{passive:true});
+document.addEventListener('touchend',e=>{if(!pok||pmode!==1){pok=false;return}pok=false;
+  const v=$('#view'),W=innerWidth,dx=pdx,vel=Math.abs(dx)/Math.max(1,Date.now()-pt);
+  const dir=(LANG==='ar'?dx>0:dx<0)?1:-1,nx=TABS.indexOf(tab)+dir,go2=Math.abs(dx)>W*.22||(vel>.45&&Math.abs(dx)>28);
+  const back=()=>{v.style.transition='transform .2s ease-out,opacity .2s';v.style.transform='';v.style.opacity='';setTimeout(()=>{v.style.transition=''},220)};
+  if(!go2||nx<0||nx>=TABS.length){back();return}
+  const sgn=dx<0?-1:1;v.style.transition='transform .12s ease-in,opacity .12s';v.style.transform=`translateX(${sgn*W*.3}px)`;v.style.opacity='0';
+  setTimeout(()=>{navTab(TABS[nx]);v.style.transition='none';v.style.transform=`translateX(${-sgn*W*.22}px)`;v.style.opacity='0';void v.offsetWidth;
+    v.style.transition='transform .22s cubic-bezier(.2,.8,.2,1),opacity .18s';v.style.transform='';v.style.opacity='';setTimeout(()=>{v.style.transition=''},240)},110)},{passive:true});
+document.addEventListener('touchcancel',()=>{if(pmode===1){const v=$('#view');v.style.transform='';v.style.opacity='';}pok=false},{passive:true});
 document.addEventListener('click',ev=>{
   if(ev.target.closest('.brand .lg')){hardRefresh();return}
   const tb=ev.target.closest('.tabs button');if(tb){navTab(tb.dataset.tab);return}
@@ -1678,6 +1700,7 @@ document.addEventListener('click',ev=>{
     case 'pickClr':{if(pk){d.ex[curEx].sets[pk.j]='';saveSoon();closeSheet();renderSession()}break}
     case 'pickRm':{if(pk&&d.ex[curEx].sets.length>1){d.ex[curEx].sets.splice(pk.j,1);saveSoon();closeSheet();renderSession()}break}
     case 'closeSheet':closeSheet();break;
+    case 'setRest':S.settings.rest=+b.dataset.s;save();if(!$('#sess').hidden){if(!$('#sheet').hidden)openMenu();if(!+b.dataset.s)endRest(false)}else if(tab==='data')renderData();break;
     case 'menu':openMenu();break;
     case 'skipRest':endRest(false);break;
     case 'finish':finishSession();break;
