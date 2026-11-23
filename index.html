@@ -437,6 +437,20 @@ html[data-th=granite] #sess .ex.wn{background:linear-gradient(180deg,#221e14,#1a
 .cr .crf:active{background:rgba(255,255,255,.06)}
 .cr .crv{margin-top:22px;font-size:11px;letter-spacing:.12em;color:var(--mu);opacity:.7}
 .cr .crv span{text-decoration:underline;cursor:pointer;padding:6px 4px}
+/* v87: شاشة البداية — أول فتح أو بعد ساعتين غياب */
+#splash{position:fixed;inset:0;z-index:99;background:radial-gradient(circle at 50% 44%,#1d1915 0,#121113 45%,#09090a 100%);display:none;align-items:center;justify-content:center;transition:opacity .5s ease}
+#splash.on{display:flex}#splash.out{opacity:0;pointer-events:none}
+#splash .sp-in{display:flex;flex-direction:column;align-items:center}
+#splash .sp-r{width:min(86vw,360px);height:auto;overflow:visible}
+#splash .sp-a{fill:none;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:spd .55s cubic-bezier(.3,.7,.2,1) forwards;animation-delay:calc(var(--i)*.1s)}
+#splash .sp-dn{stroke:#c38d4f;stroke-opacity:.55;stroke-width:13}
+#splash .sp-cu{stroke:url(#spcu);stroke-width:19;filter:drop-shadow(0 0 7px rgba(240,196,138,.45))}
+#splash .sp-pd{stroke:#2b2a2d;stroke-width:13}
+#splash .sp-n{fill:#ece8e1;opacity:0;animation:spo .6s ease .32s forwards}
+@keyframes spo{to{opacity:1}}
+#splash .sp-sig{margin-top:4px;font:500 10px/1 "Inter",system-ui,sans-serif;letter-spacing:.42em;text-indent:.42em;color:#8b847a;opacity:0;animation:spf .6s ease .55s forwards}
+@keyframes spd{to{stroke-dashoffset:0}}
+@keyframes spf{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 /* v73: جملة تحت سطر Cycle */
 @font-face{font-family:"BasQ";src:url(fonts/ruqaa.woff2) format("woff2");font-weight:700;font-display:swap}
 .qt{margin:12px auto 0;max-width:360px;padding:0 10px;text-align:center;font-family:"BasQ",var(--font);font-weight:700;font-size:23px;line-height:1.8;color:var(--tx2);opacity:.82;direction:rtl;text-transform:none;letter-spacing:0;min-height:3.6em}
@@ -618,6 +632,10 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 </style>
 </head>
 <body>
+<div id="splash" aria-hidden="true"><div class="sp-in"><svg class="sp-r" viewBox="0 0 512 512"><defs><linearGradient id="spcu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0c48a"/><stop offset="1" stop-color="#c38d4f"/></linearGradient></defs><path class="sp-a sp-dn" style="--i:0" pathLength="1" d="M268.3 80.4A176 176 0 0 1 431.6 243.7"/><path class="sp-a sp-dn" style="--i:1" pathLength="1" d="M431.6 268.3A176 176 0 0 1 268.3 431.6"/><path class="sp-a sp-cu" style="--i:2" pathLength="1" d="M243.7 431.6A176 176 0 0 1 80.4 268.3"/><path class="sp-a sp-pd" style="--i:3" pathLength="1" d="M80.4 243.7A176 176 0 0 1 243.7 80.4"/><g transform="translate(131.70,289.47) scale(0.10024)"><path class="sp-n" d="M465 -56 399 -119Q395 -123 390 -122Q384 -121 381 -117Q362 -92 342 -68Q323 -44 303 -19Q297 -11 304 -4L371 59Q375 63 380 62Q385 62 388 58Q398 46 402 40Q407 33 412 27Q417 21 427 9Q437 -3 447 -15Q457 -27 467 -40Q472 -49 465 -56Z M238 -362V-361Q231 -371 226 -380Q220 -390 215 -402Q220 -405 228 -408Q237 -410 247 -412Q260 -415 278 -418Q296 -421 314 -421Q353 -421 365 -399Q340 -377 313 -360L262 -324Q257 -334 250 -344Q244 -353 238 -362ZM630 153Q625 153 616 156Q560 170 492 182Q423 194 354 194Q350 194 348 194Q347 194 342 194Q167 194 77 93Q72 87 68 79Q64 71 64 61Q64 43 73 24Q99 -32 140 -79Q182 -126 225 -165V-164L255 -192Q266 -203 278 -212Q289 -221 299 -231Q327 -256 355 -282Q383 -308 405 -339Q420 -359 431 -386Q442 -414 452 -444Q462 -471 462 -494Q462 -536 424 -553Q390 -567 350 -567Q306 -567 266 -555Q226 -543 204 -528Q151 -490 133 -398H134Q132 -387 130 -376Q128 -366 128 -353Q128 -295 165 -247Q141 -224 112 -183Q83 -142 56 -90Q28 -39 10 16Q-7 70 -7 119Q-7 192 23 240Q53 289 102 314Q134 329 171 338Q208 348 253 348Q321 348 376 332Q431 317 480 294Q580 247 640 175Q644 171 644 166Q644 153 630 153Z M744 -266V-267Q762 -245 806 -245Q822 -245 835 -248Q837 -244 838 -241Q838 -240 838 -238Q838 -237 838 -235Q838 -234 838 -234Q839 -233 839 -233V-232Q812 -202 771 -185Q688 -151 602 -118Q516 -85 440 -43Q431 -37 431 -25Q431 -10 447 -8Q476 -6 506 -3Q536 0 566 0Q570 0 571 0Q572 0 576 0Q601 0 623 -2Q645 -4 667 -8Q717 -18 759 -46Q801 -75 834 -114Q868 -152 890 -193Q905 -222 916 -258Q927 -293 928 -333V-339Q928 -408 880 -457Q873 -464 862 -471Q850 -478 836 -478Q823 -478 810 -465Q792 -445 780 -420Q768 -396 756 -370Q749 -356 740 -338Q730 -319 730 -301Q730 -289 734 -281Q738 -273 744 -266Z M1091 -454Q1045 -435 996 -426Q947 -417 888 -407Q880 -405 878 -397L857 -277L864 -268Q908 -279 941 -286Q974 -294 996 -299Q1018 -304 1030 -308Q1042 -311 1044 -312Q1092 -338 1126 -380Q1160 -423 1175 -481Q1186 -520 1186 -572Q1186 -575 1186 -576Q1186 -578 1186 -581Q1186 -583 1186 -585Q1186 -587 1186 -589L1168 -911Q1168 -919 1160 -922Q1152 -925 1147 -917L1073 -800Q1078 -709 1084 -626Q1090 -544 1091 -454Z  M1819 -458Q1824 -487 1808 -499Q1792 -511 1759 -511Q1755 -511 1754 -511Q1752 -511 1748 -511Q1721 -511 1704 -506Q1686 -504 1673 -490Q1666 -483 1659 -472Q1652 -461 1645 -446L1611 -370Q1582 -361 1552 -353Q1522 -345 1494 -335Q1455 -322 1427 -306Q1399 -291 1377 -258Q1360 -218 1348 -167Q1336 -116 1336 -60Q1337 -4 1344 46Q1350 96 1361 143Q1372 189 1382 238Q1391 286 1398 337Q1399 347 1408 347Q1418 347 1421 339Q1430 308 1434 276Q1438 245 1438 211Q1438 194 1437 176Q1436 159 1434 143L1394 -110Q1393 -113 1393 -116Q1393 -118 1393 -120Q1393 -121 1393 -122Q1393 -137 1402 -146Q1428 -169 1464 -184Q1499 -199 1539 -207Q1605 -221 1664 -252Q1722 -282 1760 -324Q1783 -350 1796 -384Q1810 -417 1819 -458Z M2090 -336 2147 -449Q2152 -457 2147 -462Q2142 -468 2135 -466Q2090 -457 2044 -448Q1999 -440 1952 -432Q1950 -431 1947 -430Q1944 -428 1943 -426L1887 -312Q1883 -305 1888 -300Q1892 -294 1899 -295Q1945 -303 1990 -312Q2036 -321 2082 -329Q2088 -332 2090 -336Z M1910 -737Q1877 -737 1852 -720Q1826 -704 1806 -685Q1769 -650 1736 -601Q1703 -552 1677 -505Q1674 -499 1668 -490Q1663 -480 1662 -472Q1662 -464 1671 -461L1700 -453Q1708 -451 1712 -458Q1739 -497 1778 -536Q1796 -555 1816 -569Q1835 -583 1857 -590V-589Q1861 -591 1864 -592Q1868 -593 1872 -593Q1889 -593 1901 -568Q1910 -539 1947 -540L1953 -541L1965 -544Q1970 -546 1973 -551L2034 -681Q2037 -689 2032 -694Q2028 -699 2021 -698L1992 -693Q1978 -710 1958 -724Q1939 -737 1910 -737Z M2372 -433V-443Q2360 -466 2338 -490Q2316 -514 2287 -514Q2279 -514 2270 -510Q2261 -507 2253 -502Q2235 -489 2219 -472Q2203 -456 2189 -438Q2164 -403 2140 -364Q2116 -326 2096 -287L2095 -283V-241Q2095 -232 2103 -230Q2114 -227 2119 -236Q2124 -246 2128 -253Q2142 -276 2156 -302Q2171 -327 2189 -346V-345Q2197 -354 2208 -362Q2218 -371 2231 -372H2233Q2245 -372 2253 -356Q2261 -341 2266 -330Q2268 -324 2273 -318Q2278 -313 2285 -313Q2291 -313 2294 -316Q2297 -318 2301 -322Q2321 -348 2340 -376Q2358 -403 2372 -433Z M2259 -797Q2269 -797 2280 -789Q2290 -781 2297 -770Q2304 -760 2310 -747L2200 -726Q2204 -735 2208 -744Q2212 -752 2216 -760Q2221 -770 2233 -784Q2245 -797 2259 -797ZM1971 -678 1950 -559Q1949 -553 1954 -548Q1958 -544 1964 -545Q1984 -549 2010 -555Q2036 -561 2057 -565Q2059 -565 2061 -566Q2067 -567 2070 -568Q2072 -568 2078 -569Q2083 -570 2086 -571Q2090 -572 2094 -573L2091 -557V-558Q2090 -556 2090 -554Q2090 -553 2090 -552Q2090 -552 2090 -551Q2090 -533 2108 -533Q2109 -533 2110 -533Q2110 -533 2111 -533Q2122 -533 2130 -544Q2137 -554 2139 -566Q2141 -571 2142 -576Q2143 -582 2144 -586Q2213 -603 2282 -618Q2351 -634 2417 -654Q2418 -655 2420 -658Q2423 -660 2424 -661L2486 -794Q2489 -802 2484 -808Q2478 -813 2470 -809Q2465 -806 2460 -805Q2455 -804 2450 -804Q2440 -804 2431 -813Q2423 -840 2410 -868Q2396 -897 2374 -916Q2351 -936 2317 -936Q2295 -936 2275 -922Q2240 -899 2216 -861Q2195 -830 2178 -793Q2162 -756 2148 -719Q2105 -711 2066 -704Q2027 -697 1983 -689H1985H1983Q1979 -689 1976 -686Q1972 -682 1971 -678Z"/></g></svg><div class="sp-sig">AHMED MAHER</div></div></div>
+<script>(function(){var sp=document.getElementById('splash');window.__spTpl=sp.outerHTML;var k='gl_seen',t=0;try{t=+localStorage.getItem(k)||0}catch(e){}
+if(t&&Date.now()-t<72e5){sp.remove();return}
+sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(function(){sp.remove()},520)},1150)})()</script>
 <header class="top">
   <div class="brand" id="brand"></div>
   <button class="btn sm pri" id="updBtn" hidden></button>
@@ -637,7 +655,7 @@ html[data-th=granite] .pst.full{color:var(--gd)}
 <script src="quotes.js"></script>
 <script>
 'use strict';
-const VER='86';
+const VER='87';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -850,11 +868,21 @@ function migrate(){
   if((S.mig||0)<4){importHist4();S.mig=4}
   if((S.mig||0)<5){for(const x of S.sessions)if(x.imp){const dd=S.program.days.find(d=>d.name===x.dayName);x.status=dd&&dd.ex.every(t=>x.ex.some(e=>e.name===t.name))?'full':'imp'}S.mig=5}
 }
+/* v87: آخر مرة التطبيق كان مفتوح (لشاشة البداية) */
+(function(){const k='gl_seen',mark=()=>{try{localStorage.setItem(k,Date.now())}catch(e){}};let hid=0;
+ mark();setInterval(()=>{if(!document.hidden)mark()},60000);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){mark();hid=Date.now();return}
+  if(hid&&Date.now()-hid>=72e5&&!document.getElementById('splash'))showSplash();hid=0;mark()});
+ window.addEventListener('pagehide',mark)})();
+function showSplash(){const tpl=window.__spTpl;if(!tpl)return;const d=document.createElement('div');d.innerHTML=tpl;const sp=d.firstElementChild;document.body.appendChild(sp);sp.classList.add('on');setTimeout(()=>{sp.classList.add('out');setTimeout(()=>sp.remove(),520)},1150)}
 async function boot(){
   let a=null;try{a=await idb.get('state')}catch(e){}
   const b=load();
   if(!a&&b){try{await idb.set('state.legacy',JSON.parse(JSON.stringify(b)))}catch(e){}}
+  const fresh=!a&&!b;
   S=(a&&b)?((b.at||0)>(a.at||0)?b:a):(a||b||seed());
+  /* v87: أول فتح خالص: ثيم Iron، دورة ١، ومن غير رسايل ترحيل قديمة */
+  if(fresh){S.mig=5;S.settings.theme='iron';S.settings.thGr=1;S.settings.thDawn=1;S.settings.cycle=1}
   S.settings=S.settings||{};
   if(!S.settings.lang)S.settings.lang='en';
   LANG=S.settings.lang;
@@ -947,7 +975,7 @@ async function shareText(t){
 const THEMES={"iron": {"ar": "حديد", "en": "Iron", "da": "دافي · نحاسي", "de": "Warm copper", "bg": "#0e0e0f", "s1": "#17171a", "tx": "#ece8e1", "ac": "#c38d4f"}, "granite": {"ar": "جرانيت", "en": "Granite", "da": "فاخر · بلاتيني", "de": "Premium platinum", "bg": "#0b0d10", "s1": "#171b21", "tx": "#eef1f5", "ac": "#d8c18c"}, "obsidian": {"ar": "أوبسيديان", "en": "Obsidian", "da": "صارم · أحمر قاني", "de": "Stark crimson", "bg": "#09090a", "s1": "#121214", "tx": "#f1efec", "ac": "#c0343c"}, "cedar": {"ar": "أرز", "en": "Cedar", "da": "أخضر وذهب قديم", "de": "Forest and old gold", "bg": "#0a110e", "s1": "#101a16", "tx": "#ebe7d6", "ac": "#c9a24b"}, "sand": {"ar": "رمال", "en": "Sand", "da": "فاتح · برونزي", "de": "Light bronze", "bg": "#ede4d3", "s1": "#f8f2e6", "tx": "#2b211a", "ac": "#a4622d"}, "plate": {"ar": "ورشة", "en": "Plate", "da": "صناعي · أصفر", "de": "Industrial yellow", "bg": "#0b0b0a", "s1": "#151513", "tx": "#f3f1e8", "ac": "#f2c200"}, "book": {"ar": "دفتر", "en": "Logbook", "da": "ورق مسطّر", "de": "Ruled paper", "bg": "#efe6d0", "s1": "#fbf6e8", "tx": "#1f2430", "ac": "#1f3a8a"}, "pulse": {"ar": "نبض", "en": "Pulse", "da": "شاشة قياس", "de": "Monitor glow", "bg": "#04080b", "s1": "#08121a", "tx": "#dff7f2", "ac": "#19e3c1"}, "dawn": {"ar": "فجر", "en": "Dawn", "da": "زجاج · شروق", "de": "Glass sunrise", "bg": "#2a1d4a", "s1": "#3d2d63", "tx": "#f7eae0", "ac": "#f1bc95"}, "x": {"ar": "إكس", "en": "X", "da": "أسود خالص · أزرق", "de": "Pure black, blue", "bg": "#000000", "s1": "#16181c", "tx": "#e7e9ea", "ac": "#1d9bf0"}};
 let thmOpen=false;const fOpen=new Set();document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.fk){d.open?fOpen.add(d.dataset.fk):fOpen.delete(d.dataset.fk)}},true);
 const swatch=k=>{const t=THEMES[k]||THEMES.granite;return `<span class="sw" style="background:${t.bg}"><i style="background:${t.s1};border-color:${t.ac}"><b style="background:${t.tx}"></b><u style="background:${t.ac}"></u></i></span>`};
-function applyTheme(){const t=THEMES[S.settings.theme]?S.settings.theme:'granite';document.documentElement.dataset.th=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEMES[t].bg}
+function applyTheme(){const t=THEMES[S.settings.theme]?S.settings.theme:'iron';document.documentElement.dataset.th=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEMES[t].bg}
 /* ================= التنقل ================= */
 let tab='home';
 const TABICO=['<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>'];
