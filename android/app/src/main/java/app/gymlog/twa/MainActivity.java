@@ -150,6 +150,12 @@ public class MainActivity extends ComponentActivity {
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (ActivityNotFoundException ignored) {}
                 return true;                                                            // فيسبوك وأي رابط برّه: برّه التطبيق
             }
+            @Override public boolean onRenderProcessGone(WebView v, android.webkit.RenderProcessGoneDetail d) {
+                // النظام قفل عملية الـ WebView وهو في الخلفية (رامات قليلة): نعيد بناء الشاشة بدل الشاشة السودا
+                trusted = false; onAppPage = false;
+                recreate();
+                return true;
+            }
             @Override public void onPageStarted(WebView v, String url, Bitmap f) { trusted = url != null && isAppUrl(Uri.parse(url)); }
             @Override public void onPageFinished(WebView v, String url) { pageDone = true; onAppPage = trusted; }
             @Override public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
@@ -198,7 +204,7 @@ public class MainActivity extends ComponentActivity {
             }
         });
 
-        if (b != null) web.restoreState(b); else web.loadUrl(URL);
+        web.loadUrl(URL);   // الصفحة بترجّع شاشتها لوحدها (restoreState كان بيطلّع شاشة سودا بعد ما النظام يقفل التطبيق في الخلفية)
     }
 
     static boolean isAppUrl(Uri u) {
@@ -300,7 +306,6 @@ public class MainActivity extends ComponentActivity {
         @JavascriptInterface public void exitApp() { if (trusted) runOnUiThread(MainActivity.this::finish); }
     }
 
-    @Override protected void onSaveInstanceState(Bundle o) { super.onSaveInstanceState(o); web.saveState(o); }
     @Override protected void onPause() { super.onPause(); web.onPause(); }
     @Override protected void onResume() { super.onResume(); web.onResume(); }
     @Override protected void onDestroy() { if (web != null) { root.removeView(web); web.destroy(); } super.onDestroy(); }
