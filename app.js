@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='126';
+const VER='127';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -23,7 +23,7 @@ function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');c
 
 /* ================= البيانات ================= */
 function E(name,w,sets,reps,o={}){return{id:uid(),name,w,sets,reps,goal:o.goal??(o.unit?reps:Math.max(12,reps)),unit:o.unit||'',core:!!o.core,note:o.note||''}}
-/* البرنامج الافتراضي لأي حد بيفتح التطبيق أول مرة: أبر/لوور ٤ أيام. الأوزان من مكتبة التمارين (وزن بداية) والشرح كله من المكتبة */
+/* البرنامج الافتراضي لأي حد بيفتح التطبيق أول مرة: أبر/لوور 4 أيام. الأوزان من مكتبة التمارين (وزن بداية) والشرح كله من المكتبة */
 function seed(){
   const X=(n,sets,reps,core)=>{const L=typeof LIB!=='undefined'&&LIB.find(r=>r[0]===n);return E(n,L?L[2]:0,sets,reps,{core,unit:L?L[5]:''})};
   return{v:1,settings:{cycle:1,lastBackup:null},draft:null,sessions:[],program:{days:[
@@ -106,7 +106,7 @@ async function boot(){
   if(!a&&b){try{await idb.set('state.legacy',JSON.parse(JSON.stringify(b)))}catch(e){}}
   const fresh=!a&&!b;
   S=(a&&b)?((b.at||0)>(a.at||0)?b:a):(a||b||seed());
-  /* v87: أول فتح خالص: ثيم Iron، دورة ١، ومن غير رسايل ترحيل قديمة */
+  /* v87: أول فتح خالص: ثيم Iron، دورة 1، ومن غير رسايل ترحيل قديمة */
   if(fresh){S.onb=1;S.mig=6;S.settings.theme='iron';S.settings.cycle=1;S.settings.lang='';S.settings.howLang=/^en/i.test(navigator.language||'')?'en':'ar'}
   S.settings=S.settings||{};
   if(!S.settings.lang)S.settings.lang=/^ar/i.test(navigator.language||'')?'ar':'en';
@@ -148,7 +148,7 @@ function histMap(){const m={};for(const s of done())for(const e of s.ex){const k
 function setsStr(e){const a=e.sets;const u=e.unit?' '+unitTxt(e.unit):'';if(!a.length)return '';if(Array.isArray(e.ws)&&e.ws.length===a.length&&e.ws.some(x=>+x!==+e.w))return a.map((r,j)=>`${+e.ws[j]}×${r}`).join(' / ');return a.every(r=>r===a[0])?`${a.length}×${a[0]}${u}`:a.join('/')+u}
 
 /* ================= v108: الرجوع بعد الغياب (تلقائي بعد أي فترة غياب) =================
-   القوة بتفضل تقريبًا ٢–٣ أسابيع. اللي بيقع الأول: حماية العضلة من الشد العنيف بعد التمرين، والنَفَس، والأوتار.
+   القوة بتفضل تقريبًا 2–3 أسابيع. اللي بيقع الأول: حماية العضلة من الشد العنيف بعد التمرين، والنَفَس، والأوتار.
    فالرجوع بيقلّل المجموعات أكتر من الوزن، وبيوقف قبل الفشل. أي جلسة مخففة مابتتحسبش في قاعدة الزيادة،
    وبعد الخطة الأوزان بترجع لوزنك قبل الغياب لوحدها. */
 const CBD=8;
@@ -184,7 +184,7 @@ function fbPick(){
   for(const [g,ok,f] of SL){const c=all.filter(x=>x.g===g&&ok(x)).sort((a,b)=>f(b)-f(a)||a.o-b.o)[0];if(c)out.push({t:c.t,core:g==='quads'||g==='chest'||g==='back'})}
   return out;
 }
-/* التخفيف: فول بادي = مجموعتين. مخففة = مجموعة أقل (أقل حاجة ٢). الوزن نسبة من وزنك قبل الغياب */
+/* التخفيف: فول بادي = مجموعتين. مخففة = مجموعة أقل (أقل حاجة 2). الوزن نسبة من وزنك قبل الغياب */
 function cbApply(e,cb){
   const n=cb.k==='fb'?(+e.tsets||2):Math.max(2,(+e.tsets||3)-1);if(n!==+e.tsets){e.tsets=n;e.sets=Array(n).fill('');e.dur=[]}
   const w=num(e.w);if(!e.unit&&w>0){const st=stepOf(e.name);e.w=String(Math.min(w,Math.max(st,Math.round(w*cb.p/st)*st)))}
@@ -201,16 +201,16 @@ function planDraft(id,c){
   return dr;
 }
 const cbPct=cb=>Math.round(cb.p*100)+'%';
-const cbLine=cb=>cb.dl?tr(`أسبوع خفيف (Deload) · الأوزان ${cbPct(cb)} · مجموعة أقل`,`Deload week · weights ${cbPct(cb)} · one set less`):tr(`رجوع بعد ${cb.g} يوم · الأوزان ${cbPct(cb)} · سيب في إيدك 2–3 عدّات`,`Back after ${cb.g} days · weights ${cbPct(cb)} · leave 2–3 reps in the tank`);
+const cbLine=cb=>cb.dl?tr(`أسبوع خفيف  · الأوزان ${cbPct(cb)} · مجموعة أقل`,`Light week · weights ${cbPct(cb)} · one set less`):tr(`رجوع بعد ${cb.g} يوم · الأوزان ${cbPct(cb)} · سيب في إيدك 2–3 عدّات`,`Back after ${cb.g} days · weights ${cbPct(cb)} · leave 2–3 reps in the tank`);
 function cbCard(c,open){
   const ar0=LANG==='ar';
-  if(!c){const dl=S.draft&&S.draft.cb&&S.draft.cb.dl;return `<button class="cbh" data-a="cbGo"><b>${dl?tr('جلسة خفيفة مفتوحة (Deload)','Deload session in progress'):tr('جلسة رجوع مفتوحة','Comeback session in progress')}</b><span class="cbgo">${dl?tr('كمّل الجلسة الخفيفة','Continue the light session'):tr('كمّل جلسة الرجوع','Continue the comeback session')} ${ar0?'‹':'›'}</span></button>`}
-  const nm=s=>s.k==='fb'?tr('فول بادي','Full body'):tr('مخففة','Light'),ar=LANG==='ar',sep=`<i>${ar?'‹':'›'}</i>`;
+  if(!c){const dl=S.draft&&S.draft.cb&&S.draft.cb.dl;return `<button class="cbh" data-a="cbGo"><b>${dl?tr('جلسة خفيفة مفتوحة ','Deload session in progress'):tr('جلسة رجوع مفتوحة','Comeback session in progress')}</b><span class="cbgo">${dl?tr('كمّل الجلسة الخفيفة','Continue the light session'):tr('كمّل جلسة الرجوع','Continue the comeback session')} ${ar0?'‹':'›'}</span></button>`}
+  const nm=s=>s.k==='fb'?tr('جسم كامل','Full body'):tr('مخففة','Light'),ar=LANG==='ar',sep=`<i>${ar?'‹':'›'}</i>`;
   /* الخطوات اللي عدّت بتتعلّم بالجلسة اللي اتلعبت فعلًا (رجوع أو يوم عادي) */
   const pills=c.st.map((s,k)=>{if(k<c.i){const a=c.after[k];return `<span class="ok">✓ ${a&&a.cb?nm(a.cb)+' <bdi class="en">'+cbPct(a.cb)+'</bdi>':'<bdi class="en">'+esc(dayBase(a?a.dayName:''))+'</bdi>'}</span>`}
     return `<span class="${k===c.i?'on':''}">${nm(s)} <bdi class="en">${cbPct(s)}</bdi></span>`}).join(sep)+`${sep}<span>${tr('جدولك','Your plan')}</span>`;
   const dn=c.step.k==='fb'?'':day(nextDayId()).name;
-  const how=c.step.k==='fb'?tr(`فول بادي: مجموعتين لكل تمرين، والأوزان ${cbPct(c.step)} من أوزانك قبل الغياب.`,`Full body: two sets per exercise, weights at ${cbPct(c.step)} of your pre-break weights.`)
+  const how=c.step.k==='fb'?tr(`جسم كامل: مجموعتين لكل تمرين، والأوزان ${cbPct(c.step)} من أوزانك قبل الغياب.`,`Full body: two sets per exercise, weights at ${cbPct(c.step)} of your pre-break weights.`)
     :tr(`<bdi class="en">${esc(dn)}</bdi> مخففة: مجموعة أقل في كل تمرين، والأوزان ${cbPct(c.step)} من أوزانك قبل الغياب.`,`${esc(dn)}, light: one set less per exercise, weights at ${cbPct(c.step)} of your pre-break weights.`);
   return `<button class="cbh" data-a="cbGo"><b>${tr(`رجوع بعد ${c.g} يوم`,`Back after ${c.g} days`)}</b><span class="cbt">${how} ${tr('وقّف وانت لسه قادر على 2–3 عدّات.','Stop each set with 2–3 reps left.')}</span><span class="cbs" dir="${ar?'rtl':'ltr'}">${pills}</span><span class="cbgo">${open?tr('كمّل جلسة الرجوع','Continue the comeback session'):tr('ابدأ جلسة الرجوع','Start the comeback session')} ${ar?'‹':'›'}</span></button>`;
 }
@@ -221,7 +221,7 @@ function dlNow(){const ds=done();if(ds.length<8||daysAgo(ds[0].date)>=CBD)return
   let st=ds[0].date;for(let i=0;i<ds.length-1;i++){if(dGap(ds[i].date,ds[i+1].date)>=7)break;st=ds[i+1].date}
   const ref=S.dl&&S.dl>st?S.dl:st,wk=Math.floor(dGap(today(),ref)/7);return wk>=6?{wk}:null}
 function dlCard(x){const ar=LANG==='ar';
-  return `<div class="cbh dlc"><b>${x.act?tr(`أسبوع خفيف · فاضل ${x.left} يوم`,`Deload week · ${x.left} day(s) left`):tr(`بقالك ${x.wk} أسابيع تمرين متواصل`,`${x.wk} weeks of training in a row`)}</b><span class="cbt">${tr('مجموعة أقل في كل تمرين والأوزان 90%، علشان جسمك يتخلص من التعب المتراكم ويرجع أقوى.','A light week: one set less per exercise at 90% weights. Your body clears built-up fatigue and comes back stronger; it does not count toward the progression rule.')}</span><span class="dlb"><button class="cbgo" data-a="dlGo">${tr('ابدأ يوم خفيف','Start a light day')} ${ar?'‹':'›'}</button>${x.act?'':`<button class="dls" data-a="dlSkip">${tr('مش دلوقتي','Not now')}</button>`}</span></div>`}
+  return `<div class="cbh dlc"><b>${x.act?tr(`أسبوع خفيف · فاضل ${x.left} يوم`,`Light week · ${x.left} day(s) left`):tr(`بقالك ${x.wk} أسابيع تمرين متواصل`,`${x.wk} weeks of training in a row`)}</b><span class="cbt">${tr('مجموعة أقل في كل تمرين والأوزان 90%، علشان جسمك يتخلص من التعب المتراكم ويرجع أقوى.','A light week: one set less per exercise at 90% weights. Your body clears built-up fatigue and comes back stronger; it does not count toward the progression rule.')}</span><span class="dlb"><button class="cbgo" data-a="dlGo">${tr('ابدأ يوم خفيف','Start a light day')} ${ar?'‹':'›'}</button>${x.act?'':`<button class="dls" data-a="dlSkip">${tr('مش دلوقتي','Not now')}</button>`}</span></div>`}
 async function startDeload(){if(S.draft&&!dEmpty(S.draft)&&!await ask(T().confNew))return;
   if(!(S.dl&&dGap(today(),S.dl)<7))S.dl=today();
   S.draft=null;const pd=planDraft(nextDayId(),{g:0,i:0,n:1,step:{k:'lt',p:.9}});pd.cb.dl=1;if(!pd.ex.length){toast(tr('اليوم ده فاضي','This day is empty'));return}S.draft=pd;openTips.clear();save();openSession()}
@@ -274,7 +274,7 @@ const durSum=e=>(e.dur||[]).reduce((a,b)=>a+(+b||0),0);
 const durLine=e=>e.dur&&e.dur.some(x=>x>0)?tr('الوقت','Time')+': '+e.dur.map(x=>x>0?mmss(x):'—').join(' | ')+' | '+tr('الإجمالي','Total')+' '+mmss(durSum(e)):'';
 function cardText(s){
   const tm=!s.imp&&s.ts?new Date(s.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
-  const L=[`Cycle ${s.cycle}`,`${s.dayName} — ${s.date}${tm?' · '+tm:''}`];if(s.cb)L.push(s.cb.dl?tr(`أسبوع خفيف (Deload) · الأوزان ${cbPct(s.cb)}`,`Deload week · weights ${cbPct(s.cb)}`):tr(`رجوع بعد ${s.cb.g} يوم · الأوزان ${cbPct(s.cb)}`,`Back after ${s.cb.g} days · weights ${cbPct(s.cb)}`));L.push('');
+  const L=[`Cycle ${s.cycle}`,`${s.dayName} — ${s.date}${tm?' · '+tm:''}`];if(s.cb)L.push(s.cb.dl?tr(`أسبوع خفيف  · الأوزان ${cbPct(s.cb)}`,`Light week · weights ${cbPct(s.cb)}`):tr(`رجوع بعد ${s.cb.g} يوم · الأوزان ${cbPct(s.cb)}`,`Back after ${s.cb.g} days · weights ${cbPct(s.cb)}`));L.push('');
   for(const e of s.ex){L.push(e.name);L.push(`${fw(e.w)} | ${setsStr(e)}${e.clean?' | '+T().clean:''}${e.rir!=null?' | '+tr('فاضل ','RIR ')+e.rir:''}`);const dl=durLine(e);if(dl)L.push(dl);if(e.note)L.push(e.note);L.push('')}
   const tot=s.ex.reduce((a,e)=>a+durSum(e),0);if(tot>0)L.push(tr('إجمالي وقت المجموعات: ','Total set time: ')+mmss(tot),'');
   const d=S.program.days.find(x=>x.id===s.day);const c=d?coreNames(d):s.ex.filter(e=>e.core).map(e=>e.name);
@@ -297,7 +297,7 @@ function aiText(s,skip){
   out.push(`${L.aiDate}: ${s.date} (${fmtD(s.date)})`);
   if(s.rdy!=null)out.push(tr('النوم والطاقة قبل الجلسة: ','Sleep and energy before the session: ')+[tr('وحش','poor'),tr('متوسط','OK'),tr('كويس','good')][s.rdy]);
   if(coreAll.length)out.push(L.aiCore(coreDone,coreAll.length));
-  if(s.cb)out.push(tr(`جلسة رجوع بعد غياب ${s.cb.g} يوم (${s.cb.k==='fb'?'فول بادي':'يوم مخفف'}): الأوزان ${cbPct(s.cb)} من أوزانه قبل الغياب والمجموعات أقل عن قصد، ومابتتحسبش في قاعدة الزيادة.`,`Comeback session after a ${s.cb.g}-day break (${s.cb.k==='fb'?'full body':'light day'}): weights at ${cbPct(s.cb)} of pre-break and fewer sets on purpose; it does not count toward the progression rule.`));
+  if(s.cb)out.push(tr(`جلسة رجوع بعد غياب ${s.cb.g} يوم (${s.cb.k==='fb'?'جسم كامل':'يوم مخفف'}): الأوزان ${cbPct(s.cb)} من أوزانه قبل الغياب والمجموعات أقل عن قصد، ومابتتحسبش في قاعدة الزيادة.`,`Comeback session after a ${s.cb.g}-day break (${s.cb.k==='fb'?'full body':'light day'}): weights at ${cbPct(s.cb)} of pre-break and fewer sets on purpose; it does not count toward the progression rule.`));
   out.push(L.aiUnits);out.push(L.aiRule);out.push('');
   s.ex.forEach((e,i)=>{
     const u=e.unit?' '+unitTxt(e.unit):'';
@@ -393,7 +393,7 @@ async function phOpen(id,cmp){const a=(S.photos||[]).slice().sort((x,y)=>x.d<y.d
   const one=await u(id),two=cmp&&first&&first.id!==id?await u(first.id):'';
   modal(`<h3>${fmtD(x.d)}</h3>${two?`<div class="phc"><figure><img src="${two}" alt=""><figcaption>${fmtD(first.d)}</figcaption></figure><figure><img src="${one}" alt=""><figcaption>${fmtD(x.d)}</figcaption></figure></div>`:`<img class="cimg" src="${one}" alt="">`}
   <div class="row mt">${first&&first.id!==id&&!cmp?`<button class="btn sp" data-a="phCmp" data-id="${esc(id)}">${tr('قارن بأول صورة','Compare with the first')}</button>`:''}<button class="btn dan" data-a="phDel" data-id="${esc(id)}">${T().del}</button><button class="btn ghost" data-a="closeM">${T().close}</button></div>`)}
-function gymHtml(){const G=[{id:'main',name:tr('الأساسي','Main')}].concat(S.gyms||[]),cur=gymId();
+function gymHtml(){const G=[{id:'main',name:tr('جيمي','My gym')}].concat(S.gyms||[]),cur=gymId();
   return `<div class="gyr"><span>${tr('الجيم','Gym')}:</span>${G.map(g=>`<button class="${g.id===cur?'on':''}" data-a="gymSet" data-id="${esc(g.id)}">${esc(g.name)}</button>`).join('')}<button data-a="gymAdd" aria-label="${tr('جيم جديد','New gym')}">+</button></div>`}
 function offerUndo(msg,snap){const el=$('#undo');if(!el)return;UND=snap;el.querySelector('span').textContent=msg;const b=el.querySelector('button');b.textContent=tr('تراجع','Undo');
   b.onclick=()=>{if(!UND)return;const o=JSON.parse(UND);UND=null;Object.assign(S,o);if(!o.fbDay)delete S.fbDay;save();queueBackup();el.classList.remove('on');if(!$('#sess').hidden&&!S.draft)closeSession();else if(S.draft&&$('#sess').hidden&&o.draft&&tab==='home')renderHome();go(tab);toast(tr('رجعت ✓','Restored ✓'))};
@@ -543,7 +543,7 @@ function renderHome(){
       <svg viewBox="0 0 300 300" aria-hidden="true">${arcs}</svg>
       <span class="oc"><span class="on1${dName.length>11?' lg':''}"><bdi>${esc(dName)}</bdi></span><span class="on2">${tag}</span></span>
     </button>
-    <div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
+    <div class="oline"><span>${tr('الدورة','Cycle')} <bdi class="en">${cc}</bdi></span>${last}</div>
     ${c?cbCard(c,dcb):dcb?cbCard(null,true):dlx?dlCard(dlx):''}
     ${homeQuote(ds,wk,dr)}
     </div>
@@ -555,7 +555,7 @@ function renderHome(){
       ${gymHtml()}
       ${protHtml()}
       <div class="dlk"><button class="plink" data-a="rule">${tr('إزاي التطبيق بيحسب الزيادة؟','How is progression decided?')}</button></div>
-      <div class="dlk"><button class="plink" data-a="rtOpen">${tr('تايمر جولات (كوندشننج)','Round timer (conditioning)')}</button></div>
+      <div class="dlk"><button class="plink" data-a="rtOpen">${tr('تايمر جولات (كارديو ولياقة)','Round timer (cardio & conditioning)')}</button></div>
       ${al}
       <details class="alt"><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd).map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
     </details>
@@ -590,7 +590,7 @@ const openTips=new Set();
 let curEx=0,pk=null,swIv=null,wAnim=false,finishing=false;
 /* v89: ساعة الإيقاف: دوسة تبدأ، دوسة توقف وتسجّل المدة تحت المجموعة، ودوسة تبدأ اللي بعدها */
 const mmss=s=>{s=Math.max(0,Math.round(+s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
-const swNext=e=>{const du=e.dur||[];for(let j=0;j<e.sets.length;j++)if(!(du[j]>0))return j;return e.sets.length};
+const swNext=e=>{for(let j=0;j<e.sets.length;j++)if(!(num(e.sets[j])>0))return j;return e.sets.length};
 /* v115: عدّاد الراحة: بيبدأ لوحده بعد كل مجموعة. مركّب 2:30، عزل 1:30، ثبات 1:00 */
 const restFor=e=>(S.settings.ram?30:0)+(e.unit?60:(typeof META!=='undefined'&&META[e.name]&&META[e.name].kind==='comp')?150:90);
 let rsIv=null,AC=null;
@@ -669,7 +669,7 @@ function openPick(kind,j){
 }
 function openMenu(){
   const d=S.draft,L=T(),sh=$('#sheet');sh.hidden=false;
-  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><button class="btn w pri" data-a="sxOpen">+ ${tr('ضيف تمرين للجلسة','Add an exercise')}</button><button class="btn w mt" data-a="swOpen">⇄ ${tr('بدّل التمرين ده (الجهاز مشغول)','Swap this exercise (machine busy)')}</button>${curEx<d.ex.length-1?`<button class="btn w ghost mt" data-a="ssTgl">${d.ex[curEx].ss?tr('فك السوبرسيت','Unlink superset'):tr('سوبرسيت مع التمرين اللي بعده','Superset with the next exercise')}</button>`:''}<button class="btn w ghost mt" data-a="tShort">${tr('معايا وقت قليل (مجموعتين لكل تمرين)','Short on time (2 sets each)')}</button><button class="btn w ghost mt" data-a="pain">${tr('حاسس بوجع في التمرين ده','This exercise hurts')}</button><button class="btn w ghost mt" data-a="rtOpen">${tr('تايمر جولات','Round timer')}</button><div class="meta2 mt"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div>${d.editing||!d.ex.some(x=>x.core)||d.ex.every(x=>x.core)?'':`<button class="btn w ghost mt" data-a="coreOnly">${tr('الأساسي بس','Essentials only')}</button>`}<button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><button class="btn w pri" data-a="sxOpen">+ ${tr('ضيف تمرين للجلسة','Add an exercise')}</button><button class="btn w mt" data-a="swOpen">⇄ ${tr('بدّل التمرين ده (الجهاز مشغول)','Swap this exercise (machine busy)')}</button>${curEx<d.ex.length-1?`<button class="btn w ghost mt" data-a="ssTgl">${d.ex[curEx].ss?tr('فك السوبرسيت','Unlink superset'):tr('سوبرسيت: تمرينين ورا بعض من غير راحة','Superset: two exercises back to back')}</button>`:''}<button class="btn w ghost mt" data-a="tShort">${tr('معايا وقت قليل (مجموعتين لكل تمرين)','Short on time (2 sets each)')}</button><button class="btn w ghost mt" data-a="pain">${tr('حاسس بوجع في التمرين ده','This exercise hurts')}</button><button class="btn w ghost mt" data-a="rtOpen">${tr('تايمر جولات','Round timer')}</button><div class="meta2 mt"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div>${d.editing||!d.ex.some(x=>x.core)||d.ex.every(x=>x.core)?'':`<button class="btn w ghost mt" data-a="coreOnly">${tr('الأساسي بس','Essentials only')}</button>`}<button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
 }
 function openGuide(){
   const d=S.draft;if(!d)return;const e=d.ex[curEx];if(!e)return;const x=libGet(e.name),sh=$('#sheet');
@@ -707,7 +707,7 @@ function renderSession(){
     ${showL?`<div class="tnote">${lastP}${p?`<div class="pmsg ${p.c}">${p.t}</div>`:''}</div>`:''}
     ${showN?`<input class="inp noteI" data-f="n" value="${esc(e.note)}" placeholder="${L.notePh}">`:''}
   </div>
-  <div class="wnav"><button class="btn wb" data-a="exGo" data-i="${i-1}"${i===0?' disabled':''} aria-label="${tr('اللي قبله','Previous')}">${ar?'›':'‹'}</button>${last?`<button class="btn pri wb" data-a="finish">${d.editing?L.saveEdit:tr('خلّص','Finish')}</button>`:`<button class="btn wb" data-a="exGo" data-i="${i+1}" aria-label="${tr('اللي بعده','Next')}">${ar?'‹':'›'}</button>`}</div>
+  <div class="wnav"><button class="btn wb" data-a="exGo" data-i="${i-1}"${i===0?' disabled':''} aria-label="${tr('اللي قبله','Previous')}">‹</button>${last?`<button class="btn pri wb" data-a="finish">${d.editing?L.saveEdit:tr('خلّص','Finish')}</button>`:`<button class="btn wb" data-a="exGo" data-i="${i+1}" aria-label="${tr('اللي بعده','Next')}">›</button>`}</div>
   <div id="sheet" hidden></div>`;
   updCore();
   if(d.sw&&!swIv)swIv=setInterval(swTick,250);
@@ -730,7 +730,7 @@ function finishSession(){
     else if(w===mw&&Math.max(...e.sets)>bestR&&bestR>0)sm.push(`★ <bdi class="en">${esc(e.name)}</bdi>: ${tr('أكتر عدّات على','most reps at')} <b class="en">${w} k</b>`);
     const ps=progState({sets:e.tsets,goal:e.goal},exHist(e.exId));if(ps&&ps.k==='up')sm.push(`↑ <bdi class="en">${esc(e.name)}</bdi>: ${tr('استحقيت الزيادة','increase earned')}`)}
   $('#sess').innerHTML=`<div class="wdone"><div class="wchk">✓</div><div class="wdt"><bdi>${esc(nm)}</bdi></div><div class="wds">${s.status==='full'?L.savedFull:s.status==='core'?L.savedCore:L.saved}</div>${sm.length?`<div class="wsum">${sm.map(x=>`<div>${x}</div>`).join('')}</div>`:''}</div>
-  <div class="wnav"><button class="btn wb wt" data-a="copyDone">${tr('كوبي','Copy')}</button><button class="btn wb wt" data-a="imgDone">${tr('صورة','Image')}</button><button class="btn pri wb wt" data-a="doneClose">${tr('تمام','Done')}</button></div>`;
+  <div class="wnav"><button class="btn wb wt" data-a="copyDone">${tr('انسخ الكارت','Copy card')}</button><button class="btn wb wt" data-a="imgDone">${tr('صورة','Image')}</button><button class="btn pri wb wt" data-a="doneClose">${tr('تمام','Done')}</button></div>`;
 }
 const logged=e=>e.sets.some(r=>num(r)>0);
 /* حالة التمرين: none | part (ناقص خانات) | low (كل الخانات مليانة بس أقل من الهدف) | ok */
@@ -771,7 +771,7 @@ function exHistModal(exId){
   const h=exHist(exId);if(!nm&&h[0])nm=h[0].name;
   const ch=h.filter(x=>!x.unit&&+x.w>0&&!x.cb).slice(0,40).reverse(),best=Math.max(0,...ch.map(x=>e1rm(+x.w,Math.max(...x.sets))));
   modal(`<h3 class="en" style="text-align:start">${esc(nm)}</h3><div class="mu" style="margin-bottom:8px"><span class="en">${esc(dn)}</span> · ${L.sessCount(h.length)}</div>
-  ${ch.length>1?`<div class="lch"><div class="mu">${tr('الوزن على مدار الوقت','Weight over time')}</div>${lineSvg(ch.map(x=>+x.w),tr('الوزن','Weight'))}<div class="mu">${tr('أقصى وزن تقديري لعدّة واحدة (e1RM)','Estimated 1-rep max (e1RM)')}: <b class="en">${best.toFixed(1)} k</b></div></div>`:''}
+  ${ch.length>1?`<div class="lch"><div class="mu">${tr('الوزن على مدار الوقت','Weight over time')}</div>${lineSvg(ch.map(x=>+x.w),tr('الوزن','Weight'))}<div class="mu">${tr('أقصى وزن تقديري لعدّة واحدة','Estimated one-rep max')}: <b class="en">${best.toFixed(1)} k</b></div></div>`:''}
   ${h.length?`<table class="h">${h.map(x=>`<tr><td>${fmtD(x.date)}</td><td class="en">${fw(x.w)}</td><td class="en">${esc(setsStr(x))}</td><td>${x.clean?`<span style="color:var(--ok)">${L.clean}</span>`:''}</td></tr>`).join('')}</table>`:`<div class="empty">${L.noData}</div>`}
   <button class="btn w mt" data-a="closeM">${L.close}</button>`);
 }
@@ -782,7 +782,7 @@ const dayKey=n=>dayBase(n).toLowerCase();
 let hsList=[],hsN=0,hsLast='';
 function histChunk(){const L=T(),part=hsList.slice(hsN,hsN+(hsN?30:12));hsN+=part.length;
   return part.map(s=>{
-    let mh='';try{const m=new Date(s.date+'T00:00:00').toLocaleDateString(LANG==='ar'?'ar-EG':'en-GB',{month:'long',year:'numeric'});if(m!==hsLast){hsLast=m;mh=`<div class="pmon">${m}</div>`}}catch(e){}
+    let mh='';try{const m=new Date(s.date+'T00:00:00').toLocaleDateString(loc(),{month:'long',year:'numeric'});if(m!==hsLast){hsLast=m;mh=`<div class="pmon">${m}</div>`}}catch(e){}
     return `${mh}<div class="pr2"><div class="pr2b" data-a="sess" data-id="${s.id}"><div class="sp"><div class="pnm"><bdi>${esc(s.dayName)}</bdi></div><div class="mu">${fmtD(s.date)} · <span class="en">C${s.cycle}</span> · ${L.exN(s.ex.length)}</div></div><span class="pst ${s.status}">${L.st[s.status]||''}</span></div></div>`}).join('')}
 /* v122: إحصائيات: الالتزام آخر 16 أسبوع، ومجموعات كل عضلة في آخر 7 أيام */
 function statsHtml(ds){if(!ds.length)return '';
@@ -875,16 +875,16 @@ const libHowAlt=n=>{const x=libGet(n);if(!x)return '';const o=libOv(n)||{};retur
 const lastW=n=>{for(const s of done()){const e=s.ex.find(x=>x.name===n&&+x.w>0);if(e)return +e.w}return null};
 const mk=(n,sets,reps,core)=>{const L=libGet(n)||[n,'',0,3,12,''];const lw=lastW(n);return{id:uid(),name:n,w:lw!=null?lw:L[2],sets:sets||L[3],reps:reps||L[4],goal:reps||L[4],unit:L[5]||'',core:!!core,note:''}};
 const SYSTEMS=[
-{id:'ul4',ar:['أبر / لوور (٤ أيام)','كل عضلة مرتين في الأسبوع، من زاويتين مختلفتين. توازن ممتاز بين الحجم والراحة'],en:['Upper / Lower (4 days)','Every muscle twice a week from two angles. A great balance of volume and recovery'],mine:1},
-{id:'ul2',ar:['أبر / لوور (يومين)','للأسابيع المزحومة: يوم للجزء العلوي ويوم للسفلي'],en:['Upper / Lower (2 days)','For busy weeks: one upper day, one lower day'],
+{id:'ul4',ar:['علوي / سفلي (4 أيام)','كل عضلة مرتين في الأسبوع، من زاويتين مختلفتين. توازن ممتاز بين الحجم والراحة'],en:['Upper / Lower (4 days)','Every muscle twice a week from two angles. A great balance of volume and recovery'],mine:1},
+{id:'ul2',ar:['علوي / سفلي (يومين)','للأسابيع المزحومة: يوم للجزء العلوي ويوم للسفلي'],en:['Upper / Lower (2 days)','For busy weeks: one upper day, one lower day'],
  days:[['Upper',[['Flat Dumbbell Press',3,12,1],['Lat Pulldown',3,10,1],['Shoulder Press',3,10,1],['Seated Row',3,10],['Triceps Pushdown',3,12],['Biceps Curl',3,10]]],['Lower',[['Leg Press',3,10,1],['Romanian Deadlift',3,10,1],['Leg Curl',3,12,1],['Leg Extension',3,12],['Calf Raises',3,15],['Plank',3,45]]]]},
-{id:'fb3',ar:['فول بودي (٣ أيام)','جسمك كله في كل جلسة. مناسب لو بتتغيب كتير'],en:['Full Body (3 days)','Whole body each session. Good if you miss days often'],
+{id:'fb3',ar:['جسم كامل (3 أيام)','جسمك كله في كل جلسة. مناسب لو بتتغيب كتير'],en:['Full Body (3 days)','Whole body each session. Good if you miss days often'],
  days:[['Full Body A',[['Leg Press',3,10,1],['Flat Dumbbell Press',3,10,1],['Lat Pulldown',3,10,1],['Shoulder Press',2,10],['Biceps Curl',2,12],['Plank',2,40]]],['Full Body B',[['Hack Squat',3,10,1],['Incline Dumbbell Press',3,10,1],['Seated Row',3,10,1],['Leg Curl',3,12],['Triceps Pushdown',2,12],['Lateral Raises',2,15]]],['Full Body C',[['Romanian Deadlift',3,10,1],['Chest Press Machine',3,10,1],['Chest-Supported Row',3,10,1],['Leg Extension',2,12],['Hammer Curl',2,12],["Farmer's Walk",3,25]]]]},
-{id:'ppl3',ar:['دفع / سحب / رجل (٣ أيام)','الكلاسيكي: دفع، سحب، رجل، وبتكرره'],en:['Push / Pull / Legs (3 days)','The classic: push, pull, legs, repeat'],
+{id:'ppl3',ar:['دفع / سحب / رجل (3 أيام)','الكلاسيكي: دفع، سحب، رجل، وبتكرره'],en:['Push / Pull / Legs (3 days)','The classic: push, pull, legs, repeat'],
  days:[['Push',[['Incline Dumbbell Press',3,10,1],['Flat Dumbbell Press',3,12,1],['Shoulder Press',3,10,1],['Lateral Raises',3,15],['Triceps Pushdown',3,12],['Cable Overhead Extension',3,12]]],['Pull',[['Lat Pulldown',3,10,1],['Seated Row',3,10,1],['Face Pull',3,15,1],['Biceps Curl',3,10],['Hammer Curl',3,10],['DB Shrugs',3,15]]],['Legs',[['Plank',3,45,1],['Leg Press',3,10,1],['Leg Curl',3,12,1],['Leg Extension',3,12],['Calf Raises',3,15],['Back Extension',3,12]]]]},
-{id:'ulppl5',ar:['دفع / سحب / رجل + أبر / لوور (٥ أيام)','خمس أيام: دفع وسحب ورجل، وبعدين يوم علوي ويوم سفلي'],en:['Push / Pull / Legs + Upper / Lower (5 days)','Five days: push, pull, legs, then an upper and a lower day'],
+{id:'ulppl5',ar:['دفع / سحب / رجل + علوي / سفلي (5 أيام)','خمس أيام: دفع وسحب ورجل، وبعدين يوم علوي ويوم سفلي'],en:['Push / Pull / Legs + Upper / Lower (5 days)','Five days: push, pull, legs, then an upper and a lower day'],
  days:[['Push',[['Incline Dumbbell Press',3,10,1],['Chest Press Machine',3,12,1],['Shoulder Press',3,10,1],['Lateral Raises',3,15],['Triceps Pushdown',3,12]]],['Pull',[['Lat Pulldown',3,10,1],['T-Bar Row',3,10,1],['Face Pull',3,15,1],['Biceps Curl',3,10],['Hammer Curl',3,10]]],['Legs',[['Leg Press',3,12,1],['Hack Squat',3,10,1],['Back Extension',3,12],['Leg Curl',3,10,1],['Calf Raises',4,15]]],['Upper',[['Chest Press Machine',3,12,1],['Lat Pulldown',3,10,1],['Shoulder Press',3,10,1],['Triceps Pushdown',3,12],['Hammer Curl',3,10]]],['Lower',[['Leg Press',3,12,1],['Leg Extension',3,12],['Leg Curl',3,10,1],['Calf Raises',4,15]]]]},
-{id:'bro5',ar:['تقسيم عضلات (٥ أيام)','يوم لكل عضلة: صدر، ضهر، كتف، دراعين، رجل'],en:['Body-part split (5 days)','One muscle group a day: chest, back, shoulders, arms, legs'],
+{id:'bro5',ar:['تقسيم عضلات (5 أيام)','يوم لكل عضلة: صدر، ضهر، كتف، دراعين، رجل'],en:['Body-part split (5 days)','One muscle group a day: chest, back, shoulders, arms, legs'],
  days:[['Chest',[['Flat Dumbbell Press',4,10,1],['Incline Dumbbell Press',3,12,1],['Pec Deck',3,12],['Push-Up',2,15]]],['Back',[['Lat Pulldown',4,10,1],['T-Bar Row',3,10,1],['Seated Row',3,12],['Back Extension',3,12]]],['Shoulders',[['Shoulder Press',4,10,1],['Lateral Raises',4,15],['Rear Delt Fly',3,15],['DB Shrugs',3,15]]],['Arms',[['Biceps Curl',3,10,1],['Hammer Curl',3,10],['Triceps Pushdown',3,12,1],['Cable Overhead Extension',3,12],['Wrist Curl + Reverse',2,15]]],['Legs',[['Leg Press',4,10,1],['Hack Squat',3,10,1],['Leg Curl',3,12,1],['Leg Extension',3,12],['Calf Raises',4,15]]]]}
 ];
 const sysName=s=>(LANG==='ar'?s.ar:s.en)[0],sysDesc=s=>(LANG==='ar'?s.ar:s.en)[1];
@@ -1171,7 +1171,7 @@ async function runBackup(verify){
   if(ok&&chg!==my)runBackup();
   refresh();return ok;
 }
-/* مسودة مفتوحة: ارفع بحد أقصى مرة كل ١٠ دقايق (الحفظ الفعلي بيرفع دايمًا) */
+/* مسودة مفتوحة: ارفع بحد أقصى مرة كل 10 دقايق (الحفظ الفعلي بيرفع دايمًا) */
 function queueDraftBackup(){if(SYNC.on&&Date.now()-(SYNC.last||0)>6e5)queueBackup()}
 function queueBackup(session){if(!SYNC.on)return;chg++;SYNC.dirty=true;if(session)SYNC.missed++;saveSync();runBackup()}
 const PUB_REPO='notimetocry29-dot/leviathan-';
@@ -1474,7 +1474,7 @@ document.addEventListener('touchend',e=>{if(!pok||pmode!==1){pok=false;return}po
   const dir=(LANG==='ar'?dx>0:dx<0)?1:-1,nx=TABS.indexOf(tab)+dir,go2=Math.abs(dx)>W*.22||(vel>.45&&Math.abs(dx)>28);
   const back=()=>{v.style.transition='transform .2s ease-out,opacity .2s';v.style.transform='';v.style.opacity='';setTimeout(()=>{v.style.transition=''},220)};
   if(!go2||nx<0||nx>=TABS.length){back();return}
-  /* v67: الصفحة الجديدة بتتبدّل فورًا لحظة رفع الصباع (من غير انتظار «اختفاء») وتنزلق مكانها في ١٦٠ms */
+  /* v67: الصفحة الجديدة بتتبدّل فورًا لحظة رفع الصباع (من غير انتظار «اختفاء») وتنزلق مكانها في 160ms */
   const sgn=dx<0?-1:1;v.style.transition='none';navTab(TABS[nx]);
   v.style.transform=`translateX(${-sgn*W*.16}px)`;v.style.opacity='.4';void v.offsetWidth;
   v.style.transition='transform .16s cubic-bezier(.2,.8,.2,1),opacity .14s';v.style.transform='';v.style.opacity='';setTimeout(()=>{v.style.transition=''},190)},{passive:true});
@@ -1506,7 +1506,7 @@ document.addEventListener('click',ev=>{
     case 'pickW':openPick('w');break;
     case 'pickOk':{const l=$('#pkl');if(!l||!pk)break;const v=pk.vals[Math.max(0,Math.min(pk.vals.length-1,Math.round(l.scrollTop/44)))],e=d.ex[curEx];
       if(pk.kind==='w'){const old=num(e.w),ps=d.cb?null:progState({sets:e.tsets,goal:e.goal},exHist(e.exId,d.editing));
-        if(ps&&ps.k==='up'&&!e.unit&&v>(isNaN(old)?0:old)&&+e.goal>8){e.goal=8;e.treps=8;toast(tr('وزن جديد: الهدف النهارده ٨ عدّات','New weight: today\'s target is 8 reps'))}
+        if(ps&&ps.k==='up'&&!e.unit&&v>(isNaN(old)?0:old)&&+e.goal>8){e.goal=8;e.treps=8;toast(tr('وزن جديد: الهدف النهارده 8 عدّات','New weight: today\'s target is 8 reps'))}
         e.w=String(v)}else{e.sets[pk.j]=String(v);if(!e.unit&&pk.wv!=null){e.ws=(e.ws||[]).slice();while(e.ws.length<e.sets.length)e.ws.push('');e.ws[pk.j]=pk.wv!==num(e.w)?String(pk.wv):''}}saveSoon();closeSheet();renderSession();break}
     case 'pwm':case 'pwp':{if(!pk||pk.wv==null)break;const e=d.ex[curEx],st=stepOf(e.name);pk.wv=Math.max(0,Math.round((pk.wv+(b.dataset.a==='pwp'?st:-st))*100)/100);$('#pwv').textContent=pk.wv;break}
     case 'stepSet':{const e=d.ex[curEx];S.steps=S.steps||{};S.steps[nk(e.name)]=+b.dataset.v;save();b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderSession();break}

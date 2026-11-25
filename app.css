@@ -563,3 +563,7 @@ html,body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout
 ::selection{background:transparent}
 input,textarea,[contenteditable],[contenteditable] *{-webkit-user-select:text;user-select:text}
 input::selection,textarea::selection{background:var(--acbd)}
+
+/* v127: الأسامي الإنجليزي في الواجهة العربية بتتحاذى يمين */
+html[dir=rtl] .dr .dn2,html[dir=rtl] .pr2 .pnm,html[dir=rtl] .prow .nm{text-align:right}
+.oline{color:var(--mu)}
