@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='139';
+const VER='140';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -91,8 +91,8 @@ function migrate(){
   }
   if((S.mig||0)<3){importHist();S.mig=3}
   if((S.mig||0)<4){importHist4();S.mig=4}
-  if((S.mig||0)<6){S.mig6ask=S.sessions.some(x=>!x.imp&&x.ex.some(e=>!e.clean&&!e.unit));S.mig=6}
   if((S.mig||0)<5){for(const x of S.sessions)if(x.imp){const dd=S.program.days.find(d=>d.name===x.dayName);x.status=dd&&dd.ex.every(t=>x.ex.some(e=>e.name===t.name))?'full':'imp'}S.mig=5}
+  if((S.mig||0)<6){S.mig6ask=S.sessions.some(x=>!x.imp&&x.ex.some(e=>!e.clean&&!e.unit));S.mig=6}
 }
 /* v87: آخر مرة التطبيق كان مفتوح (لشاشة البداية) */
 /* v134: شاشة البداية بعد ساعتين غياب، مهما كان التطبيق اتقفل إزاي: اتقفل خالص (index.html بيتصرف)، أو فضل في الخلفية.
@@ -148,8 +148,8 @@ function nextDayId(){const l=realLast();const o=S.program.days.map(d=>d.id);if(!
 function calcCycle(dayId){const l=realLast();if(!l)return S.settings.cycle||1;const o=S.program.days.map(d=>d.id),i=dayIdx(l);return i<0?l.cycle:(o.indexOf(dayId)<=i?l.cycle+1:l.cycle)}
 const nk=n=>String(n||'').trim().toLowerCase();
 /* تاريخ التمرين: بالاسم من كل الجلسات (مش مربوط بيوم معين) */
-function exHist(exId,skip){const out=[];
-  const me=S.program.days.concat(S.fbDay?[S.fbDay]:[]).flatMap(d=>d.ex).find(x=>x.id===exId),nm=me?nk(me.name):null;
+function exHist(exId,skip,nm0){const out=[];
+  const me=S.program.days.concat(S.fbDay?[S.fbDay]:[]).flatMap(d=>d.ex).find(x=>x.id===exId),dx=!me&&!nm0&&S.draft&&S.draft.ex.find(x=>x.exId===exId),nm=me?nk(me.name):nm0?nk(nm0):dx?nk(dx.name):null;
   for(const s of done()){if(s.id===skip)continue;const e=s.ex.find(x=>x.exId===exId)||(nm&&s.ex.find(x=>nk(x.name)===nm));if(e)out.push(Object.assign({date:s.date,cycle:s.cycle,cb:s.cb?1:0,gym:gymOf(s)},e))}return out}
 function histMap(){const m={};for(const s of done())for(const e of s.ex){const k=nk(e.name);(m[k]||(m[k]=[])).push(Object.assign({date:s.date,cycle:s.cycle,cb:s.cb?1:0},e))}return m}
 function setsStr(e){const a=e.sets;const u=e.unit?' '+unitTxt(e.unit):'';if(!a.length)return '';if(Array.isArray(e.ws)&&e.ws.length===a.length&&e.ws.some(x=>+x!==+e.w))return a.map((r,j)=>`${+e.ws[j]}×${r}`).join(' / ');return a.every(r=>r===a[0])?`${a.length}×${a[0]}${u}`:a.join('/')+u}
@@ -170,11 +170,12 @@ const dGap=(a,b)=>Math.round((new Date(a+'T12:00:00')-new Date(b+'T12:00:00'))/8
 /* فين انت في خطة الرجوع: الغياب الأخير (لسه مارجعتش، أو رجعت ولسه في نص الخطة) */
 function cbNow(){
   const ds=done();if(!ds.length)return null;
-  const at=(g,i)=>{let st=cbSteps(g);if(i>=st.length)return null;
+  /* v139: خطوة الرجوع بتتحسب بس لما تلعب جلسة رجوع فعلًا. اليوم العادي مابياكلش ولا بيتخطّى خطوة */
+  const at=(g,aft)=>{let st=cbSteps(g);const cbs=aft.filter(x=>x.cb&&!x.cb.dl),i=cbs.length;if(i>=st.length)return null;
     if(st.some(x=>x.k==='fb')&&fbDay().ex.length<2)st=st.map(x=>({k:'lt',p:x.p}));
-    return{g,i,n:st.length,st,step:st[i],after:ds.slice(0,i).reverse()}};
-  const g0=daysAgo(ds[0].date);if(g0>=CBD)return at(g0,0);
-  for(let i=0;i<Math.min(ds.length-1,4);i++){const g=dGap(ds[i].date,ds[i+1].date);if(g>=CBD)return at(g,i+1)}
+    return{g,i,n:st.length,st,step:st[i],after:cbs.slice().reverse()}};
+  const g0=daysAgo(ds[0].date);if(g0>=CBD)return at(g0,[]);
+  for(let i=0;i<Math.min(ds.length-1,6);i++){const g=dGap(ds[i].date,ds[i+1].date);if(g>=CBD)return at(g,ds.slice(0,i+1))}
   return null;
 }
 /* فول بادي الرجوع: بيتبني من تمارين برنامجك انت. رجل ← صدر ← ضهر ← خلفية ← جذع. الأجهزة الأول لأنها أأمن بعد الغياب */
@@ -194,7 +195,7 @@ function fbPick(){
 /* التخفيف: فول بادي = مجموعتين. مخففة = مجموعة أقل (أقل حاجة 2). الوزن نسبة من وزنك قبل الغياب */
 function cbApply(e,cb){
   const n=cb.k==='fb'?(+e.tsets||2):Math.max(2,(+e.tsets||3)-1);if(n!==+e.tsets){e.tsets=n;e.sets=Array(n).fill('');e.dur=[]}
-  const w=num(e.w);if(!e.unit&&w>0){const st=stepOf(e.name);e.w=String(Math.min(w,Math.max(st,Math.round(w*cb.p/st)*st)))}
+  const w=num(e.w);if(!e.unit&&w>0){const st=stepOf(e.name);let nw=Math.min(w,Math.max(st,Math.round(w*cb.p/st)*st));if(nw>=w&&w>st)nw=Math.round((w-st)*100)/100;e.w=String(nw)}
 }
 /* الجلسة اللي هتتلعب (من غير حفظ): الرئيسية بتعرضها، و«ابدأ» بيفتحها */
 function planDraft(id,c){
@@ -214,7 +215,7 @@ function cbCard(c,open){
   if(!c){const dl=S.draft&&S.draft.cb&&S.draft.cb.dl;return `<button class="cbh" data-a="cbGo"><b>${dl?tr('جلسة خفيفة مفتوحة ','Deload session in progress'):tr('جلسة رجوع مفتوحة','Comeback session in progress')}</b><span class="cbgo">${dl?tr('كمّل الجلسة الخفيفة','Continue the light session'):tr('كمّل جلسة الرجوع','Continue the comeback session')} ${ar0?'‹':'›'}</span></button>`}
   const nm=s=>s.k==='fb'?tr('جسم كامل','Full body'):tr('مخففة','Light'),ar=LANG==='ar',sep=`<i>${ar?'‹':'›'}</i>`;
   /* الخطوات اللي عدّت بتتعلّم بالجلسة اللي اتلعبت فعلًا (رجوع أو يوم عادي) */
-  const pills=c.st.map((s,k)=>{if(k<c.i){const a=c.after[k];return `<span class="ok">✓ ${a&&a.cb?nm(a.cb)+' <bdi class="en">'+cbPct(a.cb)+'</bdi>':'<bdi class="en">'+esc(dayBase(a?a.dayName:''))+'</bdi>'}</span>`}
+  const pills=c.st.map((s,k)=>{if(k<c.i){const a=c.after[k];return `<span class="ok">✓ ${a&&a.cb?nm(a.cb)+' <bdi class="en">'+cbPct(a.cb)+'</bdi>':nm(s)}</span>`}
     return `<span class="${k===c.i?'on':''}">${nm(s)} <bdi class="en">${cbPct(s)}</bdi></span>`}).join(sep)+`${sep}<span>${tr('جدولك','Your plan')}</span>`;
   const dn=c.step.k==='fb'?'':day(nextDayId()).name;
   const how=c.step.k==='fb'?tr(`جسم كامل: مجموعتين لكل تمرين، والأوزان ${cbPct(c.step)} من أوزانك قبل الغياب.`,`Full body: two sets per exercise, weights at ${cbPct(c.step)} of your pre-break weights.`)
@@ -230,7 +231,6 @@ function dlNow(){const ds=done();if(ds.length<8||daysAgo(ds[0].date)>=CBD)return
 function dlCard(x){const ar=LANG==='ar';
   return `<div class="cbh dlc"><b>${x.act?tr(`أسبوع خفيف · فاضل ${x.left} يوم`,`Light week · ${x.left} day(s) left`):tr(`بقالك ${x.wk} أسابيع تمرين متواصل`,`${x.wk} weeks of training in a row`)}</b><span class="cbt">${tr('مجموعة أقل في كل تمرين والأوزان 90%، علشان جسمك يتخلص من التعب المتراكم ويرجع أقوى.','A light week: one set less per exercise at 90% weights. Your body clears built-up fatigue and comes back stronger; it does not count toward the progression rule.')}</span><span class="dlb"><button class="cbgo" data-a="dlGo">${tr('ابدأ يوم خفيف','Start a light day')} ${ar?'‹':'›'}</button>${x.act?'':`<button class="dls" data-a="dlSkip">${tr('مش دلوقتي','Not now')}</button>`}</span></div>`}
 async function startDeload(){if(S.draft&&S.draft.cb&&S.draft.cb.dl&&!S.draft.editing){openSession();return}if(S.draft&&!dEmpty(S.draft)&&!await ask(T().confNew))return;
-  if(!(S.dl&&dGap(today(),S.dl)<7))S.dl=today();
   delete S.dlSkip;
   S.draft=null;const pd=planDraft(nextDayId(),{g:0,i:0,n:1,step:{k:'lt',p:.9}});pd.cb.dl=1;if(!pd.ex.length){toast(tr('اليوم ده فاضي','This day is empty'));return}S.draft=pd;openTips.clear();save();openSession()}
 /* اقتراح بس: بيتفتح لما تدوس على الكارت. الدايرة و«ابدأ يوم تاني» والبرنامج بيفتحوا يومك العادي بأوزانك */
@@ -274,6 +274,8 @@ function progState(t,h){
   for(const x of h){if((+x.w||0)!==W)break;n++;if(x.clean&&!ds.has(x.date)&&x.sets.length>=t.sets&&x.sets.every(r=>r>=t.goal)){ds.add(x.date);q++}}
   if(q>=2)return{k:'up'};if(n>=5)return{k:'stuck',n};if(q===1)return{k:'q1'};return null;
 }
+/* v139: − و + بيمشوا على شبكة الخطوة (2.5، 5…): لو الوزن مش على الشبكة بيروح لأقرب درجة في الاتجاه ده */
+const snapW=(w,dir,st)=>{const k=w/st,n=dir>0?Math.floor(k+1e-9)+1:Math.ceil(k-1e-9)-1;return Math.max(0,Math.round(n*st*100)/100)};
 const STEP0={bb:2.5,db:2.5,mach:5,cable:5,kb:4,bw:2.5,band:2.5,other:2.5};
 const stepOf=n=>{const o=S.steps&&S.steps[nk(n)];if(o>0)return o;const m=typeof META!=='undefined'&&META[n];return STEP0[(m&&m.eq)||'other']||2.5};
 function progMsg(t,h,unit,name){
@@ -343,7 +345,7 @@ function aiText(s,skip){
     {const dl=durLine(e);if(dl)out.push('   '+dl)}
     out.push(`   ${L.aiForm}: ${e.clean?L.aiClean:tr('مش نضيف (مرجحة أو أداء مكسور)','not clean (swinging or broken form)')}`);
     if(e.rir!=null)out.push(`   ${tr('العدّات اللي كانت فاضلة في آخر مجموعة (RIR)','Reps in reserve on the last set (RIR)')}: ${e.rir===3?'3+':e.rir}`);
-    const h=exHist(e.exId,skip).filter(x=>x.date<=s.date);const prev=h[0];
+    const h=exHist(e.exId,skip,e.name).filter(x=>x.date<=s.date);const prev=h[0];
     if(prev)out.push(`   ${L.aiLast} (${prev.date}): ${noW(prev.w)?'—':(+prev.w)+' kg'} — ${prev.sets.join('/')}${u}${prev.clean?', '+L.clean:''}`);
     const p=s.cb?null:progState({sets:e.tsets||e.sets.length,goal:e.goal||e.treps||12},[Object.assign({date:s.date},e)].concat(h));
     if(p)out.push(`   ${L.aiStatus}: ${p.k==='stuck'?L.st2.stuck(p.n):L.st2[p.k]}`);
@@ -496,6 +498,7 @@ function exitAsk(){
 }
 window.glBack=function(){
   if(XP.el){xpClose();return true}
+  {const sh=$('#sheet');if(sh&&!sh.hidden){closeSheet();return true}}
   {const a=document.getElementById('ask');if(a){const n=a.querySelector('.no');n&&n.click();return true}}
   const M=$('#modal'),Sx=$('#sess');
   if(!M.hidden){if(hs().modal)history.back();else closeModal(true);return true}
@@ -626,7 +629,7 @@ function renderHome0(){
 }
 
 /* ================= الجلسة ================= */
-function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),g=gymId(),h=hh.find(x=>!x.cb&&x.gym===g)||hh.find(x=>!x.cb)||hh[0];return{exId:t.id,name:t.name,unit:t.unit||'',core:!!t.core,goal:t.goal,tsets:t.sets,treps:t.reps,note0:t.note||libHow(t.name),w:src?src.w:(h?h.w:t.w),sets:src?src.sets.map(String):Array(t.sets).fill(''),ss:!!(src?src.ss:t.ss),ws:src&&src.ws?src.ws.map(String):[],add:src?src.add:undefined,from:src?src.from:undefined,rir:src&&src.rir!=null?src.rir:null,dur:src&&src.dur?src.dur.slice():[],clean:src?!!src.clean:true,note:src?src.note||'':''}}
+function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing,t.name),g=gymId(),h=hh.find(x=>!x.cb&&x.gym===g)||hh.find(x=>!x.cb)||hh[0];return{exId:t.id,name:t.name,unit:t.unit||'',core:!!t.core,goal:t.goal,tsets:t.sets,treps:t.reps,note0:t.note||libHow(t.name),w:src?src.w:(h?h.w:t.w),sets:src?src.sets.map(String):Array(t.sets).fill(''),ss:!!(src?src.ss:t.ss),ws:src&&src.ws?src.ws.map(String):[],add:src?src.add:undefined,from:src?src.from:undefined,rir:src&&src.rir!=null?src.rir:null,dur:src&&src.dur?src.dur.slice():[],clean:src?!!src.clean:true,note:src?src.note||'':''}}
 async function startSession(id){
   if(S.draft&&!dEmpty(S.draft)&&!await ask(T().confNew))return;
   const pd=planDraft(id,id==='FB'?cbNow():null);
@@ -638,9 +641,10 @@ async function editSession(id){
   const s=S.sessions.find(x=>x.id===id);if(!s)return;
   if(S.draft&&!await ask(T().confEditOver))return;
   const d=S.program.days.find(x=>x.id===s.day);
-  S.draft={t0:s.t0,gym:s.gym,id:s.id,editing:s.id,date:s.date,day:s.day,dayName:s.dayName,cycle:s.cycle,ex:[]};if(s.cb)S.draft.cb=s.cb;
-  const ex=s.ex.map(e=>{const t=d&&d.ex.find(x=>x.id===e.exId)||{id:e.exId,name:e.name,unit:e.unit,core:e.core,goal:e.goal,sets:e.tsets||e.sets.length,reps:e.treps||e.sets[0],note:''};return draftEx(t,e)});
-  if(d)for(const t of d.ex)if(!ex.some(e=>e.exId===t.id)){const e=draftEx(t);if(s.cb)cbApply(e,s.cb);ex.push(e)}
+  S.draft={t0:s.t0,gym:s.gym,id:s.id,editing:s.id,date:s.date,day:s.day,dayName:s.dayName,cycle:s.cycle,ex:[]};if(s.cb)S.draft.cb=s.cb;if(s.rdy!=null)S.draft.rdy=s.rdy;if(s.imp){S.draft.imp=1;S.draft.st0=s.status}
+  /* v139: الأهداف والمجموعات المتسجلة في الجلسة هي اللي بتفضل، مش قيم البرنامج دلوقتي */
+  const ex=s.ex.map(e=>draftEx({id:e.exId,name:e.name,unit:e.unit,core:e.core,goal:e.goal,sets:e.tsets||e.sets.length,reps:e.treps||e.sets[0],note:''},e));
+  if(d)for(const t of d.ex)if(!ex.some(e=>e.exId===t.id)){const e=draftEx(t);e.extra=1;if(s.cb)cbApply(e,s.cb);ex.push(e)}
   S.draft.ex=ex;openTips.clear();save();closeModal(true);openSession();
 }
 function openSession(){setTimeout(askReady,450);if(!S.draft||!S.draft.ex.length){S.draft=null;save();if(tab==='home')renderHome();return}const dd=S.draft,k0=dd.ex.findIndex(e=>!fullyIn(e));curEx=dd.editing?0:(k0<0?dd.ex.length-1:k0);finishing=false;renderSession();$('#sess').hidden=false;$('#sess').classList.remove('in');void $('#sess').offsetWidth;$('#sess').classList.add('in');$('#sess').scrollTop=0;document.body.style.overflow='hidden';wakeOn();if(!hs().sess){const n=Object.assign({tab:tab},hs(),{sess:1});delete n.modal;if(hs().modal)history.replaceState(n,'');else history.pushState(n,'')}saveUI()}
@@ -660,12 +664,14 @@ const restFor=e=>(S.settings.ram?30:0)+(e.unit?60:(typeof META!=='undefined'&&ME
 let rsIv=null,AC=null;
 function beep(n){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();for(let k=0;k<(n||1);k++){const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=880;o.connect(g);g.connect(AC.destination);const t=AC.currentTime+k*.25;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.18);o.start(t);o.stop(t+.2)}}catch(e){}}
 function restStart(e){const d=S.draft;if(!d||!e)return;d.rest={t0:Date.now(),dur:restFor(e)};saveSoon();if(!rsIv)rsIv=setInterval(restTick,250);restTick()}
+/* v139: عدّاد الراحة بيتبني مرة واحدة، وبعدها بيتحدّث الرقم والشريط بس (الأزرار مابتتبنيش كل ربع ثانية فمابتضيعش دوسات) */
 function restTick(){const d=S.draft,el=$('#rst');if(!d||!d.rest){clearInterval(rsIv);rsIv=null;if(el)el.innerHTML='';return}
   const r=d.rest,rem=Math.ceil(r.dur-(Date.now()-r.t0)/1000);
   if(rem<=0&&!r.done){r.done=1;saveSoon();try{navigator.vibrate&&navigator.vibrate([220,120,220])}catch(e){}beep(2)}
   if(rem<-12){d.rest=null;saveSoon();clearInterval(rsIv);rsIv=null;if(el)el.innerHTML='';return}
-  if(!el)return;const pc=Math.max(0,Math.min(100,(1-rem/r.dur)*100));
-  el.innerHTML=rem>0?`<div class="rsb"><i style="width:${pc.toFixed(1)}%"></i></div><div class="rsr"><span>${tr('راحة','Rest')} <b class="en">${mmss(rem)}</b></span><button data-a="rsAdd">+30</button><button data-a="rsSkip">${tr('تخطّي','Skip')}</button></div>`:`<div class="rsr go"><span>${tr('يلا المجموعة الجاية','Next set')} ✓</span></div>`}
+  if(!el)return;const pc=Math.max(0,Math.min(100,(1-rem/r.dur)*100)),mode=rem>0?'run':'go';
+  if(el.dataset.m!==mode||!el.firstChild){el.dataset.m=mode;el.innerHTML=mode==='run'?`<div class="rsb"><i></i></div><div class="rsr"><span>${tr('راحة','Rest')} <b class="en"></b></span><button data-a="rsAdd">+30</button><button data-a="rsSkip">${tr('تخطّي','Skip')}</button></div>`:`<div class="rsr go"><span>${tr('يلا المجموعة الجاية','Next set')} ✓</span></div>`}
+  if(mode==='run'){const b=el.querySelector('.rsr b'),i=el.querySelector('.rsb i');if(b)b.textContent=mmss(rem);if(i)i.style.width=pc.toFixed(1)+'%'}}
 /* الإحماء للتمارين المركّبة التقيلة: 50%×8 · 70%×4 · 85%×2 */
 function warmTxt(e){const w=num(e.w),m=typeof META!=='undefined'&&META[e.name];if(e.unit||!(w>=20)||!m||m.kind!=='comp')return '';const st=stepOf(e.name);
   const seen=new Set();return [[.5,8],[.7,4],[.85,2]].map(([p,r])=>[Math.max(st,Math.round(w*p/st)*st),r]).filter(([x])=>x<w&&!seen.has(x)&&seen.add(x)).map(([x,r])=>`${x}×${r}`).join(' · ')}
@@ -678,21 +684,22 @@ function swHalt(){clearInterval(swIv);swIv=null}
 function swTick(){const d=S.draft,t=$('#swT');if(!d||!d.sw){swHalt();return}if(t)t.textContent=mmss((Date.now()-d.sw.t0)/1000)}
 function swRecord(){
   const d=S.draft;if(!d||!d.sw)return;const e=d.ex[d.sw.i];
-  if(e){const sec=Math.max(1,Math.round((Date.now()-d.sw.t0)/1000)),j=swNext(e);
+  /* v139: المجموعة بتتحدد لحظة البداية، والعدّات مابتتملاش لوحدها (إلا التمارين اللي بالوقت: الوقت هو العدّة) */
+  if(e){const sec=Math.max(1,Math.round((Date.now()-d.sw.t0)/1000));let j=d.sw.j;if(!(j>=0))j=swNext(e);
     e.dur=(e.dur||[]).slice();while(e.dur.length<e.sets.length)e.dur.push(0);
-    if(j>=e.sets.length){e.sets.push('');e.dur.push(0)}
-    e.dur[j]=sec;if(!(num(e.sets[j])>0))e.sets[j]=String(e.unit==='ث'?sec:e.unit==='د'?Math.max(1,Math.round(sec/60)):e.treps)}
+    while(j>=e.sets.length){e.sets.push('');e.dur.push(0);if(e.ws&&e.ws.length)e.ws.push('')}
+    e.dur[j]=sec;if(!(num(e.sets[j])>0)&&(e.unit==='ث'||e.unit==='د'))e.sets[j]=String(e.unit==='ث'?sec:Math.max(1,Math.round(sec/60)))}
   d.sw=null;swHalt();if(e)restStart(e);
 }
 function swTap(){
   const d=S.draft;if(!d)return;const was=d.sw&&d.sw.i===curEx;
   if(d.sw)swRecord();
-  if(!was){d.sw={i:curEx,t0:Date.now()};swIv=setInterval(swTick,250)}
+  if(!was){const e=d.ex[curEx];d.sw={i:curEx,id:e.exId,j:swNext(e),t0:Date.now()};d.rest=null;swIv=setInterval(swTick,250)}
   try{navigator.vibrate&&navigator.vibrate(was?[40,60,40]:25)}catch(e){}
   save();renderSession();
 }
 function swHtml(e){
-  const d=S.draft,on=!!(d.sw&&d.sw.i===curEx),j=swNext(e),L=on?tr('دوس تاني تسجّل','Tap to log'):j<e.sets.length?tr('ابدأ المجموعة '+(j+1),'Start set '+(j+1)):tr('مجموعة جديدة','New set');
+  const d=S.draft,on=!!(d.sw&&d.sw.i===curEx),j=on&&d.sw.j>=0?d.sw.j:swNext(e),L=on?tr('دوس تاني تسجّل','Tap to log'):j<e.sets.length?tr('ابدأ المجموعة '+(j+1),'Start set '+(j+1)):tr('مجموعة جديدة','New set');
   return `<button class="swt${on?' on':''}" data-a="sw" aria-label="${esc(L)}"><span class="swi">${on?'<i class="swp"></i>':'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="14" r="7.5"/><path d="M12 10.5V14l2.2 1.6M9.5 2.5h5M12 2.5v4M18.4 7.6l1.4-1.4"/></svg>'}</span><span class="swc"><b class="en" id="${on?'swT':''}">${on?mmss((Date.now()-d.sw.t0)/1000):'0:00'}</b><small>${L}</small></span></button>`;
 }
 function goEx(k){const d=S.draft;if(!d||k<0||k>=d.ex.length||k===curEx)return;closeSheet();curEx=k;wAnim=true;renderSession();wAnim=false;$('#sess').scrollTop=0}
@@ -741,8 +748,8 @@ function openMenu(){
   ${curEx<d.ex.length-1?`<button class="mrow" data-a="ssTgl"><i>⇵</i>${e.ss?tr('فك السوبرسيت','Unlink superset'):tr('سوبرسيت مع اللي بعده','Superset with the next one')}</button>`:''}
   <div class="mgh">${tr('الجلسة','Session')}</div>
   <button class="mrow" data-a="sxOpen"><i>+</i>${tr('ضيف تمرين','Add an exercise')}</button>
-  ${d.editing?'':`<button class="mrow" data-a="timeShort"><i>◷</i>${tr('وقتي ضيق','Short on time')}</button>`}
-  <button class="mrow" data-a="swTgl"><i>⏱</i>${S.settings.swOn?tr('ساعة الإيقاف: للتمارين اللي بالوقت بس','Stopwatch: timed exercises only'):tr('ساعة الإيقاف لكل التمارين','Stopwatch for every exercise')}</button>
+  ${d.editing?'':`<div class="mgh">${tr('وقتي ضيق','Short on time')}</div>${allEx(d).some(x=>x.core)&&!allEx(d).every(x=>x.core)?swRow('coreOnly',!!(d.hid&&d.hid.length),tr('الأساسي بس','Essentials only'),tr('التمارين التانية بتستخبى، وبترجع بكل اللي فيها لما تطفّيه','Other exercises hide and come back intact when you turn it off')):''}${swRow('tShort',!!d.short,tr('مجموعتين لكل تمرين','Two sets each'),tr('والأساسي الأول. بتطفّيه ترجع المجموعات والترتيب','Essentials first. Turn off to get sets and order back'))}<div class="mgh">${tr('أدوات','Tools')}</div>`}
+  ${swRow('swTgl',!!S.settings.swOn,tr('ساعة الإيقاف لكل التمارين','Stopwatch for every exercise'),tr('مطفي = للتمارين اللي بالوقت بس','Off = timed exercises only'))}
   <button class="mrow" data-a="shareDraft"><i>↗</i>${L.shareW}</button>
   <button class="mrow" data-a="finish"><i>✓</i>${d.editing?L.saveEdit:tr('خلّص واحفظ','Finish and save')}</button>
   <button class="mrow" data-a="dateEd"><i>▤</i>${tr('تعديل التاريخ والدورة…','Edit date and cycle…')}</button>
@@ -758,7 +765,7 @@ function openGuide(){
 function renderSession(){
   const d=S.draft,L=T();
   if(curEx>=d.ex.length)curEx=d.ex.length-1;if(curEx<0)curEx=0;
-  const i=curEx,e=d.ex[i],n=d.ex.length,last=i===n-1,h=exHist(e.exId,d.editing),l=h[0],p=d.cb?null:progMsg({sets:e.tsets,goal:e.goal},h,e.unit,e.name),ps=d.cb?null:progState({sets:e.tsets,goal:e.goal},h),earn=!!(ps&&ps.k==='up'&&!e.unit);
+  const i=curEx,e=d.ex[i],n=d.ex.length,last=i===n-1,h=exHist(e.exId,d.editing,e.name),l=h[0],p=d.cb?null:progMsg({sets:e.tsets,goal:e.goal},h,e.unit,e.name),ps=d.cb?null:progState({sets:e.tsets,goal:e.goal},h),earn=!!(ps&&ps.k==='up'&&!e.unit);
   const u=e.unit?' '+esc(unitTxt(e.unit)):'',showW=!(noW(e.w)&&e.unit);
   const showL=openTips.has('l'+i),showH=openTips.has('h'+i),showN=openTips.has('n'+i)||!!e.note;
   const seg=d.ex.map((x,k)=>{const s=exSt(x);return `<button class="sg${k===i?' cur':''}${fullyIn(x)?' dn':s==='part'?' wn':''}" data-a="exGo" data-i="${k}" aria-label="${k+1}"><i></i></button>`}).join('');
@@ -778,7 +785,7 @@ function renderSession(){
     <div class="rst" id="rst"></div>
     ${e.sets.length&&e.sets.every(v=>num(v)>0)&&!e.unit?`<div class="wrir"><span>${tr('فاضل في إيدك كام؟','Reps left in the tank?')}</span>${[tr('على الآخر','To failure'),tr('فاضل 1–2','1–2 left'),tr('فاضل 3+','3+ left')].map((t,k)=>`<button class="${e.rir===(k===0?0:k===1?2:3)?'on':''}" data-a="rir" data-v="${k===0?0:k===1?2:3}">${t}</button>`).join('')}</div>`:''}
     ${e.unit?'':`<button class="wcl${e.clean?' on':''}" data-a="clean">${e.clean?tr('✓ أداء نضيف','✓ Clean form'):tr('مش نضيف (مرجحة أو أداء مكسور)','Not clean (swinging or broken form)')}</button>`}
-    ${(e.unit||S.settings.swOn||(d.sw&&d.sw.i===curEx))&&!(d.rest&&!d.rest.done&&!(d.sw&&d.sw.i===curEx))?`<div class="wrest">${swHtml(e)}</div>`:''}
+    ${e.unit||S.settings.swOn||(d.sw&&d.sw.i===curEx)?`<div class="wrest">${swHtml(e)}</div>`:''}
     <div class="whint${memoOf(e.name)?' mine':''}" dir="auto" data-a="memo" data-n="${esc(e.name)}">${esc(memoOf(e.name)||(e.note0&&e.note0!==libHowAlt(e.name)?e.note0:(libHow(e.name)||e.note0||'')))||tr('اكتب ملاحظتك للتمرين ده','Write your note for this exercise')}</div>
     <div class="wlinks"><button data-a="tgl" data-k="l${i}">↺ ${tr('آخر 3 مرات','Last 3 times')}</button><button data-a="tgl" data-k="n${i}">✎ ${L.note}</button><button data-a="addset" data-i="${i}">+ ${tr('مجموعة','Set')}</button></div>
     ${showL?`<div class="tnote">${lastP}${p?`<div class="pmsg ${p.c}">${p.t}</div>`:''}</div>`:''}
@@ -790,13 +797,35 @@ function renderSession(){
   if(d.sw&&!swIv)swIv=setInterval(swTick,250);
   if(d.rest){if(!rsIv)rsIv=setInterval(restTick,250);restTick()}
 }
+/* ===== v139: «وقتي ضيق» = مفتاحين (الأساسي بس / مجموعتين لكل تمرين) تشغّلهم وتطفّيهم براحتك.
+   مفيش تمرين ولا مجموعة متسجلة بتتمسح: المخفي بيرجع مكانه بكل اللي فيه، والسوبرسيت بيفضل مع بعض ===== */
+const allEx=d=>d?d.ex.concat((d.hid||[]).map(x=>x.e)):[];
+function exRemap(d,fn){const cur=d.ex[curEx],sw=d.sw?d.ex[d.sw.i]:null;fn();
+  const k=cur?d.ex.indexOf(cur):-1;curEx=k>-1?k:Math.max(0,Math.min(curEx,d.ex.length-1));
+  if(d.sw){const j=sw?d.ex.indexOf(sw):-1;if(j<0){d.sw=null;swHalt()}else d.sw.i=j}}
+const exBlocks=ex=>{const out=[];let c=[];ex.forEach((e,k)=>{c.push(e);if(!e.ss||k===ex.length-1){out.push(c);c=[]}});return out};
+function setCoreOnly(on){const d=S.draft;if(!d)return false;
+  if(on){if(d.hid&&d.hid.length)return true;const bl=exBlocks(d.ex),keep=[],hid=[];let k=0;
+    for(const b of bl){const vis=b.some(e=>e.core||logged(e)||(d.sw&&d.ex[d.sw.i]===e));for(const e of b){if(vis)keep.push(e);else hid.push({k,e});k++}}
+    if(!hid.length||!keep.length)return false;exRemap(d,()=>{d.ex=keep;d.hid=hid});return true}
+  if(!d.hid||!d.hid.length){delete d.hid;return true}
+  exRemap(d,()=>{for(const x of d.hid.slice().sort((a,b)=>a.k-b.k))d.ex.splice(Math.min(x.k,d.ex.length),0,x.e);delete d.hid});return true}
+function setShort(on){const d=S.draft;if(!d)return;
+  if(on){if(d.short)return;d.short={ord:allEx(d).map(e=>e.exId)};
+    for(const e of allEx(d)){if(+e.tsets<=2)continue;e.sh0=+e.tsets;e.tsets=2;const sj=d.sw&&d.ex[d.sw.i]===e?d.sw.j:-1;
+      for(let j=e.sets.length-1;j>=0&&e.sets.length>2;j--){if(num(e.sets[j])>0||+((e.dur||[])[j])>0||j===sj)continue;e.sets.splice(j,1);if(e.dur&&e.dur.length>j)e.dur.splice(j,1);if(e.ws&&e.ws.length>j)e.ws.splice(j,1)}}
+    exRemap(d,()=>{const bl=exBlocks(d.ex);d.ex=bl.filter(b=>b.some(e=>e.core)).concat(bl.filter(b=>!b.some(e=>e.core))).flat()});return}
+  if(!d.short)return;const ord=d.short.ord;
+  for(const e of allEx(d)){if(!e.sh0)continue;e.tsets=e.sh0;while(e.sets.length<e.sh0){e.sets.push('');if(e.dur&&e.dur.length)e.dur.push(0);if(e.ws&&e.ws.length)e.ws.push('')}delete e.sh0}
+  const ix=e=>{const i=ord.indexOf(e.exId);return i<0?1e9:i};exRemap(d,()=>{d.ex.sort((a,b)=>ix(a)-ix(b))});delete d.short}
 let lastDone=null;
 function finishSession(){
-  if(!finishing&&S.draft&&S.draft.sw)swRecord();
+  /* v139: ساعة شغالة وقت «خلّص» مابتسجّلش مجموعة لوحدها */
+  if(!finishing&&S.draft&&S.draft.sw){S.draft.sw=null;swHalt()}
   if(finishing||!buildFromDraft()){if(!finishing)toast(T().noSets);return}
   finishing=true;swHalt();closeSheet();
   const nm=S.draft.dayName,L=T(),dd0=S.draft,t0=dd0.t0,prev={};
-  for(const e of dd0.ex)prev[e.exId]=exHist(e.exId,dd0.editing);
+  for(const e of dd0.ex)prev[e.exId]=exHist(e.exId,dd0.editing,e.name);
   const s=persistDraft();lastDone=s;finishing=false;
   /* v115: ملخص آخر الجلسة: المدة، الأرقام القياسية، واللي استحق زيادة */
   const sm=[];if(t0&&!dd0.editing){const mn=Math.round((Date.now()-t0)/60000);if(mn>0&&mn<360)sm.push(`${tr('المدة','Duration')}: <b class="en">${mn}</b> ${tr('دقيقة','min')}`)}
@@ -805,9 +834,9 @@ function finishSession(){
     const mw=Math.max(...h.map(x=>+x.w||0)),bestR=Math.max(0,...h.filter(x=>(+x.w||0)===w).map(x=>Math.max(...x.sets)));
     if(w>mw)sm.push(`★ <bdi class="en">${esc(e.name)}</bdi>: ${tr('أتقل وزن','heaviest ever')} <b class="en">${w} k</b>`);
     else if(w===mw&&Math.max(...e.sets)>bestR&&bestR>0)sm.push(`★ <bdi class="en">${esc(e.name)}</bdi>: ${tr('أكتر عدّات على','most reps at')} <b class="en">${w} k</b>`);
-    const ps=progState({sets:e.tsets,goal:e.goal},exHist(e.exId));if(ps&&ps.k==='up')sm.push(`↑ <bdi class="en">${esc(e.name)}</bdi>: ${tr('استحقيت الزيادة','increase earned')}`)}
+    const ps=progState({sets:e.tsets,goal:e.goal},exHist(e.exId,null,e.name));if(ps&&ps.k==='up')sm.push(`↑ <bdi class="en">${esc(e.name)}</bdi>: ${tr('استحقيت الزيادة','increase earned')}`)}
   {const t=$('#toast');if(t)t.classList.remove('on')}
-  const nx=s.ex.filter(e=>!e.unit&&(()=>{const p=progState({sets:e.tsets,goal:e.goal},exHist(e.exId));return p&&p.k==='up'})()).map(e=>e.name);
+  const nx=s.ex.filter(e=>!e.unit&&(()=>{const p=progState({sets:e.tsets,goal:e.goal},exHist(e.exId,null,e.name));return p&&p.k==='up'})()).map(e=>e.name);
   sm.push(nx.length?`${tr('الجاية: زوّد في','Next time: add weight on')} <bdi class="en">${esc(nx.join('، '))}</bdi>`:tr('الجاية: نفس الأوزان، وحاول تكمّل الهدف','Next time: same weights, aim to complete the target'));
   for(let k=sm.length-2;k>=0;k--)if(/استحقيت الزيادة|increase earned/.test(sm[k]))sm.splice(k,1);
   $('#sess').innerHTML=`<div class="wdone"><div class="wchk">✓</div><div class="wdt"><bdi>${esc(nm)}</bdi></div><div class="wds">${s.status==='full'?L.savedFull:s.status==='core'?L.savedCore:L.saved}</div>${sm.length?`<div class="wsum">${sm.map(x=>`<div>${x}</div>`).join('')}</div>`:''}</div>
@@ -829,18 +858,22 @@ function updCore(){
 /* تحويل المسودة لجلسة (من غير حفظ) */
 function buildFromDraft(){
   const d=S.draft,ex=[];
-  for(const e of d.ex){const sets=[],dur=[],wsx=[];e.sets.forEach((r,j)=>{const v=num(r);if(!isNaN(v)&&v>0){sets.push(v);dur.push(+((e.dur||[])[j])||0);const x=num((e.ws||[])[j]);wsx.push(x>0?x:num(e.w))}});if(!sets.length)continue;const w=num(e.w);
-    const o={exId:e.exId,name:e.name,unit:e.unit,core:e.core,goal:e.goal,tsets:e.tsets,treps:e.treps,w:isNaN(w)?'':w,sets,clean:!!e.clean,note:(e.note||'').trim()};if(dur.some(x=>x>0))o.dur=dur;if(e.rir!=null)o.rir=e.rir;if(e.ss)o.ss=1;if(e.add)o.add=1;if(e.from)o.from=String(e.from);if(!e.unit&&wsx.some(x=>x!==num(e.w)))o.ws=wsx;ex.push(o)}
+  for(const e of allEx(d)){const sets=[],dur=[],wsx=[];const w0=num(e.w)||0;e.sets.forEach((r,j)=>{const v=num(r);if(!isNaN(v)&&v>0){sets.push(v);dur.push(+((e.dur||[])[j])||0);const x=num((e.ws||[])[j]);wsx.push(x>0?x:w0)}});if(!sets.length)continue;const w=num(e.w);
+    const nt=[(e.note||'').trim(),e.pain?'⚠ '+tr('وجع','pain'):''].filter(Boolean).join(' ');
+    const o={exId:e.exId,name:e.name,unit:e.unit,core:e.core,goal:e.goal,tsets:e.tsets,treps:e.treps,w:isNaN(w)?'':w,sets,clean:!!e.clean,note:nt};if(e.noteEd)o.noteEd=1;if(dur.some(x=>x>0))o.dur=dur;if(e.rir!=null)o.rir=e.rir;if(e.ss)o.ss=1;if(e.add)o.add=1;if(e.from)o.from=String(e.from);if(!e.unit&&wsx.some(x=>x!==w0))o.ws=wsx;ex.push(o)}
   if(!ex.length)return null;
-  const core=d.ex.filter(e=>e.core).every(e=>ex.some(x=>x.exId===e.exId));
-  const all=d.ex.every(e=>ex.some(x=>x.exId===e.exId));
-  const o={t0:d.t0||undefined,gym:d.gym||gymId(),rdy:d.rdy,id:d.editing||d.id,date:d.date||today(),day:d.day,dayName:d.dayName,cycle:+num(d.cycle)||1,ex,status:all?'full':core?'core':'part',ts:Date.now()};
-  if(d.cb)o.cb=d.cb;if(o.rdy==null)delete o.rdy;if(o.gym==='main')delete o.gym;return o;
+  /* v139: الحالة بتتحسب من تمارين الجلسة نفسها (والمخفية بـ «الأساسي بس» محسوبة، ومفيش داتا بتضيع) */
+  const plan=allEx(d).filter(e=>!e.extra);
+  const core=plan.filter(e=>e.core).every(e=>ex.some(x=>x.exId===e.exId));
+  const all=plan.every(e=>ex.some(x=>x.exId===e.exId));
+  const o={t0:d.t0||undefined,gym:d.gym||gymId(),rdy:d.rdy,id:d.editing||d.id,date:d.date||today(),day:d.day,dayName:d.dayName,cycle:+num(d.cycle)||1,ex,status:d.imp&&d.st0==='imp'?'imp':all?'full':core?'core':'part',ts:Date.now()};
+  if(d.cb)o.cb=d.cb;if(d.imp)o.imp=1;if(o.rdy==null)delete o.rdy;if(o.gym==='main')delete o.gym;return o;
 }
 function persistDraft(){
   const d=S.draft,s=buildFromDraft();
   if(!s)return null;
-  s.ex.forEach(e=>addExNote(e.name,e.note,s.date));
+  s.ex.forEach(e=>{if(e.noteEd)addExNote(e.name,e.note,s.date,s.id);delete e.noteEd});
+  if(s.cb&&s.cb.dl&&!(S.dl&&dGap(s.date,S.dl)>=0&&dGap(s.date,S.dl)<7))S.dl=s.date;
   const i=d.editing?S.sessions.findIndex(x=>x.id===d.editing):-1;
   if(i>-1){s.ts=S.sessions[i].ts;s.mt=Date.now();S.sessions[i]=s}else S.sessions.push(s);
   S.draft=null;openTips.clear();save();autoFile();queueBackup(true);
@@ -884,7 +917,7 @@ function reportText(days){const ds=done(),inP=x=>{const a=daysAgo(x.date);return
   const pr=[],up=[],stk=[];const seen=new Set();
   for(const x of cur)for(const e of x.ex){const k=nk(e.name);if(e.unit||seen.has(k))continue;seen.add(k);const w=Math.max(...cur.filter(q=>q.ex.some(z=>nk(z.name)===k)).map(q=>+q.ex.find(z=>nk(z.name)===k).w||0));
     const pw=Math.max(0,...prev.flatMap(q=>q.ex.filter(z=>nk(z.name)===k).map(z=>+z.w||0)));if(pw>0&&w>pw)pr.push(`${e.name}: ${pw} → ${w} kg`);
-    const ps=progState({sets:e.tsets||3,goal:e.goal||12},exHist(e.exId));if(ps&&ps.k==='up')up.push(e.name);if(ps&&ps.k==='stuck')stk.push(e.name)}
+    const ps=progState({sets:e.tsets||3,goal:e.goal||12},exHist(e.exId,null,e.name));if(ps&&ps.k==='up')up.push(e.name);if(ps&&ps.k==='stuck')stk.push(e.name)}
   L.push('',tr('أوزان جديدة','New weights')+':',...(pr.length?pr.map(x=>'- '+x):['- '+tr('مفيش','none')]));
   if(up.length)L.push('',tr('استحقيت زيادة في','Increase earned on')+':',...up.map(x=>'- '+x));
   if(stk.length)L.push('',tr('واقف من غير زيادة','Stalled')+':',...stk.map(x=>'- '+x));
@@ -972,7 +1005,10 @@ function memoModal(n){const cur=memoOf(n)||((()=>{const t=S.draft&&S.draft.ex.fi
   <div class="row mt"><button class="btn pri sp" data-a="memoSave" data-n="${esc(n)}">${T().saveB}</button>${memoOf(n)?`<button class="btn ghost" data-a="memoDel" data-n="${esc(n)}">${tr('رجّع الشرح الأصلي','Restore default')}</button>`:`<button class="btn ghost" data-a="closeM">${T().cancel}</button>`}</div>`)}
 function memoDone(){closeModal();if(S.draft&&!$('#sess').hidden)renderSession();if(tab==='lib')renderLib()}
 const exNotes=n=>(S.exNotes&&S.exNotes[String(n||'').trim().toLowerCase()])||[];
-function addExNote(n,t,d){t=(t||'').trim();if(!t)return;S.exNotes=S.exNotes||{};const k=String(n||'').trim().toLowerCase(),a=S.exNotes[k]||(S.exNotes[k]=[]);if(!a.some(x=>x.t===t))a.push({d:d||today(),t})}
+/* v139: ملاحظة اتكتبت في جلسة بتتسجل مرة واحدة للجلسة دي؛ لو عدّلت الجلسة بعدين، الملاحظة بتتبدّل مش بتتكرر */
+function addExNote(n,t,d,sid){t=(t||'').replace(/\s*⚠.*$/,'').trim();S.exNotes=S.exNotes||{};const k=String(n||'').trim().toLowerCase(),a=S.exNotes[k]||[];
+  const j=sid?a.findIndex(x=>x.sid===sid):-1;if(j>-1){if(t)a[j]={d:d||a[j].d,t,sid};else a.splice(j,1)}else if(t&&!a.some(x=>x.t===t))a.push(sid?{d:d||today(),t,sid}:{d:d||today(),t});
+  if(a.length)S.exNotes[k]=a;else delete S.exNotes[k]}
 function notesHtml(n,extra){const a=exNotes(n).slice();if(extra&&!a.some(x=>x.t===extra))a.push({d:'',t:extra});
   return a.length?`<div class="dsec k0 unotes" dir="auto"><b>${tr('ملاحظاتك','Your notes')}</b>${a.map(x=>`<div>• ${esc(x.t)}${x.d?` <span class="mu">· ${fmtD(x.d)}</span>`:''}</div>`).join('')}</div>`:''}
 const libHow=n=>{const x=libGet(n);if(!x)return '';const o=libOv(n);if(howLang()==='en'){if(o&&o.shortEn)return o.shortEn;if(x[7])return x[7]}else if(o&&o.short!=null&&o.short!=='')return o.short;return x[6]};
@@ -1053,9 +1089,9 @@ function renderLib(){
 const lbEChips=()=>`<button class="${lbE==='all'?'on':''}" data-a="lbE" data-e="all">${tr('كل الأدوات','All gear')}</button>${EQ_ORDER.map(e=>`<button class="${lbE===e?'on':''}" data-a="lbE" data-e="${e}">${EQN[e][LANG==='ar'?0:1]}</button>`).join('')}`;
 const lbChips=()=>`<button class="${lbG==='all'?'on':''}" data-a="lbG" data-g="all">${tr('الكل','All')}</button>${Object.keys(GRP).map(g=>`<button class="${lbG===g?'on':''}" data-a="lbG" data-g="${g}">${GRP[g][LANG==='ar'?0:1]}</button>`).join('')}`;
 function hwModal(n){
-  const x=libGet(n);if(!x)return;
+  const x=libGet(n)||[n,'',0,3,12,'','','',null,1];
   const nt=`<label class="fld">${tr('ملاحظاتك (سطر لكل ملاحظة)','Your notes (one per line)')}<textarea class="inp" id="hwN" rows="3" dir="auto">${esc(exNotes(n).map(q=>q.t).join('\n'))}</textarea></label>`;
-  if(x[9]){modal(`<h3 class="en">${esc(n)}</h3>${nt}<div class="row"><button class="btn pri sp" data-a="hwSave" data-n="${esc(n)}">${T().saveB}</button><button class="btn sp" data-a="cuEdit" data-n="${esc(n)}">${tr('تعديل التمرين','Edit exercise')}</button><button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);return}
+  if(x[9]){modal(`<h3 class="en">${esc(n)}</h3>${nt}<div class="row"><button class="btn pri sp" data-a="hwSave" data-n="${esc(n)}">${T().saveB}</button>${libGet(n)?`<button class="btn sp" data-a="cuEdit" data-n="${esc(n)}">${tr('تعديل التمرين','Edit exercise')}</button>`:''}<button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);return}
   const o=libOv(n)||{},E=howLang()==='en',dir=E?'ltr':'rtl',L=E?DETLE:DETL;
   const d=E?(detEn(x,o)||(o.en!=null?[ '',o.en,'','','']:null)||['','','','','']):(o.d||DET[n]||['','','','','']);
   const sh=E?(o.shortEn!=null&&o.shortEn!==''?o.shortEn:(x[7]||'')):(o.short!=null&&o.short!==''?o.short:x[6]);
@@ -1073,7 +1109,7 @@ function hwApply(n,old){
   closeModal();if($('#sess')&&!$('#sess').hidden)renderSession();else if($('#lbL'))lbRefresh();
 }
 function hwSave(n){
-  const x=libGet(n);if(!x)return;const old=libHow(n);
+  const x=libGet(n)||[n,'',0,3,12,'','','',null,1];const old=libHow(n);
   {const k=String(n).trim().toLowerCase(),prev=exNotes(n),ls=($('#hwN').value||'').split('\n').map(t=>t.trim()).filter(Boolean);S.exNotes=S.exNotes||{};
    if(ls.length)S.exNotes[k]=ls.map(t=>{const q=prev.find(z=>z.t===t);return q||{d:today(),t}});else delete S.exNotes[k]}
   if(x[9]){hwApply(n,old);toast(tr('اتحفظ ✓','Saved ✓'));return}
@@ -1099,13 +1135,16 @@ function cuModal(n){
   <label class="fld">${tr('الشرح والتعليمات','Instructions')}<textarea class="inp" id="cuH" rows="7" placeholder="${tr('التجهيز، التنفيذ، الأخطاء، نصيحتك…','Setup, execution, mistakes, tips…')}">${esc(t.how)}</textarea></label>
   <div class="row"><button class="btn pri sp" data-a="cuSave" data-n="${esc(t.name)}">${T().saveB}</button>${c?`<button class="btn dan" data-a="cuDel" data-n="${esc(t.name)}">${T().del}</button>`:''}<button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);
 }
+function moveExKeys(a,b){const ka=nk(a),kb=nk(b);if(ka===kb)return;
+  for(const o of [S.exMemo,S.exNotes,S.steps])if(o&&o[ka]!=null&&o[kb]==null){o[kb]=o[ka];delete o[ka]}
+  if(S.libOv&&S.libOv[a]&&!S.libOv[b]){S.libOv[b]=S.libOv[a];delete S.libOv[a]}}
 function cuSave(old){
   const name=$('#cuN').value.trim();if(!name){toast(T().nameReq);return}
   if(name!==old&&allLib().some(x=>x[0].toLowerCase()===name.toLowerCase())){toast(tr('الاسم ده موجود فعلًا','That name already exists'));return}
   const g=k=>{const v=num($(k).value);return isNaN(v)?'':v};
   S.custom=S.custom||[];let c=old&&S.custom.find(x=>x.name===old);if(!c){c={};S.custom.push(c)}
   Object.assign(c,{name,g:$('#cuG').value,w:g('#cuW')||0,sets:Math.max(1,g('#cuS')||3),reps:g('#cuR')||12,unit:$('#cuU').value,how:$('#cuH').value.trim()});
-  if(old&&old!==name)S.program.days.forEach(d=>d.ex.forEach(t=>{if(t.name===old)t.name=name}));
+  if(old&&old!==name){S.program.days.concat(S.fbDay?[S.fbDay]:[]).forEach(d=>d.ex.forEach(t=>{if(t.name===old)t.name=name}));moveExKeys(old,name)}
   const dv=$('#cuD')?$('#cuD').value:'',td=dv&&S.program.days.find(x=>x.id===dv);if(td)td.ex.push(mk(name));
   save();queueBackup();closeModal();if(tab==='prog')renderProgram();else renderLib();toast(td?tr('اتحفظ واتضاف لـ ','Saved and added to ')+td.name+' ✓':tr('اتحفظ في المكتبة ✓','Saved to library ✓'));
 }
@@ -1194,6 +1233,8 @@ function saveTpl(i){
   const name=$('#tName').value.trim();if(!name){toast(T().nameReq);return}
   const g=k=>{const v=num($(k).value);return isNaN(v)?'':v};
   const d=day(pDay),t=i>-1?d.ex[i]:{id:uid()};
+  /* v139: تغيير الاسم لتمرين تاني (من المكتبة أو ليه سجل) = تمرين جديد بسجل جديد. تصحيح اسم = نفس التمرين، وملاحظاته بتتنقل معاه */
+  if(i>-1&&nk(t.name)!==nk(name)){if(libGet(name)||histMap()[nk(name)])t.id=uid();else moveExKeys(t.name,name)}
   Object.assign(t,{name,w:g('#tW'),sets:Math.max(1,g('#tS')||3),reps:g('#tR')||12,goal:g('#tG')||g('#tR')||12,unit:$('#tU').value,core:$('#tC').checked,note:$('#tN').value.trim()});
   if(i<0)d.ex.push(t);save();queueBackup();closeModal();renderProgram();
 }
@@ -1395,7 +1436,7 @@ const cleanTxt5=a=>Array.isArray(a)?[0,1,2,3,4].map(k=>str(a[k],2000)):undefined
 function cleanLibOv(o){const r={};if(!isObj(o))return r;for(const [k,v] of Object.entries(o).slice(0,600)){if(!isObj(v))continue;const x={};
   if(v.d)x.d=cleanTxt5(v.d);if(v.de)x.de=cleanTxt5(v.de);if(typeof v.en==='string')x.en=v.en.slice(0,4000);if(typeof v.short==='string')x.short=v.short.slice(0,1000);if(typeof v.shortEn==='string')x.shortEn=v.shortEn.slice(0,1000);
   for(const q of Object.keys(x))if(x[q]===undefined)delete x[q];if(Object.keys(x).length)r[String(k).slice(0,80)]=x}return r}
-function cleanNotes(o){const r={};if(!isObj(o))return r;for(const [k,v] of Object.entries(o).slice(0,600)){if(!Array.isArray(v))continue;const a=v.filter(x=>x&&typeof x.t==='string'&&x.t.trim()).slice(0,100).map(x=>({d:isD(x.d)?x.d:'',t:x.t.slice(0,500)}));if(a.length)r[String(k).slice(0,80)]=a}return r}
+function cleanNotes(o){const r={};if(!isObj(o))return r;for(const [k,v] of Object.entries(o).slice(0,600)){if(!Array.isArray(v))continue;const a=v.filter(x=>x&&typeof x.t==='string'&&x.t.trim()).slice(0,100).map(x=>Object.assign({d:isD(x.d)?x.d:'',t:x.t.slice(0,500)},typeof x.sid==='string'?{sid:x.sid.slice(0,80)}:{}));if(a.length)r[String(k).slice(0,80)]=a}return r}
 function cleanSteps(o){const r={};if(!isObj(o))return r;for(const [k,v] of Object.entries(o).slice(0,600)){const x=Number(v);if([1,2,2.5,4,5].includes(x))r[String(k).slice(0,80)]=x}return r}
 const BMK=['w','c','arm','chest','thigh','neck','bf'];
 const cleanBody=a=>(Array.isArray(a)?a:[]).filter(x=>x&&isD(x.d)).slice(0,2000).map(x=>{const r={d:x.d};for(const k of BMK){const v=Number(x[k]);if(isFinite(v)&&v>0&&v<1000)r[k]=Math.round(v*100)/100}return r});
@@ -1538,7 +1579,7 @@ async function autoFile(){if(NL){try{if(Android.linkedName()&&Android.writeLinke
 function exportCSV(){
   const q=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
   const rows=[T().csvH];
-  for(const s of done().reverse())for(const e of s.ex)rows.push([s.date,s.cycle,s.dayName,e.name,e.w,e.sets.join('/'),e.sets.length,e.sets.reduce((a,b)=>a+b,0),e.clean?'1':'0',e.core?'1':'0',e.note,Array.isArray(e.ws)?e.ws.join('/'):'',Array.isArray(e.dur)?e.dur.join('/'):'',e.rir!=null?e.rir:'',e.ss?'1':'',e.from?'swap:'+e.from:e.add?'add':'',gymName(s.gym),s.rdy!=null?s.rdy:'',s.cb?(s.cb.dl?'light':'comeback')+' '+Math.round(s.cb.p*100)+'%':'',s.t0?hm(s.t0):'',s.ts&&!s.imp?hm(s.ts):'',s.t0&&s.ts?Math.round((s.ts-s.t0)/60000):'',e.unit||'']);
+  for(const s of done().reverse())for(const e of s.ex)rows.push([s.date,s.cycle,s.dayName,e.name,e.w,e.sets.join('/'),e.sets.length,e.sets.reduce((a,b)=>a+b,0),e.clean?'1':'0',e.core?'1':'0',e.note,Array.isArray(e.ws)?e.ws.join('/'):'',Array.isArray(e.dur)?e.dur.join('/'):'',e.rir!=null?e.rir:'',e.ss?'1':'',e.from?'swap:'+e.from:e.add?'add':'',gymName(s.gym),s.rdy!=null?s.rdy:'',s.cb?(s.cb.dl?'light':'comeback')+' '+Math.round(s.cb.p*100)+'%':'',s.t0?hm(s.t0):'',s.ts&&!s.imp?hm(s.ts):'',s.t0&&s.ts?Math.round((s.ts-s.t0)/60000):'',e.unit||'',e.tsets||'',e.treps||'',e.goal||'',s.day||'',s.id]);
   download(`gym-log-${today()}.csv`,'﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n'),'text/csv');toast(T().csvDone);
 }
 /* ملف Excel (CSV) اللي التطبيق بيصدّره: بنقراه بالترتيب مش بأسماء الأعمدة، فبيشتغل عربي وإنجليزي */
@@ -1556,15 +1597,25 @@ function parseCSV(txt){
   row.push(f);if(row.some(x=>x!==''))rows.push(row);
   return rows;
 }
+/* v139: الاستيراد بيرجّع كل عمود اتصدّر: وقت البداية والنهاية، الجيم، نوع الجلسة (رجوع/خفيف)، الأهداف، واليوم */
 function csvToSessions(txt){
   const rows=parseCSV(txt).slice(1),map=new Map();
+  const tAt=(d,hm)=>/^\d{1,2}:\d{2}$/.test(hm||'')?new Date(d+'T'+hm.padStart(5,'0')+':00').getTime():0;
+  const gymBy=n=>{n=String(n||'').trim();if(!n)return '';const g=(S.gyms||[]).find(x=>!x.del&&x.name===n);if(g)return g.id;S.gyms=S.gyms||[];const id='g'+uid();S.gyms.push({id,name:n.slice(0,20)});return id};
   for(const r of rows){
     if(r.length<9||!/^\d{4}-\d{2}-\d{2}$/.test(r[0]))continue;
-    const key=r[0]+'|'+r[1]+'|'+r[2];
+    const key=r[27]?'id:'+r[27]:r[0]+'|'+r[1]+'|'+r[2];
     let s=map.get(key);
-    if(!s){s={id:uid(),date:r[0],cycle:+r[1]||1,dayName:r[2]||'?',status:'imp',ts:new Date(r[0]+'T12:00:00').getTime(),ex:[]};map.set(key,s)}
+    if(!s){const t0=tAt(r[0],r[19]),t1=tAt(r[0],r[20]);
+      s={id:r[27]?String(r[27]).slice(0,80):uid(),date:r[0],cycle:+r[1]||1,dayName:(r[2]||'?').slice(0,80),day:String(r[26]||'').slice(0,60),status:'imp',imp:1,ts:t1||new Date(r[0]+'T12:00:00').getTime(),ex:[]};
+      if(t0)s.t0=t0;if(t0&&!t1&&+r[21]>0)s.ts=t0+ +r[21]*60000;
+      const g=gymBy(r[16]);if(g&&g!=='main')s.gym=g;
+      const m=String(r[18]||'').match(/^(light|comeback)\s+(\d+)%/);if(m)s.cb={k:'lt',p:Math.min(1,Math.max(.3,+m[2]/100)),g:0,i:0,n:1,dl:m[1]==='light'?1:undefined};
+      map.set(key,s)}
     const sets=String(r[5]).split('/').map(Number).filter(v=>!isNaN(v)&&String(v)!=='');
     const ex={name:r[3],exId:'h:'+r[3],w:+r[4]||0,sets,unit:UNITS.includes(r[22])?r[22]:'',clean:r[8]==='1',core:r[9]==='1',note:r[10]||''};
+    if(+r[23]>0)ex.tsets=+r[23];if(+r[24]>0)ex.treps=+r[24];if(+r[25]>0)ex.goal=+r[25];
+    {const dd=s.day&&S.program.days.find(x=>x.id===s.day),t=dd&&dd.ex.find(x=>nk(x.name)===nk(r[3]));if(t)ex.exId=t.id}
     if(r[11]){const a=String(r[11]).split('/').map(Number);if(a.length===sets.length&&a.every(isFinite))ex.ws=a}
     if(r[12]){const a=String(r[12]).split('/').map(Number);if(a.every(isFinite))ex.dur=a}
     if(r[13]!==''&&r[13]!=null&&isFinite(+r[13]))ex.rir=+r[13];if(r[14]==='1')ex.ss=1;
@@ -1572,12 +1623,12 @@ function csvToSessions(txt){
     if(r[17]!==''&&r[17]!=null&&isFinite(+r[17]))s.rdy=+r[17];
     s.ex.push(ex);
   }
-  return[...map.values()].filter(s=>s.ex.length);
+  return[...map.values()].filter(s=>s.ex.length).map(cleanSession).filter(Boolean);
 }
 async function csvMerge(txt){
   const add=csvToSessions(txt);if(!add.length)return false;
-  const have=new Set(S.sessions.map(x=>x.date+'|'+x.cycle+'|'+x.dayName));
-  const fresh=add.filter(x=>!have.has(x.date+'|'+x.cycle+'|'+x.dayName));
+  const have=new Set(S.sessions.map(x=>x.date+'|'+x.cycle+'|'+x.dayName)),ids=new Set(S.sessions.map(x=>x.id));
+  const fresh=add.filter(x=>!ids.has(x.id)&&!have.has(x.date+'|'+x.cycle+'|'+x.dayName));
   if(!fresh.length){toast(tr('كل الجلسات دي موجودة عندك أصلًا','All these sessions are already in your log'));return true}
   if(!await ask(tr(`ده ملف Excel (CSV) مش نسخة كاملة. هيتضاف ${fresh.length} جلسة لسجلك من غير ما يمسح حاجة، والبرنامج والإعدادات مش هيتغيروا. أكمّل؟`,`This is an Excel (CSV) file, not a full backup. ${fresh.length} session(s) will be added to your log; nothing is deleted and your program and settings stay as they are. Continue?`)))return true;
   S.sessions=S.sessions.concat(fresh).sort((a,b)=>(a.ts||0)-(b.ts||0));
@@ -1723,15 +1774,15 @@ document.addEventListener('click',ev=>{
       renderSession();restStart(e);break}
     case 'pickW':openPick('w');break;
     case 'pickOk':{const l=$('#pkl');if(!l||!pk)break;const v=pk.vals[Math.max(0,Math.min(pk.vals.length-1,Math.round(l.scrollTop/44)))],e=d.ex[curEx];
-      if(pk.kind==='w'){const old=num(e.w),ps=d.cb?null:progState({sets:e.tsets,goal:e.goal},exHist(e.exId,d.editing));
+      if(pk.kind==='w'){const old=num(e.w),ps=d.cb?null:progState({sets:e.tsets,goal:e.goal},exHist(e.exId,d.editing,e.name));
         if(ps&&ps.k==='up'&&!e.unit&&v>(isNaN(old)?0:old)&&+e.goal>8){e.goal=8;e.treps=8;toast(tr('وزن جديد: الهدف النهارده 8 عدّات','New weight: today\'s target is 8 reps'))}
         e.w=String(v)}else{e.sets[pk.j]=String(v);if(!e.unit&&pk.wv!=null){e.ws=(e.ws||[]).slice();while(e.ws.length<e.sets.length)e.ws.push('');e.ws[pk.j]=pk.wv!==num(e.w)?String(pk.wv):''}}saveSoon();closeSheet();renderSession();break}
-    case 'pwm':case 'pwp':{if(!pk||pk.wv==null)break;const e=d.ex[curEx],st=stepOf(e.name);pk.wv=Math.max(0,Math.round((pk.wv+(b.dataset.a==='pwp'?st:-st))*100)/100);$('#pwv').textContent=pk.wv;break}
+    case 'pwm':case 'pwp':{if(!pk||pk.wv==null)break;const e=d.ex[curEx];pk.wv=snapW(pk.wv,b.dataset.a==='pwp'?1:-1,stepOf(e.name));$('#pwv').textContent=pk.wv;break}
     case 'stepSet':{const e=d.ex[curEx];S.steps=S.steps||{};S.steps[nk(e.name)]=+b.dataset.v;save();b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderSession();break}
     case 'rsAdd':if(d&&d.rest){d.rest.dur+=30;d.rest.done=0;saveSoon();restTick()}break;
     case 'rsSkip':if(d){d.rest=null;saveSoon();restTick()}break;
     case 'rir':{const e=d.ex[curEx],v=+b.dataset.v;e.rir=e.rir===v?null:v;saveSoon();renderSession();break}
-    case 'tShort':{for(const e of d.ex){if(+e.tsets>2){e.tsets=2;e.sets=e.sets.slice(0,Math.max(2,e.sets.filter(v=>num(v)>0).length));if(e.dur)e.dur=e.dur.slice(0,e.sets.length)}}d.ex.sort((a,b)=>(b.core?1:0)-(a.core?1:0));curEx=Math.min(curEx,d.ex.length-1);save();closeSheet();renderSession();toast(tr('كل تمرين بقى مجموعتين، والأساسي الأول ✓','2 sets each, essentials first ✓'));break}
+    case 'tShort':{const on=b.dataset.k==='on';setShort(on);save();renderSession();openMenu();toast(on?tr('مجموعتين لكل تمرين، والأساسي الأول ✓','2 sets each, essentials first ✓'):tr('المجموعات والترتيب رجعوا ✓','Sets and order are back ✓'));break}
     case 'pain':{closeSheet();const e=d.ex[curEx];(async()=>{const go=await ask(tr('لو الوجع حاد أو في المفصل: وقّف التمرين ده النهارده. لو خفيف: نزّل الوزن 20% وكمّل بأداء أبطأ. تبدّله بتمرين تاني لنفس العضلة؟','If the pain is sharp or in the joint, stop this exercise today. If it is mild, drop the weight 20% and go slower. Swap it for another exercise for the same muscle?'),{yes:tr('بدّله','Swap it'),no:tr('نزّل الوزن 20%','Drop 20%')});
       e.note=((e.note||'')+' ⚠ '+tr('وجع','pain')).trim();
       if(go){const L0=libGet(e.name);libQ='';libG=L0?L0[1]:'all';libFor='swap';libModal()}else{const w=num(e.w);if(!e.unit&&w>0){const st=stepOf(e.name);e.w=String(Math.max(st,Math.round(w*.8/st)*st))}}
@@ -1768,23 +1819,22 @@ document.addEventListener('click',ev=>{
     case 'gymDel':(async()=>{const g=(S.gyms||[]).find(x=>x.id===b.dataset.id);if(!g)return;if(!await ask(tr(`تمسح «${g.name}»؟ جلساتك القديمة فيه هتفضل زي ما هي.`,`Delete “${g.name}”? Your past sessions there stay as they are.`),{danger:1,yes:tr('امسح','Delete')}))return;g.del=1;if(S.settings.gym===g.id)S.settings.gym='';save();queueBackup();closeModal();renderHome();})();break;
     case 'gymSave':{const n=($('#gymN').value||'').trim();if(!n){toast(T().nameReq);break}S.gyms=S.gyms||[];const g={id:'g'+uid(),name:n};S.gyms.push(g);S.settings.gym=g.id;save();closeModal();renderHome();break}
     case 'safe':S.settings.safe=b.dataset.k==='on'?1:0;save();renderData();break;
-    case 'wStep':{const e=d.ex[curEx],st=stepOf(e.name),w=num(e.w)||0;e.w=String(Math.max(0,Math.round((w+(+b.dataset.v)*st)*100)/100));saveSoon();renderSession();break}
-    case 'rdyGo':{d.rdy=+b.dataset.v;d.rdyAsk=1;save();closeSheet();if(d.rdy===0){ask(tr('يوم تقيل. تخلّي النهارده الأساسي بس؟ الالتزام أهم من الرقم.','Rough day. Keep today to the essentials? Showing up beats the number.'),{yes:tr('الأساسي بس','Essentials only'),no:tr('كمّل عادي','Keep going')}).then(ok=>{if(ok){const keep=d.ex.filter(x=>x.core);if(keep.length){d.ex=keep;curEx=0;save();renderSession()}}})}else toast(tr('اتسجّل ✓','Noted ✓'));break}
+    case 'wStep':{const e=d.ex[curEx];e.w=String(snapW(num(e.w)||0,+b.dataset.v,stepOf(e.name)));saveSoon();renderSession();break}
+    case 'rdyGo':{d.rdy=+b.dataset.v;d.rdyAsk=1;save();closeSheet();if(d.rdy===0){ask(tr('يوم تقيل. تخلّي النهارده الأساسي بس؟ الالتزام أهم من الرقم.','Rough day. Keep today to the essentials? Showing up beats the number.'),{yes:tr('الأساسي بس','Essentials only'),no:tr('كمّل عادي','Keep going')}).then(ok=>{if(ok&&setCoreOnly(true)){save();renderSession();toast(tr('الأساسي بس ✓ تقدر ترجّع الباقي من ⋯','Essentials only ✓ bring the rest back from ⋯'))}})}else toast(tr('اتسجّل ✓','Noted ✓'));break}
     case 'rdySkip':d.rdyAsk=1;save();closeSheet();break;
-    case 'timeShort':{const sh=$('#sheet');sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="mgh">${tr('وقتك ضيق النهارده','Short on time today')}</div>${d.ex.some(x=>x.core)&&!d.ex.every(x=>x.core)?`<button class="mrow" data-a="coreOnly">${tr('الأساسي بس','Essentials only')}<small>${tr('التمارين الأساسية بكل مجموعاتها','Essential exercises, all sets')}</small></button>`:''}<button class="mrow" data-a="tShort">${tr('مجموعتين لكل تمرين','Two sets each')}<small>${tr('كل التمارين، والأساسي الأول','Every exercise, essentials first')}</small></button></div>`;break}
-    case 'swTgl':S.settings.swOn=S.settings.swOn?0:1;save();closeSheet();renderSession();toast(S.settings.swOn?tr('ساعة الإيقاف ظاهرة لكل التمارين','Stopwatch shown for every exercise'):tr('ساعة الإيقاف للتمارين اللي بالوقت بس','Stopwatch only for timed exercises'));break;
+    case 'swTgl':S.settings.swOn=b.dataset.k?(b.dataset.k==='on'?1:0):(S.settings.swOn?0:1);save();renderSession();openMenu();toast(S.settings.swOn?tr('ساعة الإيقاف ظاهرة لكل التمارين','Stopwatch shown for every exercise'):tr('ساعة الإيقاف للتمارين اللي بالوقت بس','Stopwatch only for timed exercises'));break;
     case 'dateEd':{const x=$('#mdt');if(x)x.hidden=!x.hidden;break}
     case 'tools':toolsModal();break;
     case 'cbWhy':xModal('cb');break;
     case 'dlWhy':xModal('dl');break;
     case 'shareS':{const x=S.sessions.find(q=>q.id===b.dataset.id);if(x)shareModal(x);break}
     case 'clean':{const e=d.ex[curEx];e.clean=!e.clean;saveSoon();renderSession();break}
-    case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
+    case 'coreOnly':{const on=b.dataset.k==='on';if(d.editing)break;if(!setCoreOnly(on)){toast(tr('مفيش تمارين تتخبّى','Nothing to hide'));break}save();renderSession();openMenu();toast(on?tr('الأساسي بس ✓ (التانيين مستخبيين)','Essentials only ✓ (others hidden)'):tr('كل التمارين رجعت ✓','All exercises are back ✓'));break}
     case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value),mx={};for(const [k] of BMX){const v=num(($('#b_'+k)||{}).value);if(v>0&&v<400)mx[k]=v}if(!(w>0)&&!(c>0)&&!Object.keys(mx).length){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}
       S.body=S.body||[];const t=today();let r=S.body.find(x=>x.d===t);if(!r){r={d:t};S.body.push(r)}if(w>0)r.w=w;if(c>0)r.c=c;Object.assign(r,mx);fOpen.add('body');save();queueBackup();renderData();toast(tr('اتسجّل ✓','Logged ✓'));break}
     case 'bodyDel':S.body=(S.body||[]).filter(x=>x.d!==b.dataset.d);save();renderData();break
     case 'pickClr':{if(pk){const e=d.ex[curEx];e.sets[pk.j]='';if(e.dur&&e.dur[pk.j])e.dur[pk.j]=0;saveSoon();closeSheet();renderSession()}break}
-    case 'pickRm':{if(pk&&d.ex[curEx].sets.length>1){d.ex[curEx].sets.splice(pk.j,1);if(d.ex[curEx].dur)d.ex[curEx].dur.splice(pk.j,1);saveSoon();closeSheet();renderSession()}break}
+    case 'pickRm':{const e=d.ex[curEx];if(pk&&e.sets.length>1){const j=pk.j;e.sets.splice(j,1);if(e.dur&&e.dur.length>j)e.dur.splice(j,1);if(e.ws&&e.ws.length>j)e.ws.splice(j,1);if(d.sw&&d.sw.i===curEx&&d.sw.j>=0){if(d.sw.j===j)d.sw.j=-1;else if(d.sw.j>j)d.sw.j--}saveSoon();closeSheet();renderSession()}break}
     case 'closeSheet':closeSheet();break;
     case 'menu':openMenu();break;
     case 'sw':swTap();break;
@@ -1814,7 +1864,12 @@ document.addEventListener('click',ev=>{
     case 'sxOpen':closeSheet();libQ='';libG='all';libFor='sess';libModal();break;
     case 'swOpen':{closeSheet();const cur=S.draft&&S.draft.ex[curEx],L0=cur&&libGet(cur.name);libQ='';libG=L0?L0[1]:'all';libFor='swap';libModal();break}
     case 'sxSwap':{const d=S.draft;if(!d)break;const n=b.dataset.n,old=d.ex[curEx];if(!old||nk(old.name)===nk(n)){closeModal();break}
-      const e=draftEx(mk(n));e.core=old.core;e.from=old.from||old.name;if(d.cb)cbApply(e,d.cb);d.ex[curEx]=e;save();closeModal();renderSession();toast(tr('اتبدّل للجلسة دي ✓','Swapped for this session ✓'));break}
+      (async()=>{const e=draftEx(mk(n));e.core=old.core;e.from=old.from||old.name;if(d.cb)cbApply(e,d.cb);
+        /* v139: لو فيه مجموعات اتسجلت في القديم، مابتتمسحش: البديل بيتحط بعده */
+        if(logged(old)){if(!await ask(tr(`«${old.name}» فيه مجموعات متسجلة. أحط «${n}» بعده وأسيب اللي اتلعب محفوظ؟`,`«${old.name}» has logged sets. Put «${n}» after it and keep what you logged?`),{yes:tr('أيوه','Yes'),no:tr('إلغاء','Cancel')}))return;
+          old.ss=false;exRemap(d,()=>{d.ex.splice(curEx+1,0,e)});curEx++}
+        else{if(d.sw&&d.sw.i===curEx){d.sw=null;swHalt()}d.ex[curEx]=e}
+        save();closeModal();renderSession();toast(tr('اتبدّل للجلسة دي ✓','Swapped for this session ✓'))})();break}
     case 'rtOpen':closeSheet();rtModal();break;
     case 'rtGo':{const w=Math.max(5,+num($('#rtW').value)||180),r=Math.max(0,+num($('#rtR').value)||0),n=Math.max(1,Math.min(50,+num($('#rtN').value)||5));S.settings.rt={w,r,n};save();if(RT)clearInterval(RT.iv);RT={t0:Date.now(),w,r,n,ph:''};wakeOn();beep(1);RT.iv=setInterval(rtTick,250);rtTick();break}
     case 'rtStop':rtEnd(false);closeModal();break;

@@ -131,5 +131,22 @@ async function page(st) {
   ok(await A.pg.evaluate(async () => { S.sessions.push(Object.assign({}, S.sessions[0], { id: 'a-new', mt: Date.now() })); save(); return await runBackup(true) && S.sessions.length === 10; }), 'the first device keeps the second device sessions on its next upload');
   ok(await B.pg.evaluate(() => enableSyncWith('ghp_classic', 'passphrase-123', 'me/gym')) === false, 'classic (broad) tokens are refused');
   ok(A.errs.length === 0 && B.errs.length === 0, 'no page errors (sync) ' + A.errs.concat(B.errs).join(';')); await A.ctx.close(); await B.ctx.close(); }
+// 10) v139: صحة التمرين — ساعة الإيقاف، «وقتي ضيق» بيترجع، الرجوع مابيتاكلش، شبكة 2.5، تغيير الاسم، CSV
+{ const { pg, errs, ctx } = await page(state(2));
+  await pg.evaluate(() => { startSession('U1'); closeSheet(); }); await pg.waitForTimeout(400);
+  ok(await pg.evaluate(() => { const d = S.draft, e = d.ex[0]; curEx = 0; swTap(); d.sw.t0 -= 30000; e.sets[0] = '12'; swTap(); return e.dur[0] >= 30 && e.sets[1] === '' && e.sets[0] === '12'; }), 'stopwatch logs time on the set it started on and never invents reps');
+  ok(await pg.evaluate(() => { const d = S.draft; curEx = 0; swTap(); finishing = false; const sw = !!d.sw; d.sw = null; swHalt(); return sw; }), 'stopwatch can start again');
+  ok(await pg.evaluate(() => { const d = S.draft, before = JSON.stringify(d.ex.map(e => [e.exId, e.tsets, e.sets])); setShort(true); const mid = d.ex.every(e => +e.tsets <= 2 || e.sets.filter(v => num(v) > 0).length > 2); setShort(false); return mid && JSON.stringify(d.ex.map(e => [e.exId, e.tsets, e.sets.filter(v => v !== '').length])) === JSON.stringify(JSON.parse(before).map(([a, b, c]) => [a, b, c.filter(v => v !== '').length])) && d.ex.every((e, k) => e.exId === JSON.parse(before)[k][0]); }), 'two-sets mode turns off and brings sets and order back');
+  ok(await pg.evaluate(() => { const d = S.draft, n = d.ex.length; setCoreOnly(true); const hid = d.ex.length < n; setCoreOnly(false); return hid && d.ex.length === n && !d.hid; }), 'essentials-only turns off and brings exercises back');
+  ok(await pg.evaluate(() => { openMenu(); return document.querySelectorAll('#sheet .swr[role=switch]').length >= 2; }), 'session menu shows on/off switches');
+  ok(await pg.evaluate(() => snapW(7, 1, 2.5) === 7.5 && snapW(7, -1, 2.5) === 5 && snapW(10, 1, 2.5) === 12.5 && snapW(10, -1, 5) === 5), 'weight steps snap to the 2.5 grid');
+  ok(await pg.evaluate(() => { const d = S.draft; d.ex[0].ws = ['', '']; d.ex[0].w = ''; d.ex[0].sets = ['10', '10', '']; const s = buildFromDraft(); const e = s.ex[0]; return !(e.ws || []).some(x => isNaN(x)); }), 'empty weight box never stores NaN');
+  ok(await pg.evaluate(() => { const e = { name: 'Chest Press Machine', unit: '', w: '25', tsets: 3, sets: ['', '', ''] }; cbApply(e, { k: 'lt', p: .9 }); return +e.w < 25; }), 'light days are lighter even when rounding would keep the weight');
+  ok(await pg.evaluate(() => { const t = S.program.days[0].ex[2], id0 = t.id; pDay = 'U1'; tplModal(2); $('#tName').value = 'Cable Lateral Raise'; saveTpl(2); return S.program.days[0].ex[2].id !== id0; }), 'renaming to another exercise starts a fresh history');
+  ok(await pg.evaluate(() => { S.draft = null; const csv = (() => { let t = ''; const o = download; window.download = (n, x) => { t = x }; exportCSV(); window.download = o; return t })(); const back = csvToSessions(csv); const a = back.find(x => x.id === S.sessions[0].id); return back.length === S.sessions.length && a && a.ex[0].tsets === S.sessions[0].ex[0].tsets; }), 'CSV round-trip keeps ids and targets');
+  ok(errs.length === 0, 'no page errors (training) ' + errs.join(';')); await ctx.close(); }
+{ const st = state(20); const { pg, errs, ctx } = await page(st);
+  ok(await pg.evaluate(() => { const c0 = cbNow(); S.sessions.push(Object.assign(JSON.parse(JSON.stringify(S.sessions[0])), { id: 'usual', date: today(), ts: Date.now() })); const c1 = cbNow(); return c0 && c1 && c1.i === c0.i; }), 'playing the usual day does not consume a comeback step');
+  ok(errs.length === 0, 'no page errors (comeback steps) ' + errs.join(';')); await ctx.close(); }
 await br.close();
 console.log(fail ? `\n${fail} test(s) failed` : '\nall tests passed'); process.exit(fail ? 1 : 0);
