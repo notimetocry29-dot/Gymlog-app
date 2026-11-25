@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='152';
+const VER='153';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -378,6 +378,15 @@ async function shareText(t){
 }
 
 const THEMES={iron:{ar:"ليل",en:"Night",bg:"#0e0e0f"},morning:{ar:"صبح",en:"Morning",bg:"#f3eee5"}};
+/* v153: أي زرار برّه الموزّع الأساسي (رسايل التأكيد، قايمة الخروج، …) ليه صوت برضه */
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button,a[href],label.btn');if(!b||b.disabled)return;
+  if(b.closest('[data-a]')||b.classList.contains('xsel')||b.closest('.tabs')||b.closest('.xpl')||b.closest('summary'))return;
+  if(b.closest('#ask'))snd(b.classList.contains('no')?'close':'pick');else if(b.id==='xNo')snd('close');else if(b.id==='xYes')snd('off');else snd('ui')},true);
+/* شريط مستوى الصوت: بيتغيّر وانت بتسحب، ولما تسيبه بيسمّعك صوت تجربة */
+document.addEventListener('input',e=>{const r=e.target;if(!r||r.id!=='volR')return;S.settings.vol=+r.value;volApply();r.style.setProperty('--p',(r.value/150*100).toFixed(1)+'%');const v=$('#volV');if(v)v.textContent=r.value+'%';saveSoon()});
+document.addEventListener('change',e=>{const r=e.target;if(!r||r.id!=='volR')return;save();acGet();SNDL='';snd('tab')});
+let SUMT=0;document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('summary'))SUMT=Date.now()},true);
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.tagName==='DETAILS'&&Date.now()-SUMT<700){SUMT=0;snd(d.open?'open':'close')}},true);
 const fOpen=new Set();document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.fk){d.open?fOpen.add(d.dataset.fk):fOpen.delete(d.dataset.fk)}},true);
 function migTheme(){const t=S.settings.theme;if(!THEMES[t]){S.settings.theme=(t==='sand'||t==='book')?'morning':'iron';return true}return false}
 /* v114: «تراجع» بعد أي مسح: نسخة من البرنامج والسجل قبل المسح، 7 ثواني */
@@ -558,6 +567,7 @@ function exitAsk(){
   $('#xYes').onclick=()=>{try{Android.exitApp()}catch(e){}};
 }
 window.glBack=function(){
+  snd('close');
   if(XP.el){xpClose();return true}
   {const sh=$('#sheet');if(sh&&!sh.hidden){closeSheet();return true}}
   {const a=document.getElementById('ask');if(a){const n=a.querySelector('.no');n&&n.click();return true}}
@@ -574,7 +584,7 @@ function navTab(t){
   history.pushState({tab:t},'');
   go(t);
 }
-window.addEventListener('popstate',e=>{
+window.addEventListener('popstate',e=>{if(Date.now()-SNDT>250)snd('close');
   const st=e.state||{},M=$('#modal'),Sx=$('#sess');
   if(st.modal){if(M.hidden)history.back();return}
   const wasM=!M.hidden||Date.now()-mClosed<1500;M.hidden=true;
@@ -725,7 +735,7 @@ const restFor=e=>(S.settings.ram?30:0)+(e.unit?60:(typeof META!=='undefined'&&ME
 let rsIv=null,AC=null;
 /* v144: أصوات التطبيق، معمولة بالكود (من غير ملفات، شغالة أوفلاين). نغمات عميقة وناعمة، وكل صوت ليه On/Off */
 const SND_SKIP=new Set(['exGo','sw','setTap','finish','sndT','sndTest','vibT','cbGo']);
-var SND_K=['ui','tab','orb','start','log','rest','end'];
+var SND_K=['ui','sw','pick','fold','tab','orb','start','log','rest','end'];
 function sndOn(k){return !!(S&&S.settings)&&S.settings['s_'+k]!==0}
 function vibOn(){return !(S&&S.settings)||S.settings.vib!==0}
 function vib(p){if(!vibOn())return false;try{return navigator.vibrate&&navigator.vibrate(p)}catch(e){return false}}
@@ -735,7 +745,12 @@ document.addEventListener('pointerdown',()=>{if(SND_K.some(sndOn))acGet()},{pass
 /* v145: محرّك أصوات تكتيكي (معدن، ضربة واطية، هوا) — كله متولّد بالكود، أوفلاين ومن غير ملفات */
 let NB=null,MST=null;
 function sNoise(a){if(NB&&NB.sampleRate===a.sampleRate)return NB;const n=a.sampleRate,b=a.createBuffer(1,n,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;return NB=b}
-function sOut(a){if(MST&&MST.context===a)return MST;const lp=a.createBiquadFilter(),sh=a.createBiquadFilter(),c=a.createDynamicsCompressor();lp.type='lowpass';lp.frequency.value=1700;lp.Q.value=.5;sh.type='lowshelf';sh.frequency.value=180;sh.gain.value=5;lp.connect(sh);sh.connect(c);c.threshold.value=-16;c.knee.value=6;c.ratio.value=5;c.attack.value=.002;c.release.value=.12;const g=a.createGain();g.gain.value=.85;c.connect(g);g.connect(a.destination);return MST=lp}
+/* v153: مستوى صوت التطبيق: كل الأصوات بتعدّي على مفتاح واحد (0–150%) وبعده ليميتر يمنع التقطيع */
+let MV=null;
+const volPct=()=>{const v=S&&S.settings&&S.settings.vol;return v===undefined||v===null||isNaN(+v)?100:Math.max(0,Math.min(150,+v))};
+function mOut(a){if(MV&&MV.context===a)return MV;const g=a.createGain(),l=a.createDynamicsCompressor();g.gain.value=volPct()/100;l.threshold.value=-2;l.knee.value=0;l.ratio.value=20;l.attack.value=.001;l.release.value=.08;g.connect(l);l.connect(a.destination);return MV=g}
+function volApply(){if(MV)try{MV.gain.setTargetAtTime(volPct()/100,MV.context.currentTime,.02)}catch(e){MV.gain.value=volPct()/100}}
+function sOut(a){if(MST&&MST.context===a)return MST;const lp=a.createBiquadFilter(),sh=a.createBiquadFilter(),c=a.createDynamicsCompressor();lp.type='lowpass';lp.frequency.value=1700;lp.Q.value=.5;sh.type='lowshelf';sh.frequency.value=180;sh.gain.value=5;lp.connect(sh);sh.connect(c);c.threshold.value=-16;c.knee.value=6;c.ratio.value=5;c.attack.value=.002;c.release.value=.12;const g=a.createGain();g.gain.value=.85;c.connect(g);g.connect(mOut(a));return MST=lp}
 function sEnv(g,t,v,dur,att){g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+att);g.gain.exponentialRampToValueAtTime(.0001,t+dur)}
 function sOsc(a,t,dur,f,v,type,f2,att){const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur*.85);sEnv(g,t,v,dur,att||.002);o.connect(g);g.connect(sOut(a));o.start(t);o.stop(t+dur+.05)}
 function sNz(a,t,dur,f,q,v,type,f2,att){const src=a.createBufferSource(),fl=a.createBiquadFilter(),g=a.createGain();src.buffer=sNoise(a);fl.type=type||'bandpass';fl.frequency.setValueAtTime(f,t);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,t+dur);fl.Q.value=q;sEnv(g,t,v,dur,att||.001);src.connect(fl);fl.connect(g);g.connect(sOut(a));src.start(t,Math.random()*.4);src.stop(t+dur+.05)}
@@ -769,14 +784,21 @@ const wShot=(a,t,v)=>{sNz(a,t,.012,1700,.7,v*1.2,'lowpass');sOsc(a,t,.55,95,v,'s
 const wPistol=(a,t,v)=>{wClick(a,t,v*.55);wSlide(a,t+.008,.04,v*.6,1);wClick(a,t+.05,v*.7);sNz(a,t+.075,.02,1500,1,v*.9,'lowpass');wClick(a,t+.078,v);sThump(a,t+.078,v*.55);sClank(a,t+.078,330,v*.45,.08)};
 /* v152: الدايرة (الدوسة والضغطة الطويلة) رجعت لصوتها المتولّد بالكود؛ الباقي تسجيلات */
 /* v151: تسجيلات أسلحة حقيقية (CC0 — sfx/CREDITS.md). لو الملفات لسه ماتحمّلتش، بيشتغل الصوت المتولّد كاحتياطي */
-const SFX={},SFX_F=['ui','tab1','tab2','rest','end'];
-const SFX_MAP={ui:['ui'],tab:['tab1','tab2'],start:['tab1','tab2'],log:['tab2','tab1'],rest:['rest'],end:['end']};
-const SFX_VOL={ui:.8,tab:.9,start:.95,log:.95,orb:1,charge:.9,rest:1,end:1};
+const SFX={},SFX_F=['ui','tab1','tab2','rest','end','on','off','pick','open','close'];
+const SFX_MAP={ui:['ui'],tab:['tab1','tab2'],start:['tab1','tab2'],log:['tab2','tab1'],rest:['rest'],on:['on'],off:['off'],pick:['pick'],open:['open'],close:['close'],end:['end']};
+const SFX_VOL={on:.95,off:.9,pick:.8,open:.85,close:.8,ui:.8,tab:.9,start:.95,log:.95,orb:1,charge:.9,rest:1,end:1};
 function sfxLoad(a){SFX_F.forEach(n=>{fetch('sfx/'+n+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(b=>new Promise((ok,no)=>{const p=a.decodeAudioData(b,ok,no);if(p&&p.then)p.then(ok,no)})).then(buf=>{SFX[n]=buf}).catch(()=>{})})}
 function sfxPlay(a,k){const l=SFX_MAP[k];if(!l)return false;const n=l[Math.floor(Math.random()*l.length)],b=SFX[n]||SFX[l[0]];if(!b)return false;
-  const s=a.createBufferSource(),g=a.createGain();s.buffer=b;g.gain.value=SFX_VOL[k]||1;s.connect(g);g.connect(a.destination);s.start(a.currentTime+.005);return true}
-function snd(k){if(!sndOn(k==='charge'?'orb':k))return;const a=acGet();if(!a)return;if(sfxPlay(a,k))return;const t=a.currentTime+.015;
+  const s=a.createBufferSource(),g=a.createGain();s.buffer=b;g.gain.value=SFX_VOL[k]||1;s.connect(g);g.connect(mOut(a));s.start(a.currentTime+.005);return true}
+const SND_GRP={charge:'orb',on:'sw',off:'sw',open:'fold',close:'fold'};
+let SNDL='',SNDT=0;
+function snd(k){if(!sndOn(SND_GRP[k]||k))return;{const n=Date.now();if(k===SNDL&&n-SNDT<160)return;SNDL=k;SNDT=n}const a=acGet();if(!a)return;if(sfxPlay(a,k))return;const t=a.currentTime+.015;
   if(k==='ui')wClick(a,t,.8);
+  else if(k==='on'){wClick(a,t,.9);sThump(a,t,.6)}
+  else if(k==='off'){wSlide(a,t,.05,.5,0);wClick(a,t+.05,.6)}
+  else if(k==='pick')wClick(a,t,.6);
+  else if(k==='open'){wSlide(a,t,.08,.6,1);wClick(a,t+.08,.7)}
+  else if(k==='close'){wClick(a,t,.6);sThump(a,t,.35)}
   else if(k==='tab')wPistol(a,t,.7);
   else if(k==='orb'){wMag(a,t,.75);wRack(a,t+.28,.85)}
   else if(k==='charge'){wClick(a,t,.6);wSlide(a,t+.015,.55,.75,1);wClick(a,t+.57,.7)}
@@ -1821,9 +1843,13 @@ function renderData(){
   ${swRow('safe',S.settings.safe,tr('ملف أمان','Safety profile'),tr('الأجهزة والكابل الأول في الاقتراحات والتبديل','Machines and cables first in suggestions and swaps'))}
   ${swRow('ram',S.settings.ram,tr('وضع رمضان','Ramadan mode'),tr('مجموعة أقل وراحة أطول. اتمرن بعد الفطار بساعة ونص لساعتين','One set less, longer rests. Train 1.5–2 h after iftar'))}
   <details class="fsec" data-fk="snd"${fOpen.has('snd')?' open':''}><summary>${tr('الأصوات والاهتزاز','Sounds & vibration')}<span class="fst">${SND_K.some(sndOn)?tr('شغّالة','On'):tr('مقفولة','Off')}</span><span class="pchev">⌄</span></summary><div class="fbody">
+    <div class="vrow"><div class="vtop"><span>${tr('مستوى الصوت','Volume')}</span><b class="en" id="volV">${volPct()}%</b></div><input type="range" id="volR" class="vrng" min="0" max="150" step="5" value="${volPct()}" aria-label="${tr('مستوى الصوت','Volume')}" style="--p:${(volPct()/150*100).toFixed(1)}%"></div>
     <div class="mu" style="margin-bottom:8px">${tr('التطبيق مايعرفش إن الموبايل على الصامت، فاقفل الأصوات من هنا لو محتاج.','The app can’t tell when your phone is on silent, so turn sounds off here if needed.')}</div>
     ${swRow('sndT',sndOn('orb'),tr('الدايرة','The circle'),tr('خزنة وتعمير لما تبدأ، وسحب مقبض التعمير وانت ضاغط','Magazine in and rack on start, charging handle while you hold'),'orb')}
     ${swRow('sndT',sndOn('tab'),tr('التنقل','Navigation'),tr('تعمير مسدس وانت بتقلب التابات وبين التمارين','A pistol rack when switching tabs and exercises'),'tab')}
+    ${swRow('sndT',sndOn('sw'),tr('المفاتيح','Switches'),tr('ترباس بيقفل وانت بتشغّل، وخزنة بتطلع وانت بتقفل','A bolt slams on, a magazine drops out off'),'sw')}
+    ${swRow('sndT',sndOn('pick'),tr('الاختيار من القوايم','Picking from lists'),tr('تكّة زناد M4 لما تختار','An M4 trigger click when you pick'),'pick')}
+    ${swRow('sndT',sndOn('fold'),tr('فتح وقفل القوايم','Opening and closing lists'),tr('طلقة بتدخل لما تفتح، وأقسام بترجع لما تقفل','A shell loads on open, a slide drops on close'),'fold')}
     ${swRow('sndT',sndOn('ui'),tr('الأزرار','Buttons'),tr('تكّة زناد مع كل دوسة','A trigger click on every tap'),'ui')}
     ${swRow('sndT',sndOn('start'),tr('بداية المجموعة','Set start'),tr('تعمير مسدس لما تبدأ الساعة','A pistol rack when the stopwatch starts'),'start')}
     ${swRow('sndT',sndOn('log'),tr('تسجيل المجموعة','Set logged'),tr('تعمير مسدس: المجموعة اتسجلت','Pistol rack: set logged'),'log')}
@@ -1926,7 +1952,7 @@ document.addEventListener('click',ev=>{
   if(ev.target.id==='modal'){closeModal();return}
   const b=ev.target.closest('[data-a]');if(!b)return;
   const a=b.dataset.a,i=+b.dataset.i,d=S.draft,L=T();
-  if(!b.classList.contains('orb')&&!SND_SKIP.has(a))snd('ui');
+  if(!b.classList.contains('orb')&&!SND_SKIP.has(a)){if(b.getAttribute('role')==='switch')snd(b.dataset.k==='on'?'on':'off');else if(a==='tgl')snd(b.getAttribute('aria-expanded')==='true'?'close':'open');else if(b.closest('.thseg')||b.classList.contains('mrow'))snd('pick');else snd('ui')}
   {const w=b.closest('.wdn2');if(w&&Date.now()-(+w.dataset.t0||0)<450)return}
   switch(a){
     case 'lang':$('#toast').classList.remove('on');LANG=LANG==='en'?'ar':'en';S.settings.lang=LANG;save();applyLang();if(!$('#sess').hidden)renderSession();if(!$('#modal').hidden)closeModal();go(tab);break;
@@ -1989,9 +2015,9 @@ document.addEventListener('click',ev=>{
     case 'memoDel':{const _u=JSON.stringify({exMemo:Object.assign({},S.exMemo)});S.exMemo&&delete S.exMemo[nk(b.dataset.n)];save();queueBackup();memoDone();offerUndo(tr('الملاحظة اتمسحت','Note deleted'),_u);break}
     case 'gymDel':(async()=>{const g=(S.gyms||[]).find(x=>x.id===b.dataset.id);if(!g)return;if(!await ask(tr(`تمسح «${g.name}»؟ جلساتك القديمة فيه هتفضل زي ما هي.`,`Delete “${g.name}”? Your past sessions there stay as they are.`),{danger:1,yes:tr('امسح','Delete')}))return;const _u=snapK('gyms','settings');g.del=1;if(S.settings.gym===g.id)S.settings.gym='';save();queueBackup();closeModal();renderHome();offerUndo(tr('الجيم اتمسح','Gym deleted'),_u)})();break;
     case 'gymSave':{const n=($('#gymN').value||'').trim();if(!n){toast(T().nameReq);break}S.gyms=S.gyms||[];const g={id:'g'+uid(),name:n};S.gyms.push(g);S.settings.gym=g.id;save();closeModal();renderHome();break}
-    case 'sndT':{const k=b.dataset.s;if(SND_K.includes(k)){S.settings['s_'+k]=b.dataset.k==='on'?1:0;save();renderData();if(b.dataset.k==='on')snd(k)}break}
+    case 'sndT':{const k=b.dataset.s;if(SND_K.includes(k)){S.settings['s_'+k]=b.dataset.k==='on'?1:0;save();renderData();if(b.dataset.k==='on')snd(k==='sw'?'on':k==='fold'?'open':k)}break}
     case 'vibT':S.settings.vib=b.dataset.k==='on'?1:0;save();renderData();if(b.dataset.k==='on')vib(40);break;
-    case 'sndTest':{let t=0;SND_K.filter(sndOn).flatMap(k=>k==='orb'?['charge','orb']:[k]).forEach(k=>{setTimeout(()=>snd(k),t);t+=k==='rest'?1300:k==='end'?1600:k==='ui'||k==='tab'?600:900});if(!SND_K.some(sndOn))toast(tr('كل الأصوات مقفولة','All sounds are off'));break}
+    case 'sndTest':{let t=0;SND_K.filter(sndOn).flatMap(k=>k==='orb'?['charge','orb']:k==='sw'?['on','off']:k==='fold'?['open','close']:[k]).forEach(k=>{setTimeout(()=>snd(k),t);t+=k==='rest'?1300:k==='end'?2100:['ui','sw','pick','fold','tab'].includes(k)?650:900});if(!SND_K.some(sndOn))toast(tr('كل الأصوات مقفولة','All sounds are off'));break}
     case 'safe':S.settings.safe=b.dataset.k==='on'?1:0;save();renderData();break;
     case 'wStep':{const e=d.ex[curEx];e.w=String(snapW(num(e.w)||0,+b.dataset.v,stepOf(e.name)));saveSoon();renderSession();break}
     case 'rdyGo':{d.rdy=+b.dataset.v;d.rdyAsk=1;save();closeSheet();if(d.rdy===0){ask(tr('يوم تقيل. تخلّي النهارده الأساسي بس؟ الالتزام أهم من الرقم.','Rough day. Keep today to the essentials? Showing up beats the number.'),{yes:tr('الأساسي بس','Essentials only'),no:tr('كمّل عادي','Keep going')}).then(ok=>{if(ok&&setCoreOnly(true)){save();renderSession();toast(tr('الأساسي بس ✓ تقدر ترجّع الباقي من ⋯','Essentials only ✓ bring the rest back from ⋯'))}})}else toast(tr('اتسجّل ✓','Noted ✓'));break}
@@ -2158,7 +2184,7 @@ function xpClose(){const w=XP.el;if(!w)return;XP.el=null;const f=XP.done;XP.done
 function xpOpen(title,body,wire,done){xpClose();const w=document.createElement('div');w.id='xp';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');
   w.innerHTML=`<div class="xpb">${title?`<div class="xpt">${esc(title)}</div>`:''}${body}</div>`;
   w.addEventListener('click',e=>{if(e.target===w){e.stopPropagation();xpClose()}});
-  document.body.appendChild(w);XP.el=w;XP.done=done||null;void w.offsetWidth;w.classList.add('on');wire(w);try{vib(6)}catch(e){}}
+  document.body.appendChild(w);XP.el=w;XP.done=done||null;void w.offsetWidth;w.classList.add('on');wire(w);try{vib(6)}catch(e){}snd('open')}
 const xpTitle=el=>{const l=el.closest('label');if(l){let t='';l.childNodes.forEach(n=>{if(n.nodeType===3)t+=n.textContent});t=t.trim();if(t)return t}
   if(el.tagName==='SELECT'&&el.options[0]&&el.options[0].value===''&&el.classList.contains('psel'))return el.options[0].text;return ''};
 const xpLabel=sel=>{const o=sel.options[sel.selectedIndex];return o?o.text:''};
@@ -2170,7 +2196,7 @@ function xpSelect(sel){const ph=sel.classList.contains('psel')&&sel.options[0]&&
   xpOpen(xpTitle(sel),`<div class="xpl">${h}</div>`,w=>{
     const on=w.querySelector('.xpo.on');if(on)on.scrollIntoView({block:'center'});
     w.querySelector('.xpl').addEventListener('click',e=>{const b=e.target.closest('.xpo');if(!b||b.disabled)return;e.stopPropagation();
-      const k=+b.dataset.k,ch=sel.selectedIndex!==k;sel.selectedIndex=k;xpClose();if(ch){xpFire(sel,'input');xpFire(sel,'change')}xpSync(sel)})})}
+      const k=+b.dataset.k,ch=sel.selectedIndex!==k;snd('pick');sel.selectedIndex=k;xpClose();if(ch){xpFire(sel,'input');xpFire(sel,'change')}xpSync(sel)})})}
 const XMN={ar:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],en:['January','February','March','April','May','June','July','August','September','October','November','December']};
 const XWD={ar:['س','ح','ن','ث','ر','خ','ج'],en:['Mo','Tu','We','Th','Fr','Sa','Su']};
 function xpDate(inp){const ar=LANG==='ar',v=/^\d{4}-\d{2}-\d{2}$/.test(inp.value)?inp.value:today(),td=today();
