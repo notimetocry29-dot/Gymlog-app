@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='145';
+const VER='146';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -724,8 +724,8 @@ const swNext=e=>{for(let j=0;j<e.sets.length;j++)if(!(num(e.sets[j])>0))return j
 const restFor=e=>(S.settings.ram?30:0)+(e.unit?60:(typeof META!=='undefined'&&META[e.name]&&META[e.name].kind==='comp')?150:90);
 let rsIv=null,AC=null;
 /* v144: أصوات التطبيق، معمولة بالكود (من غير ملفات، شغالة أوفلاين). نغمات عميقة وناعمة، وكل صوت ليه On/Off */
-const SND_SKIP=new Set(['sw','setTap','finish','sndT','sndTest','vibT','cbGo']);
-var SND_K=['ui','orb','start','log','rest','end'];
+const SND_SKIP=new Set(['exGo','sw','setTap','finish','sndT','sndTest','vibT','cbGo']);
+var SND_K=['ui','tab','orb','start','log','rest','end'];
 function sndOn(k){return !!(S&&S.settings)&&S.settings['s_'+k]!==0}
 function vibOn(){return !(S&&S.settings)||S.settings.vib!==0}
 function vib(p){if(!vibOn())return false;try{return navigator.vibrate&&navigator.vibrate(p)}catch(e){return false}}
@@ -747,19 +747,18 @@ const sClank=(a,t,f,v,d)=>{[1,2.32,4.25,6.63].forEach((m,i)=>sOsc(a,t,d/(1+i*.7)
 const sTick=(a,t,f,v)=>{sNz(a,t,.016,f,7,v);sOsc(a,t,.012,f*.45,v*.25,'square')};
 /* هوا (whoosh) */
 const sAir=(a,t,dur,f1,f2,v)=>sNz(a,t,dur,f1,1.4,v,'bandpass',f2,dur*.45);
-/* لاسلكي: خشخشة squelch + صفّارة راديو بتمر من فلتر الراديو الضيق */
-function sRadio(a,t,f,dur,v){const o=a.createOscillator(),bp=a.createBiquadFilter(),g=a.createGain();o.type='square';o.frequency.value=f;bp.type='bandpass';bp.frequency.value=1600;bp.Q.value=.9;sEnv(g,t,v,dur,.004);o.connect(bp);bp.connect(g);g.connect(sOut(a));o.start(t);o.stop(t+dur+.05)}
-const sSquelch=(a,t,v)=>{sNz(a,t,.11,2300,1.1,v,'bandpass',1500,.004);sTick(a,t+.1,2600,v*.6)};
-/* تعمير السلاح: سحب الأقسام لورا (هوا + احتكاك) وبعدين رجوعها بخبطة حديد */
-const sRack=(a,t,v)=>{sTick(a,t,2900,v*.7);sNz(a,t+.01,.09,1800,2.5,v*.35,'bandpass',3400,.03);sClank(a,t+.1,980,v*.75,.22);sTick(a,t+.1,3800,v*.8)};
+/* تعمير السلاح: سحب الأقسام لورا وبعدين رجوعها بخبطة حديد */
+const sRack=(a,t,v)=>{sTick(a,t,2600,v*.7);sNz(a,t+.01,.08,1500,2.5,v*.35,'bandpass',2800,.03);sClank(a,t+.09,900,v*.75,.16);sTick(a,t+.09,3200,v*.8);sThump(a,t+.09,v*.6)};
+/* v146: أصوات حديد تقيلة بس — مفيش أجراس ولا صفارات، والرنّة قصيرة ومكتومة */
 function snd(k){if(!sndOn(k==='charge'?'orb':k))return;const a=acGet();if(!a)return;const t=a.currentTime+.015;
-  if(k==='ui'){sTick(a,t,2700,1.1);sTick(a,t+.022,1500,.75);sOsc(a,t,.03,190,.18,'sine',90)}
-  else if(k==='orb'){sRack(a,t,.55);sThump(a,t+.2,1);sClank(a,t+.2,520,.42,.7);sNz(a,t+.2,.35,180,.7,.25,'lowpass')}
-  else if(k==='charge'){sOsc(a,t,.75,60,.32,'sawtooth',140,.3);sOsc(a,t,.75,420,.06,'sine',1700,.4);sNz(a,t,.75,300,2,.18,'bandpass',2600,.5)}
-  else if(k==='start')sRack(a,t,.5);
-  else if(k==='log'){sThump(a,t,.75);sClank(a,t,1150,.36,.28);sTick(a,t,3600,.35)}
-  else if(k==='rest'){sSquelch(a,t,.32);sRadio(a,t+.16,1050,.11,.35);sRadio(a,t+.31,1050,.11,.35);sRadio(a,t+.46,1400,.2,.35)}
-  else if(k==='end'){sSquelch(a,t,.3);sRadio(a,t+.15,880,.12,.3);sRadio(a,t+.3,1320,.22,.3);sThump(a,t+.6,1);sClank(a,t+.6,330,.55,1.8);sClank(a,t+.68,495,.3,1.4);sNz(a,t+.6,.9,140,.7,.3,'lowpass')}}
+  if(k==='ui'){sThump(a,t,.4);sTick(a,t,1900,.9);sClank(a,t,640,.16,.07)}
+  else if(k==='tab'){sThump(a,t,.6);sClank(a,t,1050,.3,.14);sTick(a,t,3000,.4)}
+  else if(k==='orb'){sRack(a,t,.6);sThump(a,t+.2,1);sClank(a,t+.2,430,.42,.28);sNz(a,t+.2,.3,160,.7,.3,'lowpass')}
+  else if(k==='charge'){for(let n=0,x=0;n<9;n++){x+=.11*Math.pow(.86,n);sTick(a,t+x,2200+n*120,.55);sClank(a,t+x,700+n*30,.12,.05)}sNz(a,t,.8,110,.8,.35,'lowpass',220,.5)}
+  else if(k==='start')sRack(a,t,.55);
+  else if(k==='log'){sThump(a,t,.75);sClank(a,t,1050,.34,.2);sTick(a,t,3400,.35)}
+  else if(k==='rest'){sRack(a,t,.75);sRack(a,t+.38,.9);sThump(a,t+.47,1);sClank(a,t+.47,520,.4,.25)}
+  else if(k==='end'){sRack(a,t,.7);sThump(a,t+.3,1);sClank(a,t+.3,260,.5,.35);sNz(a,t+.3,.55,130,.7,.4,'lowpass');sThump(a,t+.62,.85);sClank(a,t+.62,390,.38,.28)}}
 function beep(n){snd(n>=3?'end':n>=2?'rest':'start')}
 function restStart(e){const d=S.draft;if(!d||!e)return;d.rest={t0:Date.now(),dur:restFor(e)};saveSoon();if(!rsIv)rsIv=setInterval(restTick,250);restTick()}
 /* v139: عدّاد الراحة بيتبني مرة واحدة، وبعدها بيتحدّث الرقم والشريط بس (الأزرار مابتتبنيش كل ربع ثانية فمابتضيعش دوسات) */
@@ -801,7 +800,7 @@ function swHtml(e){
   const d=S.draft,on=!!(d.sw&&d.sw.i===curEx),j=on&&d.sw.j>=0?d.sw.j:swNext(e),L=on?tr('دوس تاني تسجّل','Tap to log'):j<e.sets.length?tr('ابدأ المجموعة '+(j+1),'Start set '+(j+1)):tr('مجموعة جديدة','New set');
   return `<button class="swt${on?' on':''}" data-a="sw" aria-label="${esc(L)}"><span class="swi">${on?'<i class="swp"></i>':'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="14" r="7.5"/><path d="M12 10.5V14l2.2 1.6M9.5 2.5h5M12 2.5v4M18.4 7.6l1.4-1.4"/></svg>'}</span><span class="swc"><b class="en" id="${on?'swT':''}">${on?mmss((Date.now()-d.sw.t0)/1000):'0:00'}</b><small>${L}</small></span></button>`;
 }
-function goEx(k){const d=S.draft;if(!d||k<0||k>=d.ex.length||k===curEx)return;closeSheet();edgeOff();curEx=k;wAnim=true;renderSession();wAnim=false;$('#sess').scrollTop=0}
+function goEx(k){const d=S.draft;if(!d||k<0||k>=d.ex.length||k===curEx)return;closeSheet();edgeOff();curEx=k;snd('tab');wAnim=true;renderSession();wAnim=false;$('#sess').scrollTop=0}
 /* الأقواس بتلف دايماً ببطء. دوسة مطوّلة = لف سريع طول ما إيدك عليها. دوسة واحدة = لفة سريعة قصيرة وبعدها التمرين */
 const ORB={ang:0,sp:8,tg:8,idle:8,fast:520,hold:false,swallow:false,t:0,lt:0,reduce:matchMedia('(prefers-reduced-motion: reduce)').matches};
 /* v142: الأقواس بتلف بس وهي باينة قدامك (الرئيسية، من غير جلسة مفتوحة فوقها، والتطبيق مش في الخلفية). غير كده مفيش أي شغل في الخلفية */
@@ -1799,11 +1798,12 @@ function renderData(){
   <details class="fsec" data-fk="snd"${fOpen.has('snd')?' open':''}><summary>${tr('الأصوات والاهتزاز','Sounds & vibration')}<span class="fst">${SND_K.some(sndOn)?tr('شغّالة','On'):tr('مقفولة','Off')}</span><span class="pchev">⌄</span></summary><div class="fbody">
     <div class="mu" style="margin-bottom:8px">${tr('التطبيق مايعرفش إن الموبايل على الصامت، فاقفل الأصوات من هنا لو محتاج.','The app can’t tell when your phone is on silent, so turn sounds off here if needed.')}</div>
     ${swRow('sndT',sndOn('orb'),tr('الدايرة','The circle'),tr('تعمير وضربة تقيلة لما تبدأ، وشحن وانت ضاغط','A rack and heavy hit when you start, a charge-up while you hold'),'orb')}
-    ${swRow('sndT',sndOn('ui'),tr('الأزرار','Buttons'),tr('تكّة سويتش حديد مع كل دوسة','A steel switch click on every tap'),'ui')}
+    ${swRow('sndT',sndOn('tab'),tr('التنقل','Navigation'),tr('خبطة حديد وانت بتقلب التابات وبين التمارين','A steel hit when switching tabs and exercises'),'tab')}
+    ${swRow('sndT',sndOn('ui'),tr('الأزرار','Buttons'),tr('تكّة حديد تقيلة مع كل دوسة','A heavy steel click on every tap'),'ui')}
     ${swRow('sndT',sndOn('start'),tr('بداية المجموعة','Set start'),tr('صوت تعمير لما تبدأ الساعة','A rack when the stopwatch starts'),'start')}
     ${swRow('sndT',sndOn('log'),tr('تسجيل المجموعة','Set logged'),tr('ضربة قفل تأكد إنها اتسجلت','A lock-in hit confirming it was logged'),'log')}
-    ${swRow('sndT',sndOn('rest'),tr('آخر الراحة','End of rest'),tr('نداء لاسلكي: المجموعة الجاية','Radio call: next set'),'rest')}
-    ${swRow('sndT',sndOn('end'),tr('نهاية الجلسة','Session end'),tr('لاسلكي وضربة تقيلة: المهمة خلصت','Radio and heavy impact: mission complete'),'end')}
+    ${swRow('sndT',sndOn('rest'),tr('آخر الراحة','End of rest'),tr('تعمير مزدوج: المجموعة الجاية','Double rack: next set'),'rest')}
+    ${swRow('sndT',sndOn('end'),tr('نهاية الجلسة','Session end'),tr('تعمير وضربتين حديد: المهمة خلصت','Rack and two steel impacts: mission complete'),'end')}
     ${swRow('vibT',vibOn(),tr('الاهتزاز','Vibration'),tr('هزّة مع الدوسات وآخر الراحة','Haptics on taps and at the end of rest'))}
     <button class="btn w mt" data-a="sndTest">${tr('اسمع الأصوات','Play the sounds')}</button>
   </div></details>
@@ -1889,7 +1889,7 @@ document.addEventListener('touchend',e=>{if(!pok||pmode!==1){pok=false;return}po
   const back=()=>{v.style.transition='transform .2s ease-out,opacity .2s';v.style.transform='';v.style.opacity='';setTimeout(()=>{v.style.transition=''},220)};
   if(!go2||nx<0||nx>=TABS.length){back();return}
   /* v67: الصفحة الجديدة بتتبدّل فورًا لحظة رفع الصباع (من غير انتظار «اختفاء») وتنزلق مكانها في 160ms */
-  const sgn=dx<0?-1:1;v.style.transition='none';navTab(TABS[nx]);
+  const sgn=dx<0?-1:1;v.style.transition='none';snd('tab');navTab(TABS[nx]);
   v.style.transform=`translateX(${-sgn*W*.16}px)`;v.style.opacity='.4';void v.offsetWidth;
   v.style.transition='transform .16s cubic-bezier(.2,.8,.2,1),opacity .14s';v.style.transform='';v.style.opacity='';setTimeout(()=>{v.style.transition=''},190)},{passive:true});
 document.addEventListener('touchcancel',()=>{if(pmode===1){const v=$('#view');v.style.transform='';v.style.opacity='';}pok=false},{passive:true});
@@ -1897,7 +1897,7 @@ document.addEventListener('click',ev=>{
   if(ev.target.closest('.brand .lg')){newQuote();return}
   if(ev.target.closest('.brand .wmk')){openCredits();return}
   {const qe=ev.target.closest('.qt');if(qe&&tab==='home'&&qGestOn()){if(Date.now()-qSw>450)copyQuote(qe);return}}
-  const tb=ev.target.closest('.tabs button');if(tb){navTab(tb.dataset.tab);return}
+  const tb=ev.target.closest('.tabs button');if(tb){if(tb.dataset.tab!==tab)snd('tab');navTab(tb.dataset.tab);return}
   if(ev.target.id==='modal'){closeModal();return}
   const b=ev.target.closest('[data-a]');if(!b)return;
   const a=b.dataset.a,i=+b.dataset.i,d=S.draft,L=T();
@@ -1966,7 +1966,7 @@ document.addEventListener('click',ev=>{
     case 'gymSave':{const n=($('#gymN').value||'').trim();if(!n){toast(T().nameReq);break}S.gyms=S.gyms||[];const g={id:'g'+uid(),name:n};S.gyms.push(g);S.settings.gym=g.id;save();closeModal();renderHome();break}
     case 'sndT':{const k=b.dataset.s;if(SND_K.includes(k)){S.settings['s_'+k]=b.dataset.k==='on'?1:0;save();renderData();if(b.dataset.k==='on')snd(k)}break}
     case 'vibT':S.settings.vib=b.dataset.k==='on'?1:0;save();renderData();if(b.dataset.k==='on')vib(40);break;
-    case 'sndTest':{let t=0;SND_K.filter(sndOn).flatMap(k=>k==='orb'?['charge','orb']:[k]).forEach(k=>{setTimeout(()=>snd(k),t);t+=k==='rest'?1400:k==='end'?2000:k==='ui'?450:900});if(!SND_K.some(sndOn))toast(tr('كل الأصوات مقفولة','All sounds are off'));break}
+    case 'sndTest':{let t=0;SND_K.filter(sndOn).flatMap(k=>k==='orb'?['charge','orb']:[k]).forEach(k=>{setTimeout(()=>snd(k),t);t+=k==='rest'?1300:k==='end'?1600:k==='ui'||k==='tab'?600:900});if(!SND_K.some(sndOn))toast(tr('كل الأصوات مقفولة','All sounds are off'));break}
     case 'safe':S.settings.safe=b.dataset.k==='on'?1:0;save();renderData();break;
     case 'wStep':{const e=d.ex[curEx];e.w=String(snapW(num(e.w)||0,+b.dataset.v,stepOf(e.name)));saveSoon();renderSession();break}
     case 'rdyGo':{d.rdy=+b.dataset.v;d.rdyAsk=1;save();closeSheet();if(d.rdy===0){ask(tr('يوم تقيل. تخلّي النهارده الأساسي بس؟ الالتزام أهم من الرقم.','Rough day. Keep today to the essentials? Showing up beats the number.'),{yes:tr('الأساسي بس','Essentials only'),no:tr('كمّل عادي','Keep going')}).then(ok=>{if(ok&&setCoreOnly(true)){save();renderSession();toast(tr('الأساسي بس ✓ تقدر ترجّع الباقي من ⋯','Essentials only ✓ bring the rest back from ⋯'))}})}else toast(tr('اتسجّل ✓','Noted ✓'));break}
