@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='134';
+const VER='135';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -442,7 +442,7 @@ function cbWhy(){const c=cbNow();if(!c)return;const nm=s=>s.k==='fb'?tr('جسم 
   <div class="cbs" dir="${LANG==='ar'?'rtl':'ltr'}">${c.st.map((s,k)=>`<span class="${k<c.i?'ok':k===c.i?'on':''}">${k<c.i?'✓ ':''}${nm(s)} <bdi class="en">${cbPct(s)}</bdi></span>`).join('<i>›</i>')}<i>›</i><span>${tr('جدولك','Your plan')}</span></div>
   <button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
 function dlWhy(){modal(`<h3>${tr('أسبوع خفيف','Light week')}</h3><div class="dsec" style="line-height:1.9">${tr('بعد 6 أسابيع تمرين ورا بعض، التعب بيتراكم حتى لو مش حاسس بيه. أسبوع خفيف (مجموعة أقل في كل تمرين، والأوزان 90%) بيخلّي جسمك يتخلص منه ويرجع أقوى. ومابيتحسبش في قاعدة الزيادة.','After 6 straight weeks fatigue builds up even if you do not feel it. A light week (one set less, 90% weights) lets your body clear it and come back stronger. It does not count toward the rule.')}</div><button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
-/* v134: أي نافذة شرح («إيه ده؟» / «ليه؟» / إزاي بيحسب الزيادة / دليل التطبيق) بتفتح بلغة الشرح المختارة في الإعدادات (howLang)،
+/* v134: أي نافذة شرح («ليه؟» / إزاي بيحسب الزيادة / دليل التطبيق) بتفتح بلغة الشرح المختارة في الإعدادات (howLang)،
    مش بلغة الواجهة. وجوّاها زرار عربي/English للنافذة دي بس (من غير ما يغيّر الإعداد) */
 function xModal(k,l){const f={rule:ruleModal,cb:cbWhy,dl:dlWhy}[k];if(!f)return;const lg=l==='ar'||l==='en'?l:howLang(),keep=LANG;
   LANG=lg;try{f()}finally{LANG=keep}
@@ -520,7 +520,7 @@ window.addEventListener('popstate',e=>{
   const st=e.state||{},M=$('#modal'),Sx=$('#sess');
   if(st.modal){if(M.hidden)history.back();return}
   const wasM=!M.hidden||Date.now()-mClosed<1500;M.hidden=true;
-  if(!st.sess&&!Sx.hidden){wakeOff();Sx.hidden=true;document.body.style.overflow='';if(S.draft)queueDraftBackup()}
+  if(!st.sess&&!Sx.hidden){wakeOff();Sx.hidden=true;document.body.style.overflow='';if(S.draft)queueDraftBackup();if(tab==='home')renderHome()}
   /* قفل نافذة بس: الصفحة زي ما هي (من غير ما المفتوح فيها يتقفل) */
   if(Sx.hidden&&!(wasM&&(st.tab||'home')===tab))go(st.tab||'home');
 });
@@ -598,10 +598,10 @@ function renderHome0(){
   const act=dr?'resume':mode==='cb'?'cbGo':mode==='dl'?'dlGo':'start';
   /* سطر هادي تحت الدايرة */
   let q='';
-  if(c&&nrm)q=`<div class="cbq">${tr(`رجعت بعد ${c.g} يوم`,`Back after ${c.g} days`)} · <button data-a="cbWhy">${tr('إيه ده؟','What is this?')}</button>${alt?` · <button data-a="cbGo">${tr('العب جلسة الرجوع بدله','Play the comeback session instead')}</button>`:''}</div>`;
-  else if(dlx&&(nrm||mode==='norm'))q=`<div class="cbq">${dlx.act?tr(`أسبوع خفيف · فاضل ${dlx.left} يوم`,`Light week · ${dlx.left} day(s) left`):tr(`${dlx.wk} أسابيع تمرين متواصل`,`${dlx.wk} weeks in a row`)} · <button data-a="dlWhy">${tr('إيه ده؟','What is this?')}</button>${!dr||alt?` · <button data-a="dlGo">${dr?tr('العب يوم خفيف بدله','Play a light day instead'):tr('العب يوم خفيف','Play a light day')}</button>`:''}</div>`;
-  else if(mode==='cb'||(dcb&&!dr.cb.dl&&c))q=`<div class="cbq">${tr(`رجعت بعد ${c.g} يوم`,`Back after ${c.g} days`)} · <button data-a="cbWhy">${tr('إيه ده؟','What is this?')}</button>${dr?'':` · <button data-a="start" data-d="${esc(nextDayId())}">${tr('العب يومك العادي','Play your usual day')}</button>`}</div>`;
-  else if(mode==='dl'||(dcb&&dr.cb.dl))q=`<div class="cbq">${dlx&&dlx.act?tr(`أسبوع خفيف · فاضل ${dlx.left} يوم`,`Light week · ${dlx.left} day(s) left`):dlx?tr(`${dlx.wk} أسابيع تمرين متواصل`,`${dlx.wk} weeks in a row`):tr('أسبوع خفيف','Light week')} · <button data-a="dlWhy">${tr('إيه ده؟','What is this?')}</button>${dr||(dlx&&dlx.act)?'':` · <button data-a="dlSkip">${tr('مش دلوقتي','Not now')}</button>`}</div>`;
+  if(c&&nrm)q=`<div class="cbq">${tr(`رجعت بعد ${c.g} يوم`,`Back after ${c.g} days`)} · <button data-a="cbWhy">${tr('ليه؟','Why?')}</button>${alt?` · <button data-a="cbSwap">${tr('العب جلسة الرجوع بدله','Play the comeback session instead')}</button>`:''}</div>`;
+  else if(dlx&&(nrm||mode==='norm'))q=`<div class="cbq">${dlx.act?tr(`أسبوع خفيف · فاضل ${dlx.left} يوم`,`Light week · ${dlx.left} day(s) left`):tr(`${dlx.wk} أسابيع تمرين متواصل`,`${dlx.wk} weeks in a row`)} · <button data-a="dlWhy">${tr('ليه؟','Why?')}</button>${!dr||alt?` · <button data-a="dlGo">${dr?tr('العب يوم خفيف بدله','Play a light day instead'):tr('العب يوم خفيف','Play a light day')}</button>`:''}</div>`;
+  else if(mode==='cb'||(dcb&&!dr.cb.dl&&c))q=`<div class="cbq">${tr(`رجعت بعد ${c.g} يوم`,`Back after ${c.g} days`)} · <button data-a="cbWhy">${tr('ليه؟','Why?')}</button>${dr?'':` · <button data-a="start" data-d="${esc(nextDayId())}">${tr('العب يومك العادي','Play your usual day')}</button>`}</div>`;
+  else if(mode==='dl'||(dcb&&dr.cb.dl))q=`<div class="cbq">${dlx&&dlx.act?tr(`أسبوع خفيف · فاضل ${dlx.left} يوم`,`Light week · ${dlx.left} day(s) left`):dlx?tr(`${dlx.wk} أسابيع تمرين متواصل`,`${dlx.wk} weeks in a row`):tr('أسبوع خفيف','Light week')} · <button data-a="dlWhy">${tr('ليه؟','Why?')}</button>${dr||(dlx&&dlx.act)?'':` · <button data-a="dlSkip">${tr('مش دلوقتي','Not now')}</button>`}</div>`;
   else if(!dr&&new Date().getDay()===6&&ds.some(x=>daysAgo(x.date)>=1&&daysAgo(x.date)<=7))q=`<div class="cbq">${tr('أسبوعك اللي فات','Your last week')}: ${ds.filter(x=>daysAgo(x.date)>=1&&daysAgo(x.date)<=7).length}/3 · <button data-a="rep" data-d="7">${tr('التقرير','Report')} ›</button></div>`;
   let al='';
   if(syncPublic())al+=`<div class="warn">${L.syncPub}</div>`;
@@ -1565,7 +1565,7 @@ function renderData(){
   <details class="fsec" data-fk="csv"${fOpen.has('csv')?' open':''}><summary>${L.csvT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${L.csvHint}</div><button class="btn w" data-a="csv">${L.csvB}</button></div></details>
   <div class="fbody" style="padding-top:16px"><label class="fld" style="margin:0">${L.cycleL}<input class="inp" id="cyc0" inputmode="numeric" value="${esc(S.settings.cycle)}"></label></div>
   </details></div></details>
-  <details class="fsec" data-fk="lang"${fOpen.has('lang')?' open':''}><summary>Language · اللغة<span class="pchev">⌄</span></summary><div class="fbody"><button class="btn w" data-a="lang">${L.langBtn}</button><div class="mu" style="margin:16px 0 8px">${tr("لغة الشروحات (شرح التمارين، «إيه ده؟»، دليل التطبيق)","Explanations language (exercise guides, «What is this?», app guide)")}</div><div class="thseg" style="margin:0"><button class="${howLang()==='ar'?'on':''}" data-a="howLang" data-k="ar">عربي</button><button class="${howLang()==='en'?'on':''}" data-a="howLang" data-k="en">English</button></div></div></details>
+  <details class="fsec" data-fk="lang"${fOpen.has('lang')?' open':''}><summary>Language · اللغة<span class="pchev">⌄</span></summary><div class="fbody"><button class="btn w" data-a="lang">${L.langBtn}</button><div class="mu" style="margin:16px 0 8px">${tr("لغة الشروحات (شرح التمارين، «ليه؟»، دليل التطبيق)","Explanations language (exercise guides, «Why?», app guide)")}</div><div class="thseg" style="margin:0"><button class="${howLang()==='ar'?'on':''}" data-a="howLang" data-k="ar">عربي</button><button class="${howLang()==='en'?'on':''}" data-a="howLang" data-k="en">English</button></div></div></details>
 
   <div class="mu" style="text-align:center;margin:18px 0 0">${L.ver}: v${VER}</div>`;
   {const pi=$('#phIn');if(pi)pi.onchange=e=>{const f=e.target.files[0];if(f)phAdd(f);e.target.value=''}}phLoad();
@@ -1753,6 +1753,7 @@ document.addEventListener('click',ev=>{
       S.program.days=dn.map((x,k)=>({id:'D'+uid()+k,name:x.slice(0,24),ex:[]}));S.sys.cur=id;pDay=S.program.days[0].id;pEdit=true;save();queueBackup();closeModal();go('prog');toast(tr('اتعمل ✓ ضيف تمارين كل يوم','Created ✓ add each day\'s exercises'));break}
     case 'npDel':{const id=b.dataset.id,pg=(S.myProgs||[]).find(x=>x.id===id);if(!pg)break;ask(tr(`تمسح برنامج «${pg.name}»؟ الجلسات اللي لعبتها منه هتفضل في السجل.`,`Delete “${pg.name}”? Sessions you logged with it stay in history.`),{danger:1,yes:tr('امسح','Delete')}).then(ok=>{if(!ok)return;S.myProgs=S.myProgs.filter(x=>x.id!==id);if(S.sys&&S.sys.saved)delete S.sys.saved[id];save();queueBackup();sysModal()});break}
     case 'cbStart':closeModal();startComeback();break;
+    case 'cbSwap':startComeback();break;
     case 'libG':libG=b.dataset.g;libModal();break;
     case 'cuNew':cuModal();break;
     case 'cuEdit':cuModal(b.dataset.n);break;

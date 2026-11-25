@@ -64,7 +64,10 @@ async function page(st) {
 { const { pg, errs, ctx } = await page(state(20));
   await pg.evaluate(() => closeModal(true));
   await pg.click('.cbq [data-a="start"]'); await pg.waitForTimeout(500); await pg.evaluate(() => { closeSession(); go('home'); }); await pg.waitForTimeout(300);
-  ok(await pg.evaluate(() => !!document.querySelector('.cbq [data-a="cbGo"]')), 'after choosing the usual day, the comeback option stays under the circle');
+  ok(await pg.evaluate(() => !!document.querySelector('.cbq [data-a="cbSwap"]')), 'after choosing the usual day, the comeback option stays under the circle');
+  await pg.click('.cbq [data-a="cbSwap"]'); await pg.waitForTimeout(500);
+  ok(await pg.evaluate(() => !$('#sess').hidden && S.draft && S.draft.cb && !S.draft.cb.dl), 'tapping it goes straight into the comeback session');
+  await pg.evaluate(() => { closeSession(); S.draft = null; save(); go('home'); }); await pg.waitForTimeout(300);
   await pg.evaluate(() => { S.settings.lang = 'en'; LANG = 'en'; S.settings.howLang = 'ar'; go('home'); }); await pg.waitForTimeout(200);
   await pg.click('.cbq [data-a="cbWhy"]'); await pg.waitForTimeout(300);
   ok(await pg.evaluate(() => /الغياب/.test(document.querySelector('#modal .mbox').textContent)), 'explanation opens in Arabic (the chosen explanations language) inside an English app');
