@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='151';
+const VER='152';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -767,9 +767,10 @@ const wHammer=(a,t,v)=>{wClick(a,t,v*.6);wClick(a,t+.045,v);sClank(a,t+.045,280,
 const wShot=(a,t,v)=>{sNz(a,t,.012,1700,.7,v*1.2,'lowpass');sOsc(a,t,.55,95,v,'sine',32,.002);sOsc(a,t,.18,190,v*.4,'triangle',60,.001);sNz(a,t,.5,1600,.8,v*.9,'lowpass',140,.004);sNz(a,t+.05,1.3,260,.7,v*.35,'lowpass',90,.08)};
 /* تعمير مسدس: سلايد قصير بيتسحب، تكّة آخر المشوار، ورجوع سريع بخبطة ناشفة */
 const wPistol=(a,t,v)=>{wClick(a,t,v*.55);wSlide(a,t+.008,.04,v*.6,1);wClick(a,t+.05,v*.7);sNz(a,t+.075,.02,1500,1,v*.9,'lowpass');wClick(a,t+.078,v);sThump(a,t+.078,v*.55);sClank(a,t+.078,330,v*.45,.08)};
+/* v152: الدايرة (الدوسة والضغطة الطويلة) رجعت لصوتها المتولّد بالكود؛ الباقي تسجيلات */
 /* v151: تسجيلات أسلحة حقيقية (CC0 — sfx/CREDITS.md). لو الملفات لسه ماتحمّلتش، بيشتغل الصوت المتولّد كاحتياطي */
-const SFX={},SFX_F=['ui','tab1','tab2','orb','hold','rest','end'];
-const SFX_MAP={ui:['ui'],tab:['tab1','tab2'],start:['tab1','tab2'],log:['tab2','tab1'],orb:['orb'],charge:['hold'],rest:['rest'],end:['end']};
+const SFX={},SFX_F=['ui','tab1','tab2','rest','end'];
+const SFX_MAP={ui:['ui'],tab:['tab1','tab2'],start:['tab1','tab2'],log:['tab2','tab1'],rest:['rest'],end:['end']};
 const SFX_VOL={ui:.8,tab:.9,start:.95,log:.95,orb:1,charge:.9,rest:1,end:1};
 function sfxLoad(a){SFX_F.forEach(n=>{fetch('sfx/'+n+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(b=>new Promise((ok,no)=>{const p=a.decodeAudioData(b,ok,no);if(p&&p.then)p.then(ok,no)})).then(buf=>{SFX[n]=buf}).catch(()=>{})})}
 function sfxPlay(a,k){const l=SFX_MAP[k];if(!l)return false;const n=l[Math.floor(Math.random()*l.length)],b=SFX[n]||SFX[l[0]];if(!b)return false;
