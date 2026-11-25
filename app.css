@@ -359,6 +359,10 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 #ask.on .abx{transform:none}
 #ask .atx{font-size:16px;line-height:1.75;color:var(--tx2);margin:0 4px 18px}
 #ask .abt{display:flex;gap:10px}
+#ask .atx{white-space:pre-line}
+#ask .abx{max-height:calc(100dvh - 48px);overflow-y:auto}
+#ask .abt.a3{flex-direction:column}
+#ask .abt.a3 button{flex:none}
 #ask .abt button{flex:1;min-height:48px;border-radius:14px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;border:1px solid var(--bd);background:var(--s2);color:var(--tx2)}
 #ask .abt .ok{background:var(--ac);border-color:var(--ac);color:var(--onac,#111)}
 #ask .abt .ok.dg{background:transparent;border-color:var(--badtx);color:var(--badtx)}

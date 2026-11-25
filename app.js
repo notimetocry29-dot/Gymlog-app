@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='138';
+const VER='139';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -238,10 +238,10 @@ async function startDeload(){if(S.draft&&S.draft.cb&&S.draft.cb.dl&&!S.draft.edi
 function ask(msg,o={}){return new Promise(res=>{
   const old=document.getElementById('ask');if(old)old.remove();
   const w=document.createElement('div');w.id='ask';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');
-  w.innerHTML=`<div class="abx"><div class="atx" dir="auto">${esc(msg)}</div><div class="abt"><button class="ok${o.danger?' dg':''}">${esc(o.yes||tr('تمام','OK'))}</button><button class="no">${esc(o.no||tr('إلغاء','Cancel'))}</button></div></div>`;
+  w.innerHTML=`<div class="abx"><div class="atx" dir="auto">${esc(msg)}</div><div class="abt${o.alt?' a3':''}"><button class="ok${o.danger?' dg':''}">${esc(o.yes||tr('تمام','OK'))}</button>${o.alt?`<button class="alt">${esc(o.alt)}</button>`:''}<button class="no">${esc(o.no||tr('إلغاء','Cancel'))}</button></div></div>`;
   let done=false;const end=v=>{if(done)return;done=true;w.classList.remove('on');document.removeEventListener('keydown',kd,true);setTimeout(()=>w.remove(),180);res(v)};
   const kd=e=>{if(e.key==='Escape'){e.stopPropagation();end(false)}};
-  w.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('.ok'))end(true);else if(e.target.closest('.no')||e.target===w)end(false)});
+  w.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('.ok'))end(true);else if(e.target.closest('.alt'))end('alt');else if(e.target.closest('.no')||e.target===w)end(false)});
   document.addEventListener('keydown',kd,true);
   document.body.appendChild(w);void w.offsetWidth;w.classList.add('on');try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
   setTimeout(()=>{const b=w.querySelector('.no');b&&b.focus({preventScroll:true})},30);
@@ -454,9 +454,9 @@ const swRow=(a,on,t,d)=>`<button class="swr" data-a="${a}" data-k="${on?'off':'o
 function offerUndo(msg,snap){const el=$('#undo');if(!el)return;UND=snap;el.querySelector('span').textContent=msg;const b=el.querySelector('button');b.textContent=tr('تراجع','Undo');
   b.onclick=()=>{if(!UND)return;const o=JSON.parse(UND);UND=null;Object.assign(S,o);if(!o.fbDay)delete S.fbDay;save();queueBackup();el.classList.remove('on');if(!$('#sess').hidden&&!S.draft)closeSession();else if(S.draft&&$('#sess').hidden&&o.draft&&tab==='home')renderHome();go(tab);toast(tr('رجعت ✓','Restored ✓'))};
   el.classList.add('on');clearTimeout(offerUndo.t);offerUndo.t=setTimeout(()=>{el.classList.remove('on');UND=null},7000)}
-const undoSnap=()=>JSON.stringify({program:S.program,sessions:S.sessions,draft:S.draft||null,fbDay:S.fbDay||null});
+const undoSnap=()=>JSON.stringify({program:S.program,sessions:S.sessions,draft:S.draft||null,fbDay:S.fbDay||null,tomb:S.tomb||{}});
 function applyFs(){const k=+(S&&S.settings&&S.settings.fs)||1;if(k>1)document.documentElement.dataset.fs=k;else delete document.documentElement.dataset.fs}
-function applyTheme(){applyFs();const t=THEMES[S.settings.theme]?S.settings.theme:'iron';document.documentElement.dataset.th=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEMES[t].bg;try{window.Android&&Android.setBarsTheme(t!=='morning')}catch(e){}}
+function applyTheme(){applyFs();const t=THEMES[S.settings.theme]?S.settings.theme:'iron';document.documentElement.dataset.th=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEMES[t].bg;try{localStorage.setItem('gl_th',t)}catch(e){}try{window.Android&&Android.setBarsTheme(t!=='morning')}catch(e){}}
 /* ================= التنقل ================= */
 let tab='home';
 const TABICO=['<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>'];
@@ -618,7 +618,7 @@ function renderHome0(){
       ${protHtml()}
       ${(S.gyms||[]).some(g=>!g.del)?gymHtml():''}
       ${al}
-      <div class="dlk2"><details class="alt"><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd||mode!=='norm').map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
+      <div class="dlk2"><details class="alt"><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd||mode!=='norm').map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${esc(x.id)}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
       <button class="plink" data-a="tools">${tr('أدوات','Tools')} ›</button></div>
     </details>
   </div>`;
@@ -753,7 +753,7 @@ function openGuide(){
   const d=S.draft;if(!d)return;const e=d.ex[curEx];if(!e)return;const x=libGet(e.name),sh=$('#sheet');
   const body=(x&&detHtml(x))||(e.note0?`<div class="dsec" dir="auto">${esc(e.note0)}</div>`:`<div class="mu">${tr('مفيش شرح جاهز للتمرين ده. تقدر تكتب ملاحظتك من زرار «ملاحظة».','No guide for this exercise yet. Use the Note button to write your own.')}</div>`);
   sh.hidden=false;
-  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx gd"><div class="gdh"><b class="en">${esc(e.name)}</b><button class="wx" data-a="closeSheet" aria-label="${T().back}">×</button></div><div class="howto gdb">${body}</div>${notesHtml(e.name,(e.note||'').trim())}<div class="row mt"><button class="btn sp ghost" data-a="hwEdit" data-n="${esc(e.name)}">✎ ${tr('تعديل الشرح','Edit guide')}</button><button class="btn sp ghost" data-a="hist" data-id="${e.exId}">${tr('سجلّ التمرين','Exercise log')}</button></div></div>`;
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx gd"><div class="gdh"><b class="en">${esc(e.name)}</b><button class="wx" data-a="closeSheet" aria-label="${T().back}">×</button></div><div class="howto gdb">${body}</div>${notesHtml(e.name,(e.note||'').trim())}<div class="row mt"><button class="btn sp ghost" data-a="hwEdit" data-n="${esc(e.name)}">✎ ${tr('تعديل الشرح','Edit guide')}</button><button class="btn sp ghost" data-a="hist" data-id="${esc(e.exId)}">${tr('سجلّ التمرين','Exercise log')}</button></div></div>`;
 }
 function renderSession(){
   const d=S.draft,L=T();
@@ -774,7 +774,7 @@ function renderSession(){
     <div class="war">${LANG==='ar'&&typeof META!=='undefined'&&META[e.name]&&META[e.name].ar?`<span>${esc(META[e.name].ar)}</span>`:''}<button class="wic" data-a="guide">ⓘ ${tr('الأداء','How')}</button><button class="wic" data-a="swOpen">⇄ ${tr('بدّل','Swap')}</button></div>
     <div class="wtg">${showW?`${e.unit?'':`<button class="wpm" data-a="wStep" data-v="-1" aria-label="${tr('أخف','Lighter')}">−</button>`}<button class="wwt en${earn?' earn':''}" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>${e.unit?'':`<button class="wpm" data-a="wStep" data-v="1" aria-label="${tr('أتقل','Heavier')}">+</button>`}`:''}<span class="wsr en">${esc(String(+e.tsets||0))}×${tgt(e.treps,e.goal,e.unit)}${u}</span></div>
     <div class="wsets">${cir}</div>
-    <div class="wlast" data-a="hist" data-id="${e.exId}">${l?`${tr('آخر مرة','Last')}: <bdi class="en">${fw(l.w)} · ${esc(setsStr(l))}</bdi> · ${fmtD(l.date)}`:tr('أول مرة تلعبه','First time')}${!e.sets.some(v=>num(v)>0)&&warmTxt(e)?`<br>${tr('إحماء','Warm-up')}: <bdi class="en">${warmTxt(e)}</bdi>`:''}</div>
+    <div class="wlast" data-a="hist" data-id="${esc(e.exId)}">${l?`${tr('آخر مرة','Last')}: <bdi class="en">${fw(l.w)} · ${esc(setsStr(l))}</bdi> · ${fmtD(l.date)}`:tr('أول مرة تلعبه','First time')}${!e.sets.some(v=>num(v)>0)&&warmTxt(e)?`<br>${tr('إحماء','Warm-up')}: <bdi class="en">${warmTxt(e)}</bdi>`:''}</div>
     <div class="rst" id="rst"></div>
     ${e.sets.length&&e.sets.every(v=>num(v)>0)&&!e.unit?`<div class="wrir"><span>${tr('فاضل في إيدك كام؟','Reps left in the tank?')}</span>${[tr('على الآخر','To failure'),tr('فاضل 1–2','1–2 left'),tr('فاضل 3+','3+ left')].map((t,k)=>`<button class="${e.rir===(k===0?0:k===1?2:3)?'on':''}" data-a="rir" data-v="${k===0?0:k===1?2:3}">${t}</button>`).join('')}</div>`:''}
     ${e.unit?'':`<button class="wcl${e.clean?' on':''}" data-a="clean">${e.clean?tr('✓ أداء نضيف','✓ Clean form'):tr('مش نضيف (مرجحة أو أداء مكسور)','Not clean (swinging or broken form)')}</button>`}
@@ -842,7 +842,7 @@ function persistDraft(){
   if(!s)return null;
   s.ex.forEach(e=>addExNote(e.name,e.note,s.date));
   const i=d.editing?S.sessions.findIndex(x=>x.id===d.editing):-1;
-  if(i>-1){s.ts=S.sessions[i].ts;S.sessions[i]=s}else S.sessions.push(s);
+  if(i>-1){s.ts=S.sessions[i].ts;s.mt=Date.now();S.sessions[i]=s}else S.sessions.push(s);
   S.draft=null;openTips.clear();save();autoFile();queueBackup(true);
   return s;
 }
@@ -864,7 +864,7 @@ let hsList=[],hsN=0,hsLast='';
 function histChunk(){const L=T(),part=hsList.slice(hsN,hsN+(hsN?30:12));hsN+=part.length;
   return part.map(s=>{
     let mh='';try{const m=new Date(s.date+'T00:00:00').toLocaleDateString(loc(),{month:'long',year:'numeric'});if(m!==hsLast){hsLast=m;mh=`<div class="pmon">${m}</div>`}}catch(e){}
-    return `${mh}<div class="pr2"><div class="pr2b" data-a="sess" data-lp="s" data-id="${s.id}"><div class="sp"><div class="pnm"><bdi>${esc(s.dayName)}</bdi></div><div class="mu">${fmtD(s.date)} · ${L.exN(s.ex.length)}${s.cb?' · '+(s.cb.dl?tr('خفيف','light'):tr('رجوع','comeback')):''}</div></div>${s.status==='full'?'':`<span class="pst ${s.status}">${L.st[s.status]||''}</span>`}</div></div>`}).join('')}
+    return `${mh}<div class="pr2"><div class="pr2b" data-a="sess" data-lp="s" data-id="${esc(s.id)}"><div class="sp"><div class="pnm"><bdi>${esc(s.dayName)}</bdi></div><div class="mu">${fmtD(s.date)} · ${L.exN(s.ex.length)}${s.cb?' · '+(s.cb.dl?tr('خفيف','light'):tr('رجوع','comeback')):''}</div></div>${s.status==='full'?'':`<span class="pst ${s.status}">${L.st[s.status]||''}</span>`}</div></div>`}).join('')}
 /* v122: إحصائيات: الالتزام آخر 16 أسبوع، ومجموعات كل عضلة في آخر 7 أيام */
 function statsHtml(ds){if(!ds.length)return '';
   const wk=iso=>Math.floor((new Date(iso+'T12:00:00')-new Date('2000-01-01T12:00:00'))/(7*864e5)),now=wk(today()),c={};for(const x of ds){const k=now-wk(x.date);if(k>=0&&k<16)c[k]=(c[k]||0)+1}
@@ -922,17 +922,17 @@ function dayHistModal(k){
   const cnt=st=>ss.filter(x=>x.status===st).length;
   modal(`<h3 class="en" style="text-align:start">${esc(nm)}</h3>
   <div class="mu" style="margin-bottom:8px">${tr('اتلعب','Played')} <b style="color:var(--tx)">${ss.length}</b> ${tr('مرة','times')}${ss.length?` · ${tr('آخر مرة','Last')} ${fmtD(ss[0].date)}`:''}</div>
-  ${ss.length?`<div class="plist" style="max-height:48vh;overflow-y:auto">${ss.map(x=>`<div class="pr2"><div class="pr2b" data-a="sess" data-id="${x.id}"><div class="sp"><div class="mu">${fmtD(x.date)} · <span class="en">C${x.cycle}</span> · ${L.exN(x.ex.length)}${dayBase(x.dayName).toLowerCase()!==String(x.dayName).trim().toLowerCase()?` · <span class="en">${esc(x.dayName)}</span>`:''}</div></div><span class="pst ${x.status}">${L.st[x.status]||''}</span></div></div>`).join('')}</div>`:`<div class="empty">${L.noData}</div>`}
+  ${ss.length?`<div class="plist" style="max-height:48vh;overflow-y:auto">${ss.map(x=>`<div class="pr2"><div class="pr2b" data-a="sess" data-id="${esc(x.id)}"><div class="sp"><div class="mu">${fmtD(x.date)} · <span class="en">C${x.cycle}</span> · ${L.exN(x.ex.length)}${dayBase(x.dayName).toLowerCase()!==String(x.dayName).trim().toLowerCase()?` · <span class="en">${esc(x.dayName)}</span>`:''}</div></div><span class="pst ${x.status}">${L.st[x.status]||''}</span></div></div>`).join('')}</div>`:`<div class="empty">${L.noData}</div>`}
   <button class="btn w mt" data-a="closeM">${L.close}</button>`);
 }
 /* v133: الدوسة المطوّلة: قايمة سريعة على الجلسة في السجل، والتمرين في البرنامج، والتمرين في المكتبة */
 function lpMenu(el){const k=el.dataset.lp,R=(a,ic,t,x='')=>`<button class="mrow${a==='delS'||a==='delT'?' dan':''}" data-a="${a}" ${x}><i>${ic}</i>${t}</button>`;
-  if(k==='s'){const s=S.sessions.find(x=>x.id===el.dataset.id);if(!s)return;const q=`data-id="${s.id}"`;
+  if(k==='s'){const s=S.sessions.find(x=>x.id===el.dataset.id);if(!s)return;const q=`data-id="${esc(s.id)}"`;
     modal(`<h3><bdi>${esc(s.dayName)}</bdi> · ${fmtD(s.date)}</h3>${R('copyS','⧉',tr('انسخ الكارت','Copy the card'),q)}${R('imgS','▣',tr('صورة للجلسة','Session image'),q)}${R('aiS','↗',tr('ابعتها للتحليل','Send for analysis'),q)}${R('editS','✎',T().edit,q)}${R('delS','×',T().del,q)}`)}
   else if(k==='pt'){const i=+el.dataset.i,t=day(pDay).ex[i];if(!t)return;const q=`data-i="${i}"`;
     modal(`<h3 class="en">${esc(t.name)}</h3>${R('editT','✎',tr('عدّل الوزن والمجموعات','Edit weight and sets'),q)}${R('tCore','★',t.core?tr('شيله من الأساسي','Remove from essentials'):tr('خليه أساسي','Make it essential'),q)}${i>0?R('tMv','↑',tr('طلّعه فوق','Move up'),q+' data-v="-1"'):''}${i<day(pDay).ex.length-1?R('tMv','↓',tr('نزّله تحت','Move down'),q+' data-v="1"'):''}${R('memo','✐',tr('ملاحظتي','My note'),`data-n="${esc(t.name)}"`)}${R('delT','×',tr('شيله من اليوم','Remove from this day'),q)}`)}
   else if(k==='lx'){const n=el.dataset.n,ds=S.program.days;
-    modal(`<h3 class="en">${esc(n)}</h3><div class="mgh">${tr('ضيفه ليوم','Add it to a day')}</div>${ds.map(d=>R('libAddTo','+',`<bdi class="en">${esc(d.name)}</bdi>${d.ex.some(t=>t.name===n)?' <span class="mu">✓</span>':''}`,`data-n="${esc(n)}" data-d="${d.id}"`)).join('')}${R('memo','✐',tr('ملاحظتي','My note'),`data-n="${esc(n)}"`)}`)}
+    modal(`<h3 class="en">${esc(n)}</h3><div class="mgh">${tr('ضيفه ليوم','Add it to a day')}</div>${ds.map(d=>R('libAddTo','+',`<bdi class="en">${esc(d.name)}</bdi>${d.ex.some(t=>t.name===n)?' <span class="mu">✓</span>':''}`,`data-n="${esc(n)}" data-d="${esc(d.id)}"`)).join('')}${R('memo','✐',tr('ملاحظتي','My note'),`data-n="${esc(n)}"`)}`)}
 }
 (()=>{let tm=null,x0=0,y0=0,sw=false;
   const cancel=()=>{clearTimeout(tm);tm=null};
@@ -946,10 +946,10 @@ function lpMenu(el){const k=el.dataset.lp,R=(a,ic,t,x='')=>`<button class="mrow$
 function sessModal(id){
   const L=T(),s=S.sessions.find(x=>x.id===id);if(!s)return;
   modal(`<h3><bdi>${esc(s.dayName)}</bdi> · ${fmtD(s.date)}</h3><div class="dl">${s.ex.map(e=>`<div class="dr"><span class="dn2 en">${esc(e.name)}</span><span class="dw en">${e.unit?'':fw(e.w)+' · '}${esc(setsStr(e))}</span></div>`).join('')}</div>
-  <div class="row mt"><button class="btn pri sp" data-a="editS" data-id="${s.id}">${L.edit}</button><button class="btn sp" data-a="shareS" data-id="${s.id}">${tr('مشاركة…','Share…')}</button></div>
-  <button class="mrow dan" data-a="delS" data-id="${s.id}">${L.del}</button>`);
+  <div class="row mt"><button class="btn pri sp" data-a="editS" data-id="${esc(s.id)}">${L.edit}</button><button class="btn sp" data-a="shareS" data-id="${esc(s.id)}">${tr('مشاركة…','Share…')}</button></div>
+  <button class="mrow dan" data-a="delS" data-id="${esc(s.id)}">${L.del}</button>`);
 }
-function shareModal(s){modal(`<h3>${tr('مشاركة الجلسة','Share the session')}</h3><button class="mrow" data-a="copyS" data-id="${s.id}"><i>⧉</i>${tr('انسخ الكارت','Copy the card')}</button><button class="mrow" data-a="imgS" data-id="${s.id}"><i>▣</i>${tr('صورة للجلسة','Session image')}</button><button class="mrow" data-a="aiS" data-id="${s.id}"><i>↗</i>${tr('ابعتها للتحليل','Send for analysis')}</button><button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
+function shareModal(s){modal(`<h3>${tr('مشاركة الجلسة','Share the session')}</h3><button class="mrow" data-a="copyS" data-id="${esc(s.id)}"><i>⧉</i>${tr('انسخ الكارت','Copy the card')}</button><button class="mrow" data-a="imgS" data-id="${esc(s.id)}"><i>▣</i>${tr('صورة للجلسة','Session image')}</button><button class="mrow" data-a="aiS" data-id="${esc(s.id)}"><i>↗</i>${tr('ابعتها للتحليل','Send for analysis')}</button><button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
 
 /* ================= البرنامج ================= */
 /* ================= مكتبة التمارين + الأنظمة ================= */
@@ -1037,7 +1037,7 @@ function libRows(){
   const q=lbQ.trim().toLowerCase(),inP=new Set(S.program.days.flatMap(d=>d.ex.map(t=>t.name)));
   const r=allLib().filter(x=>(lbG==='all'||x[1]===lbG)&&(lbE==='all'||lbEq(x)===lbE)&&lbMatch(x,q));
   if(!r.length)return `<div class="empty">—</div>`;
-  const row=x=>`<details class="pr2 lbn" data-n="${esc(x[0])}"><summary data-lp="lx" data-n="${esc(x[0])}"><div class="sp"><div class="pnm en">${esc(x[0])}</div><div class="mu">${LANG==='ar'&&META[x[0]]?esc(META[x[0]].ar)+' · ':''}<span class="en">${x[3]}×${x[4]}${x[5]?' '+esc(unitTxt(x[5])):''}</span> · ${(EQN[lbEq(x)]||EQN.other)[LANG==='ar'?0:1]}${x[9]?' · '+tr('تمريني','Mine'):''}</div></div>${inP.has(x[0])?'<span class="pdot"></span>':''}<span class="pchev">⌄</span></summary>
+  const row=x=>`<details class="pr2 lbn" data-n="${esc(x[0])}"><summary data-lp="lx" data-n="${esc(x[0])}"><div class="sp"><div class="pnm en">${esc(x[0])}</div><div class="mu">${LANG==='ar'&&META[x[0]]?esc(META[x[0]].ar)+' · ':''}<span class="en">${esc(x[3])}×${esc(x[4])}${x[5]?' '+esc(unitTxt(x[5])):''}</span> · ${(EQN[lbEq(x)]||EQN.other)[LANG==='ar'?0:1]}${x[9]?' · '+tr('تمريني','Mine'):''}</div></div>${inP.has(x[0])?'<span class="pdot"></span>':''}<span class="pchev">⌄</span></summary>
     <div class="lbody"></div></details>`;
   return GRP_ORDER.map(g=>{const rs=r.filter(x=>x[1]===g);if(!rs.length)return '';
     const op=!!q||lbG!=='all'||lbOpenG.has(g);
@@ -1095,7 +1095,7 @@ function cuModal(n){
   <label class="fld">${tr('العضلة','Muscle group')}<select class="inp" id="cuG">${Object.keys(GRP).map(g=>`<option value="${g}"${cuG(t)===g?' selected':''}>${GRP[g][LANG==='ar'?0:1]}</option>`).join('')}</select></label>
   <div class="fgrid"><label class="fld">${T().weight}<input class="inp" id="cuW" inputmode="decimal" value="${esc(t.w)}"></label><label class="fld">${T().sets}<input class="inp" id="cuS" inputmode="numeric" value="${esc(t.sets)}"></label><label class="fld">${T().reps}<input class="inp" id="cuR" inputmode="numeric" value="${esc(t.reps)}"></label></div>
   <label class="fld">${T().unit}<select class="inp" id="cuU">${['','ث','خطوة','د'].map(u=>`<option value="${u}"${t.unit===u?' selected':''}>${T().units[u]}</option>`).join('')}</select></label>
-  ${c?'':`<label class="fld">${tr('تضيفه لبرنامجك؟ (اختياري)','Add to your program? (optional)')}<select class="inp" id="cuD"><option value="">${tr('لا، في المكتبة بس','No, library only')}</option>${S.program.days.map(x=>`<option value="${x.id}"${x.id===pDay&&tab==='prog'?'':''}>${tr('ضيفه لـ ','Add to ')}${esc(x.name)}</option>`).join('')}</select></label>`}
+  ${c?'':`<label class="fld">${tr('تضيفه لبرنامجك؟ (اختياري)','Add to your program? (optional)')}<select class="inp" id="cuD"><option value="">${tr('لا، في المكتبة بس','No, library only')}</option>${S.program.days.map(x=>`<option value="${esc(x.id)}">${tr('ضيفه لـ ','Add to ')}${esc(x.name)}</option>`).join('')}</select></label>`}
   <label class="fld">${tr('الشرح والتعليمات','Instructions')}<textarea class="inp" id="cuH" rows="7" placeholder="${tr('التجهيز، التنفيذ، الأخطاء، نصيحتك…','Setup, execution, mistakes, tips…')}">${esc(t.how)}</textarea></label>
   <div class="row"><button class="btn pri sp" data-a="cuSave" data-n="${esc(t.name)}">${T().saveB}</button>${c?`<button class="btn dan" data-a="cuDel" data-n="${esc(t.name)}">${T().del}</button>`:''}<button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);
 }
@@ -1129,14 +1129,14 @@ function renderProgram(){
     const last=l?`${setsStr(l)?setsStr(l)+' · ':''}${fw(l.w)} · ${esc(l.date||'')}`:tr('لسه ماتلعبش','Not logged yet');
     return `<details class="pr2"><summary data-lp="pt" data-i="${i}" data-n="${esc(t.name)}"><span class="pno${t.core?' cr':''}">${i+1}</span><div class="sp"><div class="pnm en">${esc(t.name)}</div><div class="mu">${meta}${lb?` · ${GRP[lb[1]][LANG==='ar'?0:1]}`:''}</div></div><span class="pchev">⌄</span></summary><div class="pdrop"><div class="mu">${tr('آخر أداء','Last time')}: <span class="en">${last}</span></div><button class="plink" data-a="exInfo" data-i="${i}">${tr('طريقة اللعب','How to perform')}</button></div></details>`;
   }).join('')||`<div class="empty">${tr('اليوم فاضي.','Empty day.')}</div>`;
-  const tabs=days.map((x,k)=>`<button class="${x.id===pDay?'on':''}" data-a="pday" data-d="${x.id}">${esc(shortDay(x.name))}</button>`).join('');
+  const tabs=days.map((x,k)=>`<button class="${x.id===pDay?'on':''}" data-a="pday" data-d="${esc(x.id)}">${esc(shortDay(x.name))}</button>`).join('');
   $('#view').innerHTML=`<button class="psys" data-a="sysOpen"><span class="en">${esc(sysName(sp))}</span><span class="pchev">⌄</span></button>
   <div class="ptabs">${tabs}</div>
   <div class="phead"><div class="pdn en">${esc(d.name)}</div><button class="ptxt" data-a="pedit">${pEdit?tr('تم','Done'):tr('تعديل','Edit')}</button></div>
   ${pDay==='FB'?`<div class="pfbn">${tr('ده الفول بادي اللي بيتلعب في جلسة الرجوع بعد الغياب. مش جزء من الدورة. عدّل تمارينه ومجموعاته زي ما انت عايز، والتطبيق بيحط الأوزان المخففة لوحده.','The full body played in the comeback session after a break. It is not part of the rotation. Edit its exercises and sets as you like; the app sets the reduced weights itself.')}</div>`:''}
   <div class="plist${pEdit?' ed':''}">${rows}</div>
   ${pEdit?`<div class="pact"><button class="plink" data-a="libOpen">+ ${tr('تمرين','Exercise')}</button>${pDay==='FB'?`<button class="plink" data-a="fbReset">${tr('رجّعه للاختيار التلقائي','Reset to automatic')}</button>`:''}<button class="plink" data-a="dayEdit">${tr('اسم اليوم','Rename day')}</button><button class="plink" data-a="copyT">${L.copyTpl}</button></div>`
-  :`${cores.length?`<div class="pcore"><b>${tr('الأساسي','Essentials')}:</b> <span class="en">${cores.join(' + ')}</span></div>`:''}${d.ex.length?`<button class="btn pri w pgo" data-a="start" data-d="${d.id}">${tr('ابدأ اليوم ده','Start this day')}</button>`:`<button class="btn pri w pgo" data-a="libOpen">+ ${tr('ضيف تمرين من المكتبة','Add from library')}</button>`}`}`;
+  :`${cores.length?`<div class="pcore"><b>${tr('الأساسي','Essentials')}:</b> <span class="en">${cores.join(' + ')}</span></div>`:''}${d.ex.length?`<button class="btn pri w pgo" data-a="start" data-d="${esc(d.id)}">${tr('ابدأ اليوم ده','Start this day')}</button>`:`<button class="btn pri w pgo" data-a="libOpen">+ ${tr('ضيف تمرين من المكتبة','Add from library')}</button>`}`}`;
 }
 function infoModal(i){
   const d=day(pDay),t=d.ex[i];if(!t)return;const lb=libGet(t.name),how=libHow(t.name),l=baseH(t.id);
@@ -1151,7 +1151,7 @@ function libRowsHtml(){
   const q=libQ.trim().toLowerCase();
   const sx=(libFor==='sess'||libFor==='swap')&&S.draft,inS=n=>sx&&S.draft.ex.some(e=>nk(e.name)===nk(n));
   const sf=n=>{const m=typeof META!=='undefined'&&META[n];return m&&(m.eq==='mach'||m.eq==='cable')?0:m&&m.eq==='bb'?2:1};let li=allLib().filter(x=>(libG==='all'||x[1]===libG)&&lbMatch(x,q));if(S.settings.safe||libFor==='swap')li=li.slice().sort((a,b)=>sf(a[0])-sf(b[0]));
-  return li.map(x=>`<div class="prow" data-a="${sx?(libFor==='swap'?'sxSwap':'sxAdd'):'libAdd'}" data-n="${esc(x[0])}"><div class="sp"><div class="nm en">${esc(x[0])}</div><div class="mu">${(GRP[x[1]]||GRP.core)[LANG==='ar'?0:1]} · <span class="en">${x[3]}×${x[4]}</span></div></div><span class="icb">${inS(x[0])?'✓':'+'}</span></div>`).join('')||`<div class="empty">—</div>`;
+  return li.map(x=>`<div class="prow" data-a="${sx?(libFor==='swap'?'sxSwap':'sxAdd'):'libAdd'}" data-n="${esc(x[0])}"><div class="sp"><div class="nm en">${esc(x[0])}</div><div class="mu">${(GRP[x[1]]||GRP.core)[LANG==='ar'?0:1]} · <span class="en">${esc(x[3])}×${esc(x[4])}</span></div></div><span class="icb">${inS(x[0])?'✓':'+'}</span></div>`).join('')||`<div class="empty">—</div>`;
 }
 function libModal(){
   const rows=libRowsHtml();
@@ -1169,7 +1169,7 @@ function sysModal(){
   <div class="mu" style="margin-bottom:10px">${tr('تمارينك في النظام الحالي بتتحفظ وترجعلها لو رجعت له. الأوزان بتتاخد من آخر مرة لعبت فيها نفس التمرين.','Your exercises in the current system are kept if you return. Weights come from the last time you did the same exercise.')}</div>
   <button class="btn w" data-a="npNew" style="margin-bottom:12px">+ ${tr('برنامج جديد من الصفر','New program from scratch')}</button>
   ${allSys().map(s=>{const cur=S.sys.cur===s.id;const dn=s.mine?(cur?S.program.days:(S.sys.saved[s.id]?S.sys.saved[s.id].days.map(x=>x.name):['Upper 1','Lower 1','Upper 2','Lower 2'])).map?.(x=>x.name||x):[];const names=s.days?s.days.map(x=>x[0]):dn;
-   return `<div class="sysopt${cur?' on':''}"><div class="sp"><div class="nm">${esc(sysName(s))}${cur?` <span class="tag">${tr('الحالي','Current')}</span>`:''}</div><div class="mu">${esc(sysDesc(s))}</div><div class="mu en" style="margin-top:3px">${names.map(esc).join(' · ')}</div></div>${cur?'':`<div class="sysb"><button class="btn sm pri" data-a="sysPick" data-id="${s.id}">${tr('استخدم','Use')}</button>${s.custom?`<button class="btn sm ghost" data-a="npDel" data-id="${s.id}">${tr('امسح','Delete')}</button>`:''}</div>`}</div>`}).join('')}
+   return `<div class="sysopt${cur?' on':''}"><div class="sp"><div class="nm">${esc(sysName(s))}${cur?` <span class="tag">${tr('الحالي','Current')}</span>`:''}</div><div class="mu">${esc(sysDesc(s))}</div><div class="mu en" style="margin-top:3px">${names.map(esc).join(' · ')}</div></div>${cur?'':`<div class="sysb"><button class="btn sm pri" data-a="sysPick" data-id="${esc(s.id)}">${tr('استخدم','Use')}</button>${s.custom?`<button class="btn sm ghost" data-a="npDel" data-id="${esc(s.id)}">${tr('امسح','Delete')}</button>`:''}</div>`}</div>`}).join('')}
   <button class="btn w mt" data-a="progShare">${tr('مشاركة أو استيراد برنامج بكود','Share or import a program code')}</button>
   <div class="row mt"><button class="btn ghost sp" data-a="closeM">${T().close}</button></div>`);
 }
@@ -1212,7 +1212,7 @@ const b64=u=>{let t='';for(let i=0;i<u.length;i+=0x8000)t+=String.fromCharCode.a
 const unb64=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
 const pipe=async(bytes,S2)=>new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(S2)).arrayBuffer());
 let SYNC={on:false,repo:'',branch:'gym-backup',path:'sync/state.bin',salt:'',iter:600000,last:0,n:0,dirty:false,missed:0,err:''};
-let BKEY=null,running=false,chg=0,brOK=false,rSha=null;
+let BKEY=null,running=false,chg=0,brOK=false;
 async function loadSync(){try{const c=await idb.get('sync');if(c)Object.assign(SYNC,c)}catch(e){}try{BKEY=(await idb.get('bk.key'))||null}catch(e){}}
 const saveSync=()=>idb.set('sync',Object.assign({},SYNC)).catch(()=>{});
 async function deriveKey(pass,salt,iter){
@@ -1221,9 +1221,9 @@ async function deriveKey(pass,salt,iter){
 }
 async function sealBytes(key,bytes){const iv=crypto.getRandomValues(new Uint8Array(12));return{iv,ct:new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,bytes))}}
 /* كل اللي محتاجينه عشان الاسترجاع يرجّع كل حاجة (نفس الشكل في الملف وGitHub) */
-const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],myProgs:S.myProgs||[],libOv:S.libOv||{},exNotes:S.exNotes||{},exMemo:S.exMemo||{},steps:S.steps||{},body:S.body||[],mig:S.mig||0,fbDay:S.fbDay||null,dl:S.dl||null,prot:S.prot||null,gyms:S.gyms||[]});
+const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],myProgs:S.myProgs||[],libOv:S.libOv||{},exNotes:S.exNotes||{},exMemo:S.exMemo||{},steps:S.steps||{},body:S.body||[],mig:S.mig||0,fbDay:S.fbDay||null,dl:S.dl||null,dlSkip:S.dlSkip||null,prot:S.prot||null,gyms:S.gyms||[],tomb:S.tomb||{}});
 async function packBackup(){
-  const payload=enc.encode(JSON.stringify({app:'gymlog',v:1,at:Date.now(),data:snapData()}));
+  const payload=enc.encode(JSON.stringify({app:'gymlog',v:BK_V,at:Date.now(),data:snapData()}));
   let z=null;try{z=await pipe(payload,new CompressionStream('gzip'))}catch(e){}
   const {iv,ct}=await sealBytes(BKEY,z||payload);
   return JSON.stringify({app:'gymlog-enc',v:1,kdf:'PBKDF2-SHA256',iter:SYNC.iter,salt:SYNC.salt,iv:b64(iv),z:z?1:0,ct:b64(ct)});
@@ -1233,7 +1233,7 @@ async function openBackup(txt,keyOrPass){
   const key=typeof keyOrPass==='string'?await deriveKey(keyOrPass,unb64(o.salt),o.iter):keyOrPass;
   let p;try{p=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(o.iv)},key,unb64(o.ct)))}catch(e){throw new Error('pass')}
   if(o.z)p=await pipe(p,new DecompressionStream('gzip'));
-  return JSON.parse(dec.decode(p));
+  const r=JSON.parse(dec.decode(p));if(+r.v>BK_V)throw new Error('newer');if(r.data&&typeof r.data==='object')r.data.__v=r.v;return r;
 }
 async function getToken(){const t=await idb.get('bk.token');if(!t||!BKEY)throw new Error('notoken');return dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:t.iv},BKEY,t.ct))}
 async function gh(method,url,body,accept,tok){
@@ -1249,7 +1249,7 @@ async function ensureBranch(tok){
   const def=(await rr.json()).default_branch;
   let br=await gh('GET',`/repos/${R}/git/ref/heads/${def}`,null,null,tok);
   if(!br.ok&&(br.status===404||br.status===409)){
-    const init=await gh('PUT',`/repos/${R}/contents/README.md`,{message:'init',content:btoa('Gym log - encrypted backup\n'),branch:def},null,tok);
+    const init=await gh('PUT',`/repos/${R}/contents/README.md`,{message:'init',content:b64(enc.encode('چيم لوج — encrypted backup\n')),branch:def},null,tok);
     if(!init.ok)throw ghErr(init);
     br=await gh('GET',`/repos/${R}/git/ref/heads/${def}`,null,null,tok);
   }
@@ -1258,30 +1258,41 @@ async function ensureBranch(tok){
   r=await gh('POST',`/repos/${R}/git/refs`,{ref:'refs/heads/'+SYNC.branch,sha},null,tok);
   if(!r.ok&&r.status!==422)throw ghErr(r);
 }
-async function putBackup(text){
-  const url=`/repos/${SYNC.repo}/contents/${SYNC.path}`;
-  for(let k=0;k<3;k++){
-    let sha=rSha;
-    if(!sha){const g=await gh('GET',`${url}?ref=${SYNC.branch}`);if(g.ok)sha=(await g.json()).sha;else if(g.status!==404)throw ghErr(g)}
-    const p=await gh('PUT',url,Object.assign({message:'sync '+new Date().toISOString().slice(0,16),content:b64(enc.encode(text)),branch:SYNC.branch},sha?{sha}:{}));
-    if(p.ok){try{rSha=(await p.json()).content.sha}catch(e){rSha=null}return}
-    rSha=null;if(p.status!==409&&p.status!==422)throw ghErr(p);
-  }
-  throw new Error('conflict');
-}
-async function readRemote(tok){
-  const r=await gh('GET',`/repos/${SYNC.repo}/contents/${SYNC.path}?ref=${SYNC.branch}`,null,'application/vnd.github.raw+json',tok);
-  if(r.status===404)throw new Error('nofile');if(!r.ok)throw ghErr(r);return r.text();
-}
+/* v139: قبل أي رفع بنقرا النسخة اللي على GitHub، نفكّها، وندمج الجلسات (كل جلسة بالـ id، والأحدث تعديلًا يكسب).
+   كده الموبايل (Chrome) والـ APK (تخزين منفصل) مابيمسحوش جلسات بعض أبدًا */
+async function getRemote(tok){
+  const url=`/repos/${SYNC.repo}/contents/${SYNC.path}?ref=${encodeURIComponent(SYNC.branch)}`;
+  const g=await gh('GET',url,null,null,tok);if(g.status===404)return null;if(!g.ok)throw ghErr(g);
+  const j=await g.json();let text='';
+  if(j&&j.content&&j.encoding==='base64')text=dec.decode(unb64(j.content.replace(/\s/g,'')));
+  else{const r=await gh('GET',url,null,'application/vnd.github.raw+json',tok);if(!r.ok)throw ghErr(r);text=await r.text()}
+  return{sha:j.sha,text}}
+const sTime=x=>+x.mt||+x.ts||0;
+function mergeIn(rd){
+  if(!rd||!Array.isArray(rd.sessions))return 0;
+  const tomb=Object.assign({},cleanTomb(rd.tomb),S.tomb||{});S.tomb=tomb;
+  const by=new Map(S.sessions.map(x=>[x.id,x]));let n=0;
+  for(const r0 of rd.sessions){const r=cleanSession(r0);if(!r||tomb[r.id])continue;const l=by.get(r.id);
+    if(!l){S.sessions.push(r);by.set(r.id,r);n++}else if(sTime(r)>sTime(l)){S.sessions[S.sessions.indexOf(l)]=r;by.set(r.id,r);n++}}
+  const b=S.sessions.length;S.sessions=S.sessions.filter(x=>!tomb[x.id]);return n+b-S.sessions.length}
+async function readRemote(tok){const r=await getRemote(tok);if(!r)throw new Error('nofile');return r.text}
 async function runBackup(verify){
-  if(!SYNC.on||!BKEY||running||!navigator.onLine)return false;
+  if(!SYNC.on||!BKEY||running||!navigator.onLine||SYNC.hold)return false;
   running=true;const my=chg;let ok=false;
   try{
     if(!brOK){await ensureBranch();brOK=true}
-    await putBackup(await packBackup());
-    if(verify){const back=await openBackup(await readRemote(),BKEY);if(!back.data||back.data.sessions.length!==S.sessions.length)throw new Error('verify')}
+    const url=`/repos/${SYNC.repo}/contents/${SYNC.path}`;let up=false;
+    for(let k=0;k<3&&!up;k++){
+      const rm=await getRemote();
+      if(rm){let o;try{o=await openBackup(rm.text,BKEY)}catch(e){throw new Error(e.message==='pass'?'rkey':e.message)}
+        if(mergeIn(o.data)){save();if($('#sess').hidden&&tab==='hist')renderHistory()}}
+      const p=await gh('PUT',url,Object.assign({message:'sync '+new Date().toISOString().slice(0,16),content:b64(enc.encode(await packBackup())),branch:SYNC.branch},rm?{sha:rm.sha}:{}));
+      if(p.ok)up=true;else if(p.status!==409&&p.status!==422)throw ghErr(p);
+    }
+    if(!up)throw new Error('conflict');
+    if(verify){const back=await openBackup(await readRemote(),BKEY);if(!back.data||!S.sessions.every(x=>back.data.sessions.some(y=>y.id===x.id)))throw new Error('verify')}
     if(chg===my)SYNC.dirty=false;SYNC.missed=0;SYNC.last=Date.now();SYNC.n=S.sessions.length;SYNC.err='';ok=true;markBackup();
-  }catch(e){SYNC.err=String(e.message||e);brOK=false;rSha=null}
+  }catch(e){SYNC.err=String(e.message||e);brOK=false}
   running=false;await saveSync();
   if(ok&&chg!==my)runBackup();
   refresh();return ok;
@@ -1291,24 +1302,43 @@ function queueDraftBackup(){if(SYNC.on&&Date.now()-(SYNC.last||0)>6e5)queueBacku
 function queueBackup(session){if(!SYNC.on)return;chg++;SYNC.dirty=true;if(session)SYNC.missed++;saveSync();runBackup()}
 const PUB_REPO='notimetocry29-dot/leviathan-';
 const syncPublic=()=>SYNC.on&&String(SYNC.repo).toLowerCase()===PUB_REPO;
-const syncMsg=e=>({token:tr('التوكن مرفوض أو منتهي','Token rejected or expired'),repo:tr('الريبو مش موجود أو التوكن ملوش صلاحية عليه','Repo not found or the token has no access to it'),conflict:tr('تعارض في الرفع، هيعيد المحاولة','Upload conflict, will retry'),verify:tr('الملف اترفع بس التحقق فشل','Uploaded but verification failed'),pass:tr('العبارة غلط','Wrong passphrase'),nofile:tr('مفيش نسخة في الريبو','No backup in the repo')}[e]||e);
+const syncMsg=e=>({rkey:tr('النسخة اللي على GitHub متشفّرة بعبارة تانية (من جهاز تاني). وقّف النسخ وفعّله تاني بنفس العبارة بتاعة الجهاز التاني علشان أدمجهم','The backup on GitHub uses a different passphrase (another device). Turn backup off and on again with that device\'s passphrase so they merge'),newer:tr('النسخة دي من إصدار أحدث من التطبيق. حدّث التطبيق الأول','This backup is from a newer app version. Update the app first'),broad:tr('التوكن ده صلاحياته واسعة (بيوصل لريبوهات تانية). اعمل توكن Fine-grained على ريبو النسخة بس، بصلاحية Contents: Read and write','This token is too broad (it reaches other repos). Create a fine-grained token for the backup repo only, with Contents: Read and write'),public:tr('الريبو ده عام: أي حد يقدر يشوف الملف. اعمل ريبو خاص (Private) واستخدمه','This repo is public: anyone can see the file. Create a private repo and use it'),token:tr('التوكن مرفوض أو منتهي','Token rejected or expired'),repo:tr('الريبو مش موجود أو التوكن ملوش صلاحية عليه','Repo not found or the token has no access to it'),conflict:tr('تعارض في الرفع، هيعيد المحاولة','Upload conflict, will retry'),verify:tr('الملف اترفع بس التحقق فشل','Uploaded but verification failed'),pass:tr('العبارة غلط','Wrong passphrase'),nofile:tr('مفيش نسخة في الريبو','No backup in the repo')}[e]||e);
 async function enableSync(){
   const tok=$('#gTok').value.trim(),p1=$('#gP1').value,p2=$('#gP2').value,repo=$('#gRepo').value.trim();
-  if(!tok||p1.length<6||p1!==p2||!/^[\w.-]+\/[\w.-]+$/.test(repo)){toast(T().syncBadIn);return}
+  if(!tok||p1.length<10||p1!==p2||!/^[\w.-]+\/[\w.-]+$/.test(repo)){toast(T().syncBadIn);return}
   return enableSyncWith(tok,p1,repo);
 }
-async function enableSyncWith(tok,p1,repo){
+/* v139: التوكن لازم يبقى على ريبو النسخة بس، والريبو لازم يبقى خاص */
+async function tokenCheck(tok,repo){
+  if(/^(ghp_|gho_|ghu_|ghs_)/.test(tok))return 'broad';
+  const r=await gh('GET',`/repos/${repo}`,null,null,tok);if(!r.ok)return r.status===404?'repo':r.status===401||r.status===403?'token':'http'+r.status;
+  const sc=r.headers.get('x-oauth-scopes');if(sc&&/\b(repo|public_repo)\b/.test(sc))return 'broad';
+  const j=await r.json();if(!j.private)return 'public';if(j.permissions&&j.permissions.push===false)return 'token';
+  try{const u=await gh('GET','/user/repos?per_page=100&visibility=private',null,null,tok);if(u.ok){const a=await u.json();if(Array.isArray(a)&&a.some(x=>x&&String(x.full_name).toLowerCase()!==repo.toLowerCase()))return 'broad'}}catch(e){}
+  return ''}
+async function enableSyncWith(tok,p1,repo,o={}){
   toast(T().syncBusy);
   try{
-    const salt=crypto.getRandomValues(new Uint8Array(16));
-    brOK=false;rSha=null;SYNC=Object.assign(SYNC,{repo,salt:b64(salt),iter:600000,on:true,dirty:true,missed:0,err:''});chg++;
-    BKEY=await deriveKey(p1,salt,SYNC.iter);
+    SYNC.repo=repo;brOK=false;
+    const bad=await tokenCheck(tok,repo);if(bad){toast(T().syncErr(syncMsg(bad)));return false}
+    /* لو فيه نسخة على GitHub: مابنكتبش فوقها أبدًا. لازم نفس العبارة، وبعدها تختار دمج أو استرجاع */
+    let rm=null;try{rm=await getRemote(tok)}catch(e){if(e.message!=='repo')throw e}
+    let salt=crypto.getRandomValues(new Uint8Array(16)),iter=600000,remote=null;
+    if(rm){let h;try{h=JSON.parse(rm.text)}catch(e){h=null}
+      if(!h||h.app!=='gymlog-enc'){toast(T().syncErr(tr('فيه ملف تاني في نفس المكان على GitHub ومش هكتب فوقه','There is another file at that path on GitHub; it will not be overwritten')));return false}
+      try{remote=await openBackup(rm.text,p1)}catch(e){if(e.message==='pass'){await ask(tr('فيه نسخة على GitHub متشفّرة بعبارة تانية. اكتب نفس العبارة اللي اتعملت بيها (من الجهاز التاني)، علشان مانكتبش فوقها ونضيّع جلساتها.','There is already a backup on GitHub encrypted with a different passphrase. Enter the passphrase it was made with (from the other device), so it is not overwritten and its sessions are not lost.'),{yes:tr('تمام','OK'),no:tr('قفل','Close')});return false}throw e}
+      salt=unb64(h.salt);iter=+h.iter||600000;
+      if(!o.merge){const rs=remote.data&&Array.isArray(remote.data.sessions)?remote.data.sessions.length:0,at=remote.at?new Date(remote.at).toLocaleString(loc(),{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'}):'';
+        const r=await ask(tr(`فيه نسخة على GitHub بالفعل: ${arN(rs,'جلسة','جلستين','جلسات')}${at?' · '+at:''}.\nعلى الموبايل ده: ${arN(S.sessions.length,'جلسة','جلستين','جلسات')}.\n\nتعمل إيه؟`,`There is already a backup on GitHub: ${rs} session${rs===1?'':'s'}${at?' · '+at:''}.\nOn this phone: ${S.sessions.length}.\n\nWhat should happen?`),{yes:tr('ادمجهم (مفيش حاجة تتمسح)','Merge them (nothing is deleted)'),alt:tr('رجّع اللي على GitHub بدل اللي هنا','Restore GitHub over this phone'),no:tr('إلغاء','Cancel')});
+        if(!r)return false;if(r==='alt'){if(!await applyRestore(remote.data,{at:remote.at}))return false}}}
+    BKEY=await deriveKey(p1,salt,iter);
+    SYNC=Object.assign(SYNC,{repo,salt:b64(salt),iter,on:true,dirty:true,missed:0,err:'',hold:false});chg++;
     const {iv,ct}=await sealBytes(BKEY,enc.encode(tok));
     await idb.set('bk.token',{iv,ct});await idb.set('bk.key',BKEY);await saveSync();
     const ok=await runBackup(true);
-    if(!ok){const e=SYNC.err;SYNC.on=false;BKEY=null;await saveSync();try{await idb.set('bk.token',null);await idb.set('bk.key',null)}catch(_){}toast(T().syncErr(syncMsg(e)));renderData();return}
-    toast(T().syncOK);renderData();
-  }catch(e){SYNC.on=false;await saveSync();toast(T().syncErr(syncMsg(String(e.message||e))))}
+    if(!ok){const e=SYNC.err;SYNC.on=false;BKEY=null;await saveSync();try{await idb.set('bk.token',null);await idb.set('bk.key',null)}catch(_){}toast(T().syncErr(syncMsg(e)));renderData();return false}
+    toast(T().syncOK);renderData();if(tab!=='data')go(tab);return true;
+  }catch(e){SYNC.on=false;await saveSync();toast(T().syncErr(syncMsg(String(e.message||e))));return false}
 }
 async function disableSync(){
   if(!await ask(T().syncConfOff,{danger:1}))return;
@@ -1319,10 +1349,10 @@ async function restoreRemote(){
   if(!tok||!p1||!/^[\w.-]+\/[\w.-]+$/.test(repo)){toast(T().syncBadIn);return}
   toast(T().syncBusy);
   try{
-    SYNC.repo=repo;brOK=false;rSha=null;
+    SYNC.repo=repo;brOK=false;
     const o=await openBackup(await readRemote(tok),p1);
-    if(!await applyRestore(o.data))return;
-    if(!SYNC.on&&await ask(T().syncAfterRestore))await enableSyncWith(tok,p1,repo);
+    if(!await applyRestore(o.data,{at:o.at}))return;
+    if(!SYNC.on&&await ask(T().syncAfterRestore))await enableSyncWith(tok,p1,repo,{merge:true});
   }catch(e){toast(T().syncErr(syncMsg(String(e.message||e))))}
 }
 /* ================= الاسترجاع (ملف أو GitHub) ================= */
@@ -1331,34 +1361,95 @@ const HIST_MIG=5;/* آخر ترحيل بيستورد السجل القديم: ب
 const nn=(v,a,b,d)=>{const x=Number(v);return isFinite(x)?Math.min(b,Math.max(a,x)):d};
 const UNITS=['','ث','خطوة','د'],okU=u=>UNITS.includes(u)?u:'';
 const cleanEx=e=>({exId:String(e.exId||'h:'+e.name),name:String(e.name).slice(0,80),unit:okU(e.unit),core:!!e.core,goal:nn(e.goal,0,999,12),tsets:nn(e.tsets,1,20,3),treps:nn(e.treps,0,999,10),w:e.w===''||e.w==null?'':nn(e.w,0,2000,0),sets:e.sets.map(Number).filter(v=>isFinite(v)&&v>0).map(v=>Math.min(v,999)),dur:Array.isArray(e.dur)?e.dur.map(x=>nn(x,0,36000,0)):undefined,rir:e.rir==null?undefined:nn(e.rir,0,3,2),ss:e.ss?1:undefined,add:e.add?1:undefined,from:e.from?String(e.from).slice(0,80):undefined,ws:Array.isArray(e.ws)?e.ws.map(x=>nn(x,0,2000,0)):undefined,clean:!!e.clean,note:String(e.note||'').slice(0,500)});
-const cleanT=t=>({ss:!!t.ss,id:String(t.id),name:String(t.name).slice(0,80),w:nn(t.w,0,2000,0),sets:nn(t.sets,1,20,3),reps:nn(t.reps,1,999,10),goal:nn(t.goal,1,999,12),unit:okU(t.unit),core:!!t.core,note:String(t.note||'').slice(0,1000)});
+const cleanT=t=>({ss:!!t.ss,id:String(t.id).slice(0,80),name:String(t.name).slice(0,80),w:nn(t.w,0,2000,0),sets:nn(t.sets,1,20,3),reps:nn(t.reps,1,999,10),goal:nn(t.goal,1,999,12),unit:okU(t.unit),core:!!t.core,note:String(t.note||'').slice(0,1000)});
 function cleanSession(s){
   if(!s||typeof s!=='object'||typeof s.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s.date)||!Array.isArray(s.ex))return null;
   const ex=s.ex.filter(e=>e&&typeof e.name==='string'&&Array.isArray(e.sets)).map(cleanEx);
   const cb=s.cb&&typeof s.cb==='object'?{k:s.cb.k==='fb'?'fb':'lt',dl:s.cb.dl?1:undefined,p:nn(s.cb.p,.3,1,.9),g:nn(s.cb.g,0,9999,8),i:nn(s.cb.i,0,9,0),n:nn(s.cb.n,1,9,1)}:undefined;
-  const o={id:String(s.id||uid()),date:s.date,day:String(s.day||''),dayName:String(s.dayName||s.day||'?').slice(0,80),cycle:nn(s.cycle,1,9999,1),status:['full','core','part','imp'].includes(s.status)?s.status:'part',ts:nn(s.ts,0,9e15,new Date(s.date+'T12:00:00').getTime()),ex};
-  if(s.imp)o.imp=1;if(cb)o.cb=cb;if(s.gym&&typeof s.gym==='string')o.gym=s.gym.slice(0,40);if(s.rdy!=null)o.rdy=nn(s.rdy,0,2,1);if(s.t0)o.t0=nn(s.t0,0,9e15,0)||undefined;return o;
+  const o={id:String(s.id||uid()).slice(0,80),date:s.date,day:String(s.day||''),dayName:String(s.dayName||s.day||'?').slice(0,80),cycle:nn(s.cycle,1,9999,1),status:['full','core','part','imp'].includes(s.status)?s.status:'part',ts:nn(s.ts,0,9e15,new Date(s.date+'T12:00:00').getTime()),ex};
+  if(s.imp)o.imp=1;if(cb)o.cb=cb;if(s.gym&&typeof s.gym==='string')o.gym=s.gym.slice(0,40);if(s.rdy!=null)o.rdy=nn(s.rdy,0,2,1);if(s.t0)o.t0=nn(s.t0,0,9e15,0)||undefined;if(s.mt)o.mt=nn(s.mt,0,9e15,0)||undefined;return o;
 }
 function cleanRestore(d){
   if(!d||!d.program||!Array.isArray(d.program.days)||!Array.isArray(d.sessions))throw new Error('fmt');
-  const days=d.program.days.filter(x=>x&&x.id&&Array.isArray(x.ex)).map(x=>({id:String(x.id),name:String(x.name||x.id).slice(0,40),ex:x.ex.filter(t=>t&&t.id&&typeof t.name==='string').map(cleanT)}));
+  if(+d.__v>BK_V)throw new Error('newer');
+  const days=cleanDays(d.program.days);
   if(!days.length)throw new Error('fmt');
   const ss=d.sessions.map(cleanSession).filter(Boolean);
   return{days,ss,bad:d.sessions.length-ss.length};
 }
-async function applyRestore(d){
-  const c=cleanRestore(d);
-  if(!await ask(T().confRestore(c.ss.length),{danger:1}))return false;
-  /* نسخة من اللي على الموبايل قبل الاسترجاع، عشان «تراجع» */
-  try{await idb.set('state.prerestore',{at:Date.now(),data:JSON.parse(JSON.stringify(S))})}catch(e){}
-  S={v:1,gyms:Array.isArray(d.gyms)?d.gyms.filter(g=>g&&typeof g.id==='string'&&typeof g.name==='string').map(g=>({id:g.id.slice(0,40),name:g.name.slice(0,20),del:g.del?1:undefined})):[],photos:(S&&S.photos)||[],program:Object.assign({},d.program,{days:c.days}),sessions:c.ss,settings:Object.assign({cycle:1},d.settings&&typeof d.settings==='object'?d.settings:{},{lang:LANG}),draft:null,fbDay:d.fbDay&&Array.isArray(d.fbDay.ex)?{id:'FB',name:String(d.fbDay.name||'Full Body').slice(0,40),ex:d.fbDay.ex.filter(t=>t&&t.id&&typeof t.name==='string').map(cleanT)}:undefined,sys:d.sys||undefined,myProgs:Array.isArray(d.myProgs)?d.myProgs.filter(p=>p&&typeof p.id==='string'&&typeof p.name==='string').map(p=>({id:p.id.slice(0,40),name:p.name.slice(0,30)})):[],custom:Array.isArray(d.custom)?d.custom:[],libOv:(d.libOv&&typeof d.libOv==='object')?d.libOv:{},exNotes:(d.exNotes&&typeof d.exNotes==='object')?d.exNotes:{},exMemo:(d.exMemo&&typeof d.exMemo==='object')?Object.fromEntries(Object.entries(d.exMemo).filter(([k,v])=>typeof v==='string').map(([k,v])=>[k.slice(0,80),v.slice(0,1200)])):{},steps:(d.steps&&typeof d.steps==='object')?d.steps:{},body:Array.isArray(d.body)?d.body:[],mig:Math.max(+d.mig||0,HIST_MIG)};
-  if(S.draft&&(!Array.isArray(S.draft.ex)))S.draft=null;
-  save();queueBackup();toast(c.bad?T().restoredSkip(c.bad):T().restored);go('home');return true;
+/* v139: كل حاجة جاية من ملف بتتنضف قبل ما تدخل التطبيق (مفيش نص يقدر يبقى كود) */
+const BK_V=1;/* أعلى إصدار نسخة احتياطية التطبيق ده بيفهمه */
+const isD=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v);
+const str=(v,n)=>typeof v==='string'?v.slice(0,n):'';
+const isObj=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
+const cleanDays=a=>(Array.isArray(a)?a:[]).filter(x=>x&&x.id!=null&&Array.isArray(x.ex)).slice(0,14).map(x=>({id:String(x.id).slice(0,60),name:String(x.name||x.id).slice(0,40),ex:x.ex.filter(t=>t&&t.id!=null&&typeof t.name==='string').slice(0,40).map(cleanT)}));
+function cleanSettings(o){o=isObj(o)?o:{};const b=v=>v?1:0,r={cycle:nn(o.cycle,1,9999,1)};
+  if(o.lastBackup)r.lastBackup=nn(o.lastBackup,0,9e15,0)||null;
+  r.theme=THEMES[o.theme]?o.theme:'iron';if(o.howLang==='en'||o.howLang==='ar')r.howLang=o.howLang;
+  if(o.fs)r.fs=nn(o.fs,1,3,1);for(const k of ['safe','ram','swOn','sxProg','hint1','legend'])if(o[k]!=null)r[k]=b(o[k]);
+  if(o.qGest!=null)r.qGest=b(o.qGest);if(o.protG)r.protG=nn(o.protG,50,400,150);
+  if(typeof o.gym==='string')r.gym=o.gym.slice(0,40);if(typeof o.linked==='string')r.linked=o.linked.slice(0,80);
+  if(isObj(o.rt))r.rt={w:nn(o.rt.w,5,3600,180),r:nn(o.rt.r,0,3600,60),n:nn(o.rt.n,1,50,5)};return r}
+const cleanCustom=a=>(Array.isArray(a)?a:[]).filter(c=>c&&typeof c.name==='string'&&c.name.trim()).slice(0,300).map(c=>({name:c.name.trim().slice(0,80),g:GRP[c.g]?c.g:cuG({g:String(c.g||''),name:c.name}),w:nn(c.w,0,2000,0),sets:nn(c.sets,1,20,3),reps:nn(c.reps,1,999,12),unit:okU(c.unit),how:str(c.how,4000)}));
+const cleanTxt5=a=>Array.isArray(a)?[0,1,2,3,4].map(k=>str(a[k],2000)):undefined;
+function cleanLibOv(o){const r={};if(!isObj(o))return r;for(const [k,v] of Object.entries(o).slice(0,600)){if(!isObj(v))continue;const x={};
+  if(v.d)x.d=cleanTxt5(v.d);if(v.de)x.de=cleanTxt5(v.de);if(typeof v.en==='string')x.en=v.en.slice(0,4000);if(typeof v.short==='string')x.short=v.short.slice(0,1000);if(typeof v.shortEn==='string')x.shortEn=v.shortEn.slice(0,1000);
+  for(const q of Object.keys(x))if(x[q]===undefined)delete x[q];if(Object.keys(x).length)r[String(k).slice(0,80)]=x}return r}
+function cleanNotes(o){const r={};if(!isObj(o))return r;for(const [k,v] of Object.entries(o).slice(0,600)){if(!Array.isArray(v))continue;const a=v.filter(x=>x&&typeof x.t==='string'&&x.t.trim()).slice(0,100).map(x=>({d:isD(x.d)?x.d:'',t:x.t.slice(0,500)}));if(a.length)r[String(k).slice(0,80)]=a}return r}
+function cleanSteps(o){const r={};if(!isObj(o))return r;for(const [k,v] of Object.entries(o).slice(0,600)){const x=Number(v);if([1,2,2.5,4,5].includes(x))r[String(k).slice(0,80)]=x}return r}
+const BMK=['w','c','arm','chest','thigh','neck','bf'];
+const cleanBody=a=>(Array.isArray(a)?a:[]).filter(x=>x&&isD(x.d)).slice(0,2000).map(x=>{const r={d:x.d};for(const k of BMK){const v=Number(x[k]);if(isFinite(v)&&v>0&&v<1000)r[k]=Math.round(v*100)/100}return r});
+function cleanSys(o,days){if(!isObj(o))return undefined;const r={cur:str(o.cur,60)||'ul4',saved:{}};if(isObj(o.saved))for(const [k,v] of Object.entries(o.saved).slice(0,30)){const ds=cleanDays(v&&v.days);if(ds.length)r.saved[String(k).slice(0,60)]=({days:ds})}return r}
+const cleanTomb=o=>{const r={};if(isObj(o))for(const [k,v] of Object.entries(o).slice(0,5000)){const t=Number(v);if(isFinite(t)&&t>0)r[String(k).slice(0,80)]=t}return r};
+/* مسودة (جلسة مفتوحة) جاية من ملف: نفس شكل draftEx بس كل قيمة متنضفة */
+function cleanDraft(d){if(!isObj(d)||!Array.isArray(d.ex)||!isD(d.date))return null;
+  const sv=v=>{const x=num(v);return isFinite(x)&&x>0?String(Math.min(x,2000)):''};
+  const ex=d.ex.filter(e=>e&&typeof e.name==='string'&&Array.isArray(e.sets)).slice(0,40).map(e=>({exId:String(e.exId||'h:'+e.name).slice(0,80),name:e.name.slice(0,80),unit:okU(e.unit),core:!!e.core,goal:nn(e.goal,0,999,12),tsets:nn(e.tsets,1,20,3),treps:nn(e.treps,0,999,10),note0:str(e.note0,1000),w:e.w===''||e.w==null?'':String(nn(e.w,0,2000,0)),sets:e.sets.slice(0,20).map(sv),ss:!!e.ss,ws:Array.isArray(e.ws)?e.ws.slice(0,20).map(sv):[],add:e.add?1:undefined,from:e.from?String(e.from).slice(0,80):undefined,rir:e.rir==null?null:nn(e.rir,0,3,2),dur:Array.isArray(e.dur)?e.dur.slice(0,20).map(x=>nn(x,0,36000,0)):[],clean:e.clean!==false,note:str(e.note,500),hid:e.hid?1:undefined}));
+  if(!ex.length)return null;
+  const o={id:String(d.id||uid()).slice(0,80),t0:nn(d.t0,0,9e15,Date.now()),editing:d.editing?String(d.editing).slice(0,80):null,date:d.date,day:String(d.day||'').slice(0,60),dayName:String(d.dayName||'?').slice(0,80),cycle:nn(d.cycle,1,9999,1),ex,mt:nn(d.mt,0,9e15,0)||undefined};
+  if(d.gym&&typeof d.gym==='string')o.gym=d.gym.slice(0,40);if(d.rdy!=null)o.rdy=nn(d.rdy,0,2,1);if(d.rdyAsk)o.rdyAsk=1;if(d.short)o.short=1;
+  if(isObj(d.cb))o.cb={k:d.cb.k==='fb'?'fb':'lt',dl:d.cb.dl?1:undefined,p:nn(d.cb.p,.3,1,.9),g:nn(d.cb.g,0,9999,8),i:nn(d.cb.i,0,9,0),n:nn(d.cb.n,1,9,1)};
+  return o}
+const dLive=d=>!!d&&(d.editing||(d.ex||[]).some(e=>(e.sets||[]).some(v=>num(v)>0)));
+const dAge=d=>d?(+d.mt||+d.t0||0):0;
+const sNewest=a=>a.reduce((m,x)=>x.date>m?x.date:m,'');
+/* v139: الاسترجاع: بيحذّرك لو الملف أقدم أو فيه جلسات أقل من اللي على الموبايل، وبيحتفظ بآخر 3 نسخ قبل الاسترجاع،
+   ومابيرفعش على GitHub غير لما توافق */
+async function applyRestore(d,meta){
+  const c=cleanRestore(d),L=T(),nNow=S.sessions.length,nF=c.ss.length,lastNow=sNewest(S.sessions),lastF=sNewest(c.ss);
+  const at=meta&&meta.at?new Date(meta.at).toLocaleString(loc(),{day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'}):'';
+  const older=nF<nNow||(lastNow&&lastF<lastNow);
+  let msg=L.confRestore(nF)+'\n\n'+tr(`على الموبايل دلوقتي: ${arN(nNow,'جلسة','جلستين','جلسات')}${lastNow?' (آخرها '+fmtD(lastNow)+')':''}\nفي الملف: ${arN(nF,'جلسة','جلستين','جلسات')}${lastF?' (آخرها '+fmtD(lastF)+')':''}${at?'\nالملف اتعمل: '+at:''}`,`On this phone now: ${nNow} session${nNow===1?'':'s'}${lastNow?' (latest '+fmtD(lastNow)+')':''}\nIn the file: ${nF} session${nF===1?'':'s'}${lastF?' (latest '+fmtD(lastF)+')':''}${at?'\nFile made: '+at:''}`);
+  if(older)msg=tr('⚠ الملف ده أقدم من اللي على الموبايل','⚠ This file is older than what is on this phone')+(nF<nNow?tr(`: فيه ${arN(nNow-nF,'جلسة','جلستين','جلسات')} أقل.`,`: it has ${nNow-nF} fewer session${nNow-nF===1?'':'s'}.`):'.')+'\n\n'+msg;
+  if(!await ask(msg,{danger:1,yes:older?tr('أيوه، استرجعه برضه','Yes, restore anyway'):tr('استرجع','Restore')}))return false;
+  /* المسودة: الأحدث بين اللي على الموبايل واللي في الملف بتفضل لو وافقت */
+  const fd=cleanDraft(d.draft),ld=S.draft&&dLive(S.draft)?S.draft:null;let keepD=null;
+  const cand=[ld,fd&&dLive(fd)?fd:null].filter(Boolean).sort((a,b)=>dAge(b)-dAge(a))[0];
+  if(cand&&await ask(tr(`فيه جلسة مفتوحة (${cand.dayName} · ${fmtD(cand.date)}) ${cand===ld?'على الموبايل':'في الملف'}. تحتفظ بيها؟`,`There is an open session (${cand.dayName} · ${fmtD(cand.date)}) ${cand===ld?'on this phone':'in the file'}. Keep it?`),{yes:tr('احتفظ بيها','Keep it'),no:tr('لأ','No')}))keepD=JSON.parse(JSON.stringify(cand));
+  /* آخر 3 نسخ من اللي على الموبايل قبل الاسترجاع، عشان «تراجع» */
+  try{const a=await preList();a.unshift({at:Date.now(),data:JSON.parse(JSON.stringify(S))});await idb.set('state.prerestores',a.slice(0,3))}catch(e){}
+  const g=Array.isArray(d.gyms)?d.gyms.filter(g=>g&&typeof g.id==='string'&&typeof g.name==='string').slice(0,20).map(g=>({id:g.id.slice(0,40),name:g.name.slice(0,20),del:g.del?1:undefined})):[];
+  const fb=d.fbDay&&Array.isArray(d.fbDay.ex)?{id:'FB',name:String(d.fbDay.name||'Full Body').slice(0,40),ex:d.fbDay.ex.filter(t=>t&&t.id!=null&&typeof t.name==='string').slice(0,40).map(cleanT)}:undefined;
+  S={v:1,gyms:g,photos:(S&&S.photos)||[],program:{days:c.days},sessions:c.ss,settings:Object.assign(cleanSettings(d.settings),{lang:LANG}),draft:keepD,fbDay:fb,sys:cleanSys(d.sys),
+    myProgs:Array.isArray(d.myProgs)?d.myProgs.filter(p=>p&&typeof p.id==='string'&&typeof p.name==='string').slice(0,30).map(p=>({id:p.id.slice(0,40),name:p.name.slice(0,30)})):[],
+    custom:cleanCustom(d.custom),libOv:cleanLibOv(d.libOv),exNotes:cleanNotes(d.exNotes),
+    exMemo:isObj(d.exMemo)?Object.fromEntries(Object.entries(d.exMemo).filter(([k,v])=>typeof v==='string').slice(0,600).map(([k,v])=>[k.slice(0,80),v.slice(0,1200)])):{},
+    steps:cleanSteps(d.steps),body:cleanBody(d.body),tomb:cleanTomb(d.tomb),mig:Math.max(+d.mig||0,HIST_MIG)};
+  if(isD(d.dl))S.dl=d.dl;if(isD(d.dlSkip))S.dlSkip=d.dlSkip;if(isObj(d.prot)&&isD(d.prot.d))S.prot={d:d.prot.d,g:nn(d.prot.g,0,2000,0)};
+  if(!S.fbDay)delete S.fbDay;if(!S.sys)delete S.sys;
+  /* مابنرفعش على GitHub لوحدنا بعد الاسترجاع: لازم توافق */
+  if(SYNC.on){SYNC.hold=true;await saveSync()}
+  save();toast(c.bad?L.restoredSkip(c.bad):L.restored);go('home');
+  if(SYNC.on)setTimeout(async()=>{if(await ask(tr('ترفع البيانات اللي استرجعتها على نسختك في GitHub دلوقتي؟ (الجلسات اللي هناك ومش في الملف هتفضل محفوظة)','Upload the restored data to your GitHub backup now? (Sessions there that are not in the file are kept)'),{yes:tr('ارفع','Upload'),no:tr('بعدين','Later')})){SYNC.hold=false;await saveSync();queueBackup()}},500);
+  return true;
 }
+async function preList(){let a=null;try{a=await idb.get('state.prerestores')}catch(e){}if(!Array.isArray(a))a=[];
+  try{const o=await idb.get('state.prerestore');if(o&&o.data){a.push(o);await idb.set('state.prerestore',null)}}catch(e){}
+  return a.filter(x=>x&&x.data).sort((x,y)=>y.at-x.at).slice(0,3)}
 async function undoRestore(){
-  let p=null;try{p=await idb.get('state.prerestore')}catch(e){}
-  if(!p||!p.data||!await ask(T().confUndoRestore))return;
-  S=p.data;try{await idb.set('state.prerestore',null)}catch(e){}
+  const a=await preList(),p=a[0];
+  if(!p||!await ask(T().confUndoRestore+'\n'+new Date(p.at).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})))return;
+  S=p.data;try{await idb.set('state.prerestores',a.slice(1))}catch(e){}
   save();queueBackup();toast(T().undoDone);go('home');
 }
 window.addEventListener('online',()=>{if(SYNC.dirty)runBackup()});
@@ -1382,7 +1473,7 @@ function backupMD(){
     for(const e of s.ex){const f=exFlags(e,s);o.push(rowMd([e.name+(e.core?' ★':'')+(f.length?' ('+f.join(' · ')+')':''),fw(e.w),setsStr(e),e.dur&&e.dur.some(x=>x>0)?e.dur.map(x=>x>0?mmss(x):'—').join(' / '):'',e.rir!=null?(e.rir===3?'3+':String(e.rir)):'',e.clean?L.yes:tr('لأ','no'),e.note]))}
     o.push('');
   }
-  const data=JSON.stringify({app:'gymlog',v:1,exported:new Date().toISOString(),data:snapData()}).replace(/-->/g,'--\\u003e');
+  const data=JSON.stringify({app:'gymlog',v:BK_V,at:Date.now(),exported:new Date().toISOString(),data:snapData()}).replace(/-->/g,'--\\u003e');
   o.push('---','',`<!-- GYMLOG-DATA · ${L.mdData}`,data,'-->','');
   return o.join('\n');
 }
@@ -1399,11 +1490,12 @@ function parseBackup(txt){
   /* لو برنامج تاني حوّل الملف (CSV بيضاعف علامات التنصيص، أو HTML) نرجّعه */
   if(t.indexOf('""app"":""gymlog""')>=0)t=t.replace(/""/g,'"');
   if(t.indexOf('&quot;app&quot;')>=0)t=t.replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+  const un=o=>{if(!o||typeof o!=='object')throw new Error('fmt');const d=o.data||o;if(d&&typeof d==='object'){d.__v=o.data?o.v:1;d.__at=o.data?(+o.at||Date.parse(o.exported)||0):0}return d};
   const m=t.match(/<!--\s*GYMLOG-DATA[^\n]*\n([\s\S]*?)\n?-->/);
-  if(m){try{const o=JSON.parse(m[1]);return o.data||o}catch(e){}}
+  if(m){let o=null;try{o=JSON.parse(m[1])}catch(e){}if(o)return un(o)}
   const a=t.search(/\{\s*"app"\s*:\s*"gymlog"/);
-  if(a>=0){const j=jsonAt(t,a);if(j){const o=JSON.parse(j);return o.data||o}}
-  const o=JSON.parse(t);return o.data||o;
+  if(a>=0){const j=jsonAt(t,a);if(j)return un(JSON.parse(j))}
+  return un(JSON.parse(t));
 }
 function download(name,text,type){if(window.Android){try{Android.saveFile(name,type||'text/plain',String(text));return}catch(e){}}const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)}
 function markBackup(){S.settings.lastBackup=Date.now();save()}
@@ -1496,10 +1588,11 @@ async function importText(txt){
   let d;
   try{d=parseBackup(txt);cleanRestore(d)}
   catch(e){
+    if(e&&e.message==='newer'){toast(T().bkNewer);return}
     let ok=false;try{ok=await csvMerge(txt)}catch(e2){}
     if(!ok)toast(String(txt).trim()?T().badFile:tr('الملف ده فاضي — احفظ نسخة جديدة','This file is empty — save a new backup'));
     return}
-  await applyRestore(d);
+  await applyRestore(d,{at:d.__at});
 }
 window.__glOpen=t=>{importText(t)};
 function importFile(file){
@@ -1512,7 +1605,7 @@ function refresh(){if(tab==='data')renderData();if(tab==='home'){const o=[...doc
 const DM={p:null,u:false};
 async function dataMeta(){let p=null,u=false;
   try{p=navigator.storage&&navigator.storage.persisted?await navigator.storage.persisted():null}catch(e){}
-  try{const pre=await idb.get('state.prerestore');u=!!(pre&&pre.data&&Date.now()-pre.at<864e5)}catch(e){}
+  try{const a=await preList();u=!!(a[0]&&Date.now()-a[0].at<7*864e5)}catch(e){}
   if(p!==DM.p||u!==DM.u){DM.p=p;DM.u=u;if(tab==='data')renderData()}}
 const BMX=[['arm','الدراع (سم)','Arm (cm)'],['chest','الصدر (سم)','Chest (cm)'],['thigh','الفخد (سم)','Thigh (cm)'],['neck','الرقبة (سم)','Neck (cm)'],['bf','نسبة الدهون %','Body fat %']];
 function bodySec(){const a=(S.body||[]).slice().sort((x,y)=>x.d<y.d?-1:1),last=a.slice(-8).reverse();
@@ -1523,7 +1616,7 @@ function bodySec(){const a=(S.body||[]).slice().sort((x,y)=>x.d<y.d?-1:1),last=a
     <details class="bmx"><summary>${tr('قياسات تانية (اختياري)','More measurements (optional)')}</summary><div class="fgrid">${BMX.map(([k,a,e])=>`<label class="fld">${tr(a,e)}<input class="inp" id="b_${k}" inputmode="decimal"></label>`).join('')}</div></details>
     <button class="btn pri w" data-a="bodySave">${tr('سجّل النهارده','Log today')}</button>
     ${sp?`<svg class="bspark" viewBox="0 0 300 64" preserveAspectRatio="none" aria-hidden="true">${sp}</svg>`:''}
-    ${last.length?`<table class="bdt">${last.map(x=>`<tr><td>${fmtD(x.d)}</td><td class="en">${x.w>0?x.w+' kg':'—'}</td><td class="en">${x.c>0?x.c+' cm':'—'}${BMX.some(([k])=>x[k]>0)?`<div class="mu bmr">${BMX.filter(([k])=>x[k]>0).map(([k,a,e])=>`${tr(a.split(' ')[0],e.split(' ')[0])} ${x[k]}`).join(' · ')}</div>`:''}</td><td><button data-a="bodyDel" data-d="${x.d}" aria-label="${T().del}">×</button></td></tr>`).join('')}</table>`:`<div class="mu mt">${tr('سجّل مرة في الأسبوع، نفس اليوم ونفس الوقت (الصبح قبل الأكل).','Log once a week, same day and time (morning, before eating).')}</div>`}
+    ${last.length?`<table class="bdt">${last.map(x=>`<tr><td>${fmtD(x.d)}</td><td class="en">${x.w>0?esc(x.w)+' kg':'—'}</td><td class="en">${x.c>0?esc(x.c)+' cm':'—'}${BMX.some(([k])=>x[k]>0)?`<div class="mu bmr">${BMX.filter(([k])=>x[k]>0).map(([k,a,e])=>`${tr(a.split(' ')[0],e.split(' ')[0])} ${esc(x[k])}`).join(' · ')}</div>`:''}</td><td><button data-a="bodyDel" data-d="${esc(x.d)}" aria-label="${T().del}">×</button></td></tr>`).join('')}</table>`:`<div class="mu mt">${tr('سجّل مرة في الأسبوع، نفس اليوم ونفس الوقت (الصبح قبل الأكل).','Log once a week, same day and time (morning, before eating).')}</div>`}
   </div></details>`}
 function renderData(){
   const L=T(),lb=S.settings.lastBackup,n=S.sessions.length;
@@ -1546,7 +1639,7 @@ function renderData(){
     ${canUndo?`<button class="btn w mt dan" data-a="undoRestore">${L.undoRestore}</button>`:''}
   <details class="fsub"><summary>${tr('متقدم','Advanced')}</summary>
   <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?`<span class="pdot${SYNC.err?' er':''}" style="margin-inline-start:6px"></span>`:''}<span class="pchev">⌄</span></summary><div class="fbody">
-    ${SYNC.on?`<div class="note-ok" style="margin:0 0 10px">${L.syncOnL} · ${L.syncLast}: ${SYNC.last?new Date(SYNC.last).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.syncNever}${SYNC.dirty?' · '+L.syncWait(Math.max(1,SYNC.missed)):''}</div>${SYNC.err?`<div class="warn" style="margin:0 0 10px">${L.syncErr(esc(syncMsg(SYNC.err)))}</div>`:''}${syncPublic()?`<div class="warn" style="margin:0 0 10px">${L.syncPub}</div>`:''}
+    ${SYNC.on?`<div class="note-ok" style="margin:0 0 10px">${L.syncOnL} · ${L.syncLast}: ${SYNC.last?new Date(SYNC.last).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.syncNever}${SYNC.dirty?' · '+L.syncWait(Math.max(1,SYNC.missed)):''}</div>${SYNC.err?`<div class="warn" style="margin:0 0 10px">${L.syncErr(esc(syncMsg(SYNC.err)))}</div>`:''}${syncPublic()?`<div class="warn" style="margin:0 0 10px">${L.syncPub}</div>`:''}${SYNC.hold?`<div class="warn" style="margin:0 0 10px">${L.syncHold}</div>`:''}
       <button class="btn pri w" data-a="syncNow">${L.syncNow}</button><button class="btn dan w mt" data-a="syncOff">${L.syncOffB}</button>`
     :`<div class="mu" style="margin-bottom:10px">${L.syncHint}</div>
       <label class="fld">${L.syncRepo}<input class="inp en" id="gRepo" placeholder="owner/gym-data" value="${esc(SYNC.repo)}" autocapitalize="off" autocomplete="off" style="text-align:left"></label>
@@ -1709,7 +1802,7 @@ document.addEventListener('click',ev=>{
     case 'aiS':{const s=S.sessions.find(x=>x.id===b.dataset.id);if(s)shareText(aiText(s,s.id));break}
     case 'editS':editSession(b.dataset.id);break;
     case 'undoRestore':undoRestore();break;
-    case 'delS':ask(L.confDel,{danger:1}).then(ok=>{if(ok){const _u=undoSnap();S.sessions=S.sessions.filter(x=>x.id!==b.dataset.id);if(S.draft&&S.draft.editing===b.dataset.id)S.draft=null;save();queueBackup();closeModal();go(tab);offerUndo(tr('الجلسة اتمسحت','Session deleted'),_u)}});break;
+    case 'delS':ask(L.confDel,{danger:1}).then(ok=>{if(ok){const _u=undoSnap();S.tomb=Object.assign({},S.tomb,{[b.dataset.id]:Date.now()});S.sessions=S.sessions.filter(x=>x.id!==b.dataset.id);if(S.draft&&S.draft.editing===b.dataset.id)S.draft=null;save();queueBackup();closeModal();go(tab);offerUndo(tr('الجلسة اتمسحت','Session deleted'),_u)}});break;
     case 'closeM':closeModal();break;
     case 'pday':pDay=b.dataset.d;renderProgram();break;
     case 'fbReset':ask(tr('ترجّع الفول بادي للاختيار التلقائي من برنامجك؟','Reset the full body to the automatic pick from your program?')).then(ok=>{if(ok){S.fbDay=null;fbDay();save();queueBackup();renderProgram();toast(tr('اترجع ✓','Reset ✓'))}});break;
@@ -1761,7 +1854,7 @@ document.addEventListener('click',ev=>{
     case 'howLang':S.settings.howLang=b.dataset.k==='en'?'en':'ar';save();renderData();break;
     case 'lbE':lbE=b.dataset.e;{const c=$('#lbEC'),l=$('#lbL');if(c)c.innerHTML=lbEChips();if(l)l.innerHTML=libRows()}break;
     case 'lbG':lbG=b.dataset.g;{const c=$('#lbC'),l=$('#lbL');if(c)c.innerHTML=lbChips();if(l)l.innerHTML=libRows()}break;
-    case 'lbAdd':modal(`<h3>${tr('تضيفه لأنهي يوم؟','Add to which day?')}</h3><div class="mu en" style="margin-bottom:10px;text-align:start">${esc(b.dataset.n)}</div>${S.program.days.map(x=>`<button class="btn w" style="margin-bottom:8px" data-a="lbPick" data-d="${x.id}" data-n="${esc(b.dataset.n)}"><bdi>${esc(x.name)}</bdi></button>`).join('')}<button class="btn ghost w" data-a="closeM">${T().close}</button>`);break
+    case 'lbAdd':modal(`<h3>${tr('تضيفه لأنهي يوم؟','Add to which day?')}</h3><div class="mu en" style="margin-bottom:10px;text-align:start">${esc(b.dataset.n)}</div>${S.program.days.map(x=>`<button class="btn w" style="margin-bottom:8px" data-a="lbPick" data-d="${esc(x.id)}" data-n="${esc(b.dataset.n)}"><bdi>${esc(x.name)}</bdi></button>`).join('')}<button class="btn ghost w" data-a="closeM">${T().close}</button>`);break
     case 'lbPick':{const dd=day(b.dataset.d);if(dd){dd.ex.push(mk(b.dataset.n));save();queueBackup();closeModal();lbRefresh();toast(tr('اتضاف لـ ','Added to ')+dd.name+' ✓')}break}
     case 'libAdd':{const t=mk(b.dataset.n);day(pDay).ex.push(t);save();queueBackup();closeModal();renderProgram();toast(tr('اتضاف ✓','Added ✓'));break}
     case 'dayAdd':{const nd={id:'D'+uid(),name:tr('يوم جديد','New day'),ex:[]};S.program.days.push(nd);pDay=nd.id;save();queueBackup();renderProgram();dayModal();break}
@@ -1779,7 +1872,7 @@ document.addEventListener('click',ev=>{
     case 'csv':exportCSV();break;
     case 'theme':S.settings.theme=b.dataset.k==='morning'?'morning':'iron';save();applyTheme();renderData();break;
     case 'syncOn':enableSync();break;
-    case 'syncNow':{chg++;SYNC.dirty=true;runBackup(true).then(ok=>toast(ok?T().syncOK:T().syncErr(syncMsg(SYNC.err))));break}
+    case 'syncNow':{chg++;SYNC.dirty=true;SYNC.hold=false;runBackup(true).then(ok=>toast(ok?T().syncOK:T().syncErr(syncMsg(SYNC.err))));break}
     case 'syncOff':disableSync();break;
     case 'syncRestore':restoreRemote();break;
   }

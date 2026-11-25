@@ -86,5 +86,50 @@ async function page(st) {
 { const st = state(2); st.program.days = [st.program.days[0]]; const { pg, errs, ctx } = await page(st);
   ok(await pg.evaluate(() => !!document.querySelector('.orb .cmt') && getComputedStyle(document.querySelector('.orb .cmt')).animationName === 'cmt'), 'single ring has a visibly rotating comet');
   ok(errs.length === 0, 'no page errors (single ring) ' + errs.join(';')); await ctx.close(); }
+// 8) v139: أمان البيانات — XSS من ملف، تمرين مخصص بايظ، دمج الجلسات، 3 نسخ قبل الاسترجاع، مفيش CSP errors
+{ const { pg, errs, ctx } = await page(state(2));
+  const csp = []; pg.on('console', m => { if (/Content Security Policy|Refused to/i.test(m.text())) csp.push(m.text()); });
+  const bad = state(2); bad.program.days[0].id = '"><img src=x onerror=window.__x=1>'; bad.custom = [{ name: 5 }, { name: 'Ok Ex', sets: '<b>', reps: 3 }];
+  bad.body = [{ d: '"><img src=x onerror=window.__x=2>', w: 80 }, { d: '2026-01-01', w: '<i>' }]; bad.sys = { cur: 'ul4', saved: { x: { days: [{ id: '"><svg onload=window.__x=3>', name: 'A', ex: [] }] } } };
+  bad.settings.theme = '<x>'; bad.settings.protG = '<img>';
+  await pg.evaluate(d => { window.__r = applyRestore(d); }, bad); await pg.waitForTimeout(300); await pg.click('#ask .ok'); await pg.waitForTimeout(700);
+  await pg.evaluate(() => { go('prog'); go('lib'); go('data'); go('home'); lbQ = 'ok'; renderLib(); });
+  ok(await pg.evaluate(() => !window.__x && S.custom.length === 1 && typeof S.custom[0].sets === 'number' && S.settings.theme === 'iron' && S.body.length === 1), 'restore cleans custom, body, sys and settings (no script runs, no crash)');
+  ok(await pg.evaluate(async () => { const a = await idb.get('state.prerestores'); return Array.isArray(a) && a.length === 1; }), 'a pre-restore copy is kept');
+  ok(await pg.evaluate(() => { const n = S.sessions.length; const r = JSON.parse(JSON.stringify({ sessions: S.sessions.slice(0, 2) })); r.sessions.push(Object.assign({}, r.sessions[0], { id: 'remoteOnly' })); r.sessions[1].mt = Date.now() + 5; r.sessions[1].dayName = 'Changed'; const k = mergeIn(r); return S.sessions.length === n + 1 && S.sessions.some(x => x.id === 'remoteOnly') && S.sessions.some(x => x.dayName === 'Changed') && k === 2; }), 'sync merge keeps remote-only sessions and the newest edit');
+  ok(await pg.evaluate(() => { S.tomb = { remoteOnly: Date.now() }; mergeIn({ sessions: S.sessions }); return !S.sessions.some(x => x.id === 'remoteOnly'); }), 'deleted sessions stay deleted after a merge');
+  const older = state(2); older.sessions = older.sessions.slice(0, 2);
+  await pg.evaluate(d => { window.__r = applyRestore(d, { at: Date.now() - 864e5 }); }, older); await pg.waitForTimeout(300);
+  ok(await pg.evaluate(() => /أقدم|older/.test(document.querySelector('#ask .atx').textContent)), 'restoring an older/smaller file shows a strong warning');
+  await pg.click('#ask .no'); await pg.waitForTimeout(300);
+  ok(await pg.evaluate(() => { try { cleanRestore({ __v: 9, program: { days: [] }, sessions: [] }); return false } catch (e) { return e.message === 'newer' } }), 'backups from a newer format are refused');
+  ok(csp.length === 0, 'no CSP violations ' + csp.join(';'));
+  ok(errs.length === 0, 'no page errors (v139 data safety) ' + errs.join(';')); await ctx.close(); }
+// 9) v139: النسخ على GitHub: مفيش كتابة فوق نسخة موجودة، والجهازين بيندمجوا
+{ const store = { file: null, sha: 0, puts: 0 };
+  const fake = async route => { const rq = route.request(), u = new URL(rq.url()), p = u.pathname, m = rq.method(), J = (o, st = 200) => route.fulfill({ status: st, contentType: 'application/json', body: JSON.stringify(o) });
+    if (p === '/repos/me/gym' && m === 'GET') return J({ private: true, permissions: { push: true }, default_branch: 'main' });
+    if (p === '/user/repos') return J([{ full_name: 'me/gym' }]);
+    if (p.includes('/git/ref/')) return J({ object: { sha: 'x' } });
+    if (p.endsWith('/contents/sync/state.bin')) {
+      if (m === 'GET') { if (!store.file) return J({ message: 'Not Found' }, 404); if (/raw/.test(rq.headers()['accept'] || '')) return route.fulfill({ status: 200, body: store.file }); return J({ sha: 's' + store.sha, encoding: 'base64', content: Buffer.from(store.file).toString('base64') }); }
+      if (m === 'PUT') { const b = JSON.parse(rq.postData()); if (store.file && b.sha !== 's' + store.sha) return J({ message: 'conflict' }, 409); store.file = Buffer.from(b.content, 'base64').toString(); store.sha++; store.puts++; return J({ content: { sha: 's' + store.sha } }); } }
+    return J({}, 404); };
+  const dev = async (st) => { const r = await page(st); await r.ctx.route('https://api.github.com/**', fake); return r; };
+  const A = await dev(state(2));
+  await A.pg.evaluate(() => { go('data'); }); 
+  ok(await A.pg.evaluate(() => enableSyncWith('github_pat_x', 'passphrase-123', 'me/gym')), 'first device enables sync and uploads');
+  const B0 = state(2); B0.sessions = B0.sessions.slice(0, 3).map(x => Object.assign({}, x, { id: 'b' + x.id }));
+  const B = await dev(B0);
+  const wrong = B.pg.evaluate(() => enableSyncWith('github_pat_x', 'other-passphrase', 'me/gym')); await B.pg.waitForTimeout(2500);
+  ok(await B.pg.evaluate(() => !!document.querySelector('#ask')), 'a different passphrase is refused (no overwrite)'); await B.pg.click('#ask .no'); await wrong;
+  const puts = store.puts;
+  const good = B.pg.evaluate(() => enableSyncWith('github_pat_x', 'passphrase-123', 'me/gym')); await B.pg.waitForTimeout(2500);
+  ok(await B.pg.evaluate(() => !!document.querySelector('#ask .alt')), 'an existing backup offers merge / restore'); await B.pg.click('#ask .ok'); await good;
+  ok(await B.pg.evaluate(() => S.sessions.length === 9 && SYNC.on), 'merge brings the other device sessions here');
+  ok(store.puts === puts + 1, 'merged data uploaded once');
+  ok(await A.pg.evaluate(async () => { S.sessions.push(Object.assign({}, S.sessions[0], { id: 'a-new', mt: Date.now() })); save(); return await runBackup(true) && S.sessions.length === 10; }), 'the first device keeps the second device sessions on its next upload');
+  ok(await B.pg.evaluate(() => enableSyncWith('ghp_classic', 'passphrase-123', 'me/gym')) === false, 'classic (broad) tokens are refused');
+  ok(A.errs.length === 0 && B.errs.length === 0, 'no page errors (sync) ' + A.errs.concat(B.errs).join(';')); await A.ctx.close(); await B.ctx.close(); }
 await br.close();
 console.log(fail ? `\n${fail} test(s) failed` : '\nall tests passed'); process.exit(fail ? 1 : 0);
