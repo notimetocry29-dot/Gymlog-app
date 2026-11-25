@@ -417,6 +417,8 @@ html[data-fs="3"] #view>:not(.homew),html[data-fs="3"] .mbox,html[data-fs="3"] .
 .mgs{display:flex;flex-direction:column;gap:7px;margin-top:8px}.mgr{display:grid;grid-template-columns:110px 1fr 28px;align-items:center;gap:8px;font-size:13px}.mgr i{height:6px;border-radius:99px;background:var(--ac);display:block}.mgr b{text-align:end;font-weight:600}
 .pws{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 10px;font-size:13.5px;color:var(--mu)}.pws b{font-size:20px;color:var(--tx2);min-width:48px;text-align:center}.pws button{width:40px;height:40px;border-radius:50%;border:1px solid var(--bd);background:none;color:var(--tx2);font-size:20px}
 .sstag{text-align:center;font-size:12.5px;color:var(--ac2);margin-bottom:4px}
+.phg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.pht{border:1px solid var(--bd);background:var(--s2);border-radius:10px;padding:0;overflow:hidden;display:flex;flex-direction:column}.pht img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}.pht span{font-size:11px;color:var(--mu);padding:4px}
+.phc{display:grid;grid-template-columns:1fr 1fr;gap:8px}.phc figure{margin:0}.phc img{width:100%;border-radius:10px}.phc figcaption{font-size:12px;color:var(--mu);text-align:center;margin-top:4px}
 .pfbn{font-size:13px;line-height:1.7;color:var(--mu);margin:0 2px 10px}
 .cbdh{margin:16px 0 6px;font-size:13px;color:var(--mu);text-align:start}
 .sxs{margin:0 0 10px}
@@ -600,7 +602,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='123';
+const VER='124';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1081,6 +1083,20 @@ function progShareModal(){modal(`<h3>${tr('مشاركة البرنامج','Share
   <button class="btn pri w" data-a="progCopy">${tr('انسخ كود برنامجي','Copy my program code')}</button>
   <div class="mu" style="margin:16px 0 8px">${tr('أو الصق كود برنامج وصلك:','Or paste a program code you received:')}</div><textarea class="inp" id="pgIn" rows="3" dir="ltr" style="width:100%"></textarea>
   <button class="btn w mt" data-a="progImp">${tr('استورد البرنامج','Import the program')}</button><button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
+/* v124: صور التقدم: على الموبايل بس (IndexedDB)، مش بتترفع ولا بتدخل النسخة الاحتياطية */
+function photoSec(){const a=(S.photos||[]).slice().sort((x,y)=>x.d<y.d?1:-1);
+  return `<details class="fsec" data-fk="ph"${fOpen.has('ph')?' open':''}><summary>${tr('صور التقدم','Progress photos')}<span class="pchev">⌄</span></summary><div class="fbody">
+  <div class="mu" style="margin-bottom:10px">${tr('الصور على الموبايل ده بس: مش بتترفع لأي مكان، ومش بتدخل في النسخة الاحتياطية. صوّر نفس المكان ونفس الإضاءة كل شهر.','Photos stay on this phone only: never uploaded and not part of backups. Same spot and light every month.')}</div>
+  <label class="btn pri w" style="cursor:pointer">${tr('ضيف صورة','Add a photo')}<input type="file" id="phIn" accept="image/*" hidden></label>
+  ${a.length?`<div class="phg">${a.map(x=>`<button class="pht" data-a="phOpen" data-id="${esc(x.id)}"><img data-ph="${esc(x.id)}" alt=""><span>${fmtD(x.d)}</span></button>`).join('')}</div>`:''}</div></details>`}
+async function phLoad(){for(const im of document.querySelectorAll('img[data-ph]')){if(im.src)continue;try{const b=await idb.get('ph:'+im.dataset.ph);if(b)im.src=URL.createObjectURL(b)}catch(e){}}}
+async function phAdd(f){try{const bm=await createImageBitmap(f);const k=Math.min(1,1280/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);
+  const b=await new Promise(r=>c.toBlob(r,'image/jpeg',.82));const id=uid();await idb.set('ph:'+id,b);S.photos=S.photos||[];S.photos.push({id,d:today()});fOpen.add('ph');save();renderData();toast(tr('الصورة اتحفظت ✓','Photo saved ✓'))}catch(e){toast(tr('مقدرتش أحفظ الصورة','Could not save the photo'))}}
+async function phOpen(id,cmp){const a=(S.photos||[]).slice().sort((x,y)=>x.d<y.d?-1:1),x=a.find(q=>q.id===id);if(!x)return;const first=a[0];
+  const u=async i=>{try{const b=await idb.get('ph:'+i);return b?URL.createObjectURL(b):''}catch(e){return ''}};
+  const one=await u(id),two=cmp&&first&&first.id!==id?await u(first.id):'';
+  modal(`<h3>${fmtD(x.d)}</h3>${two?`<div class="phc"><figure><img src="${two}" alt=""><figcaption>${fmtD(first.d)}</figcaption></figure><figure><img src="${one}" alt=""><figcaption>${fmtD(x.d)}</figcaption></figure></div>`:`<img class="cimg" src="${one}" alt="">`}
+  <div class="row mt">${first&&first.id!==id&&!cmp?`<button class="btn sp" data-a="phCmp" data-id="${esc(id)}">${tr('قارن بأول صورة','Compare with the first')}</button>`:''}<button class="btn dan" data-a="phDel" data-id="${esc(id)}">${T().del}</button><button class="btn ghost" data-a="closeM">${T().close}</button></div>`)}
 function offerUndo(msg,snap){const el=$('#undo');if(!el)return;UND=snap;el.querySelector('span').textContent=msg;const b=el.querySelector('button');b.textContent=tr('تراجع','Undo');
   b.onclick=()=>{if(!UND)return;const o=JSON.parse(UND);UND=null;Object.assign(S,o);if(!o.fbDay)delete S.fbDay;save();queueBackup();el.classList.remove('on');if(!$('#sess').hidden&&!S.draft)closeSession();else if(S.draft&&$('#sess').hidden&&o.draft&&tab==='home')renderHome();go(tab);toast(tr('رجعت ✓','Restored ✓'))};
   el.classList.add('on');clearTimeout(offerUndo.t);offerUndo.t=setTimeout(()=>{el.classList.remove('on');UND=null},7000)}
@@ -1902,7 +1918,7 @@ async function applyRestore(d){
   if(!await ask(T().confRestore(c.ss.length),{danger:1}))return false;
   /* نسخة من اللي على الموبايل قبل الاسترجاع، عشان «تراجع» */
   try{await idb.set('state.prerestore',{at:Date.now(),data:JSON.parse(JSON.stringify(S))})}catch(e){}
-  S={v:1,program:Object.assign({},d.program,{days:c.days}),sessions:c.ss,settings:Object.assign({cycle:1},d.settings&&typeof d.settings==='object'?d.settings:{},{lang:LANG}),draft:null,fbDay:d.fbDay&&Array.isArray(d.fbDay.ex)?{id:'FB',name:String(d.fbDay.name||'Full Body').slice(0,40),ex:d.fbDay.ex.filter(t=>t&&t.id&&typeof t.name==='string').map(cleanT)}:undefined,sys:d.sys||undefined,custom:Array.isArray(d.custom)?d.custom:[],libOv:(d.libOv&&typeof d.libOv==='object')?d.libOv:{},exNotes:(d.exNotes&&typeof d.exNotes==='object')?d.exNotes:{},steps:(d.steps&&typeof d.steps==='object')?d.steps:{},body:Array.isArray(d.body)?d.body:[],mig:Math.max(+d.mig||0,HIST_MIG)};
+  S={v:1,photos:(S&&S.photos)||[],program:Object.assign({},d.program,{days:c.days}),sessions:c.ss,settings:Object.assign({cycle:1},d.settings&&typeof d.settings==='object'?d.settings:{},{lang:LANG}),draft:null,fbDay:d.fbDay&&Array.isArray(d.fbDay.ex)?{id:'FB',name:String(d.fbDay.name||'Full Body').slice(0,40),ex:d.fbDay.ex.filter(t=>t&&t.id&&typeof t.name==='string').map(cleanT)}:undefined,sys:d.sys||undefined,custom:Array.isArray(d.custom)?d.custom:[],libOv:(d.libOv&&typeof d.libOv==='object')?d.libOv:{},exNotes:(d.exNotes&&typeof d.exNotes==='object')?d.exNotes:{},steps:(d.steps&&typeof d.steps==='object')?d.steps:{},body:Array.isArray(d.body)?d.body:[],mig:Math.max(+d.mig||0,HIST_MIG)};
   if(S.draft&&(!Array.isArray(S.draft.ex)))S.draft=null;
   save();queueBackup();toast(c.bad?T().restoredSkip(c.bad):T().restored);go('home');return true;
 }
@@ -2080,6 +2096,7 @@ function renderData(){
   <div class="qrow"><div class="mu">${tr('وضع رمضان: مجموعة أقل في كل تمرين، وراحة أطول 30 ثانية. أحسن وقت للتمرين بعد الفطار بساعة ونص لساعتين.','Ramadan mode: one set less per exercise and 30 s longer rests. Best time to train is 1.5–2 hours after iftar.')}</div><div class="thseg"><button class="${S.settings.ram?'on':''}" data-a="ram" data-k="on">${tr('شغّال','On')}</button><button class="${S.settings.ram?'':'on'}" data-a="ram" data-k="off">${tr('مقفول','Off')}</button></div></div>
   <div class="qrow"><div class="mu">${tr('بيت الشعر: دوسة = نسخ · سحب = تنقل','Verse: tap = copy · swipe = browse')}</div><div class="thseg"><button class="${qGestOn()?'on':''}" data-a="qGest" data-k="on">${tr('شغّال','On')}</button><button class="${qGestOn()?'':'on'}" data-a="qGest" data-k="off">${tr('مقفول','Off')}</button></div></div>
   ${bodySec()}
+  ${photoSec()}
   <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?`<span class="pdot${SYNC.err?' er':''}" style="margin-inline-start:6px"></span>`:''}<span class="pchev">⌄</span></summary><div class="fbody">
     ${SYNC.on?`<div class="note-ok" style="margin:0 0 10px">${L.syncOnL} · ${L.syncLast}: ${SYNC.last?new Date(SYNC.last).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.syncNever}${SYNC.dirty?' · '+L.syncWait(Math.max(1,SYNC.missed)):''}</div>${SYNC.err?`<div class="warn" style="margin:0 0 10px">${L.syncErr(esc(syncMsg(SYNC.err)))}</div>`:''}${syncPublic()?`<div class="warn" style="margin:0 0 10px">${L.syncPub}</div>`:''}
       <button class="btn pri w" data-a="syncNow">${L.syncNow}</button><button class="btn dan w mt" data-a="syncOff">${L.syncOffB}</button>`
@@ -2101,6 +2118,7 @@ function renderData(){
   <details class="fsec" data-fk="lang"${fOpen.has('lang')?' open':''}><summary>Language · اللغة<span class="pchev">⌄</span></summary><div class="fbody"><button class="btn w" data-a="lang">${L.langBtn}</button><div class="mu" style="margin:16px 0 8px">${tr("لغة «كيفية الأداء» (شرح التمارين)","Exercise guide (how to perform) language")}</div><div class="thseg" style="margin:0"><button class="${howLang()==='ar'?'on':''}" data-a="howLang" data-k="ar">عربي</button><button class="${howLang()==='en'?'on':''}" data-a="howLang" data-k="en">English</button></div></div></details>
   <div class="fbody" style="padding-top:16px"><label class="fld" style="margin:0">${L.cycleL}<input class="inp" id="cyc0" inputmode="numeric" value="${esc(S.settings.cycle)}"></label></div>
   <div class="mu" style="text-align:center;margin:18px 0 0">${L.ver}: v${VER}</div>`;
+  {const pi=$('#phIn');if(pi)pi.onchange=e=>{const f=e.target.files[0];if(f)phAdd(f);e.target.value=''}}phLoad();
   $('#imp').onchange=e=>{const f=e.target.files[0];if(f)importFile(f);e.target.value=''};
   $('#cyc0').onchange=e=>{const v=num(e.target.value);if(v>0){S.settings.cycle=v;save();toast(L.cycleSaved)}};
 }
@@ -2193,6 +2211,9 @@ document.addEventListener('click',ev=>{
       ask(tr(`البرنامج فيه ${days.length} أيام. يحل محل برنامجك الحالي؟ (سجلك مش هيتأثر، وتقدر تتراجع)`,`This program has ${days.length} days. Replace your current program? (Your log is untouched, and you can undo)`)).then(ok=>{if(!ok)return;const _u=undoSnap();sysInit();S.sys.saved[S.sys.cur]={days:S.program.days};S.program.days=days;pDay=days[0].id;save();queueBackup();closeModal();go('prog');offerUndo(tr('البرنامج اتغيّر','Program replaced'),_u)});break}
     case 'ram':S.settings.ram=b.dataset.k==='on'?1:0;save();renderData();break;
     case 'ssTgl':{const e=d.ex[curEx];e.ss=!e.ss;const pd=S.program.days.find(x=>x.id===d.day),t=pd&&pd.ex.find(x=>x.id===e.exId);if(t)t.ss=e.ss;save();closeSheet();renderSession();toast(e.ss?tr('اتربط: بعد كل مجموعة هتروح للتمرين اللي بعده، والراحة بعد الاتنين','Linked: after each set you go to the next exercise; rest comes after both'):tr('السوبرسيت اتفك','Superset removed'));break}
+    case 'phOpen':phOpen(b.dataset.id);break;
+    case 'phCmp':phOpen(b.dataset.id,true);break;
+    case 'phDel':ask(tr('تمسح الصورة دي نهائيًا؟','Delete this photo permanently?'),{danger:1}).then(async ok=>{if(!ok)return;const id=b.dataset.id;S.photos=(S.photos||[]).filter(x=>x.id!==id);try{await idb.set('ph:'+id,null)}catch(e){}save();closeModal();renderData()});break;
     case 'clean':{const e=d.ex[curEx];e.clean=!e.clean;saveSoon();renderSession();break}
     case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
     case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value),mx={};for(const [k] of BMX){const v=num(($('#b_'+k)||{}).value);if(v>0&&v<400)mx[k]=v}if(!(w>0)&&!(c>0)&&!Object.keys(mx).length){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}
