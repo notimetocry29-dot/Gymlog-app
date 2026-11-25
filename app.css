@@ -798,3 +798,43 @@ html[dir=ltr] select.inp,html[dir=ltr] .psel,html[dir=ltr] .lbf .psel{background
 
 /* 9) الحالة الفاضية */
 .empty{padding:40px 16px;font-size:var(--t2);line-height:1.8;color:var(--mu)}
+/* ===== v134: لوحة اختيار وتقويم بنفس الثيم بدل قوايم أندرويد ===== */
+.xhid{display:none!important}
+.xsel{display:flex;align-items:center;gap:8px;text-align:start;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.xsel span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xsel i{flex:none;font-style:normal;color:var(--mu);font-size:15px;line-height:1}
+.xsel.inp{color:var(--tx)}
+#xp{position:fixed;inset:0;z-index:95;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.5);opacity:0;transition:opacity .18s ease}
+#xp.on{opacity:1}
+#xp .xpb{width:100%;max-width:480px;max-height:78dvh;display:flex;flex-direction:column;background:var(--s1);border:1px solid var(--bd);border-bottom:0;border-radius:22px 22px 0 0;padding:10px 14px calc(14px + env(safe-area-inset-bottom));transform:translateY(24px);transition:transform .24s cubic-bezier(.2,.8,.2,1)}
+#xp.on .xpb{transform:none}
+#xp .xpb::before{content:'';display:block;width:38px;height:4px;border-radius:9px;background:var(--bd);margin:2px auto 10px}
+.xpt{font-size:14px;color:var(--mu);text-align:center;margin:0 6px 8px}
+.xpl{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.xpg{font-size:12.5px;color:var(--mu);padding:14px 8px 4px;letter-spacing:.02em}
+.xpo{display:flex;align-items:center;gap:10px;width:100%;min-height:50px;padding:10px 12px;margin:2px 0;border:0;border-radius:14px;background:none;color:var(--tx2);font-size:16px;text-align:start;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.xpo span{flex:1;min-width:0}
+.xpo i{font-style:normal;color:var(--ac2);opacity:0}
+.xpo.on{background:var(--s2);color:var(--tx)}
+.xpo.on i{opacity:1}
+.xpo:active{background:var(--s2)}
+.xpo:disabled{opacity:.4}
+.xcal{padding:0 4px}
+.xch{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
+.xch b{font-weight:600;font-size:16px;color:var(--tx)}
+.xcn{width:44px;height:44px;border-radius:50%;border:1px solid var(--bd);background:none;color:var(--tx2);font-size:20px;line-height:1;cursor:pointer}
+.xcw,.xcg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.xcw span{font-size:12px;color:var(--mu);padding:4px 0}
+.xd{aspect-ratio:1;max-height:46px;border:0;border-radius:50%;background:none;color:var(--tx2);font-size:15px;font-family:var(--fnum);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.xd.td{box-shadow:inset 0 0 0 1px var(--acbd);color:var(--ac2)}
+.xd.on{background:var(--ac);color:var(--onac)}
+.xd:disabled{opacity:.28}
+.xct{display:block;margin:12px auto 2px;padding:10px 22px;min-height:44px;border-radius:99px;border:1px solid var(--bd);background:none;color:var(--tx2);font-size:14px;cursor:pointer}
+/* v134: الدايرة لما تكون حلقة واحدة: ذيل جمري واضح بيلف حواليها (الحلقة نفسها خافتة، فالحركة باينة) */
+.orb circle.ar.cur.one{stroke:var(--pw);stroke-opacity:.2;stroke-width:9}
+.orb .cmt{transform-origin:150px 150px;transform-box:view-box;animation:cmt 7s linear infinite;pointer-events:none}
+.orb .ct{fill:none;stroke:var(--pw);stroke-width:10;stroke-linecap:butt}
+.orb .ch{fill:none;stroke:#fff3e6;stroke-width:7;stroke-linecap:round;filter:blur(1px);opacity:.95}
+html[data-th=morning] .orb .ch{stroke:#fff;opacity:1}
+@keyframes cmt{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.orb .cmt{animation:none}}

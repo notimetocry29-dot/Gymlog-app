@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='133';
+const VER='134';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -95,10 +95,16 @@ function migrate(){
   if((S.mig||0)<5){for(const x of S.sessions)if(x.imp){const dd=S.program.days.find(d=>d.name===x.dayName);x.status=dd&&dd.ex.every(t=>x.ex.some(e=>e.name===t.name))?'full':'imp'}S.mig=5}
 }
 /* v87: آخر مرة التطبيق كان مفتوح (لشاشة البداية) */
-(function(){const k='gl_seen',mark=()=>{try{localStorage.setItem(k,Date.now())}catch(e){}};let hid=0;
- mark();setInterval(()=>{if(!document.hidden)mark()},60000);
- document.addEventListener('visibilitychange',()=>{if(document.hidden){mark();hid=Date.now();return}
-  if(hid&&Date.now()-hid>=72e5&&!document.getElementById('splash'))showSplash();hid=0;mark()});
+/* v134: شاشة البداية بعد ساعتين غياب، مهما كان التطبيق اتقفل إزاي: اتقفل خالص (index.html بيتصرف)، أو فضل في الخلفية.
+   في الخلفية الموبايل ساعات بيجمّد الصفحة من غير ما يبلّغها إنها اتخفت، فبنقيس الفجوة نفسها: آخر علامة «كان مفتوح» قبل ساعتين أو أكتر = رجوع */
+(function(){const k='gl_seen',G=72e5,get=()=>{try{return +localStorage.getItem(k)||0}catch(e){return 0}},mark=()=>{try{localStorage.setItem(k,Date.now())}catch(e){}};
+ let lt=Date.now();
+ const back=()=>{const l=Math.max(get(),0),n=Date.now();if(l&&n-l>=G&&!document.getElementById('splash'))showSplash();lt=n;mark()};
+ mark();
+ setInterval(()=>{if(document.hidden)return;const n=Date.now();if(n-lt>=G)back();else{lt=n;mark()}},30000);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){mark();return}back()});
+ window.addEventListener('pageshow',e=>{if(e.persisted)back()});
+ window.addEventListener('focus',()=>{if(!document.hidden&&Date.now()-lt>=G)back()});
  window.addEventListener('pagehide',mark)})();
 function showSplash(){const tpl=window.__spTpl;if(!tpl)return;const d=document.createElement('div');d.innerHTML=tpl;const sp=d.firstElementChild;document.body.appendChild(sp);sp.classList.add('on');setTimeout(()=>{sp.classList.add('out');setTimeout(()=>sp.remove(),520)},1150)}
 async function boot(){
@@ -218,13 +224,14 @@ function cbCard(c,open){
 /* v116: Deload: بعد 6 أسابيع تمرين متواصل (من غير غياب أسبوع)، اقتراح بأسبوع خفيف: مجموعة أقل والأوزان 90%، ومابيتحسبش في القاعدة */
 function dlNow(){const ds=done();if(ds.length<8||daysAgo(ds[0].date)>=CBD)return null;
   if(S.dl&&dGap(today(),S.dl)<7)return{act:1,left:7-dGap(today(),S.dl)};
-  if(S.dlSkip&&dGap(today(),S.dlSkip)<7)return null;
+  const sk=!!(S.dlSkip&&dGap(today(),S.dlSkip)<7);
   let st=ds[0].date;for(let i=0;i<ds.length-1;i++){if(dGap(ds[i].date,ds[i+1].date)>=7)break;st=ds[i+1].date}
-  const ref=S.dl&&S.dl>st?S.dl:st,wk=Math.floor(dGap(today(),ref)/7);return wk>=6?{wk}:null}
+  const ref=S.dl&&S.dl>st?S.dl:st,wk=Math.floor(dGap(today(),ref)/7);return wk>=6?(sk?{wk,skip:1}:{wk}):null}
 function dlCard(x){const ar=LANG==='ar';
   return `<div class="cbh dlc"><b>${x.act?tr(`أسبوع خفيف · فاضل ${x.left} يوم`,`Light week · ${x.left} day(s) left`):tr(`بقالك ${x.wk} أسابيع تمرين متواصل`,`${x.wk} weeks of training in a row`)}</b><span class="cbt">${tr('مجموعة أقل في كل تمرين والأوزان 90%، علشان جسمك يتخلص من التعب المتراكم ويرجع أقوى.','A light week: one set less per exercise at 90% weights. Your body clears built-up fatigue and comes back stronger; it does not count toward the progression rule.')}</span><span class="dlb"><button class="cbgo" data-a="dlGo">${tr('ابدأ يوم خفيف','Start a light day')} ${ar?'‹':'›'}</button>${x.act?'':`<button class="dls" data-a="dlSkip">${tr('مش دلوقتي','Not now')}</button>`}</span></div>`}
 async function startDeload(){if(S.draft&&S.draft.cb&&S.draft.cb.dl&&!S.draft.editing){openSession();return}if(S.draft&&!dEmpty(S.draft)&&!await ask(T().confNew))return;
   if(!(S.dl&&dGap(today(),S.dl)<7))S.dl=today();
+  delete S.dlSkip;
   S.draft=null;const pd=planDraft(nextDayId(),{g:0,i:0,n:1,step:{k:'lt',p:.9}});pd.cb.dl=1;if(!pd.ex.length){toast(tr('اليوم ده فاضي','This day is empty'));return}S.draft=pd;openTips.clear();save();openSession()}
 /* اقتراح بس: بيتفتح لما تدوس على الكارت. الدايرة و«ابدأ يوم تاني» والبرنامج بيفتحوا يومك العادي بأوزانك */
 /* v113: ask(نص) بدل confirm: نافذة بنفس الثيم، وبترجع وعد (موافقة = true) */
@@ -435,6 +442,14 @@ function cbWhy(){const c=cbNow();if(!c)return;const nm=s=>s.k==='fb'?tr('جسم 
   <div class="cbs" dir="${LANG==='ar'?'rtl':'ltr'}">${c.st.map((s,k)=>`<span class="${k<c.i?'ok':k===c.i?'on':''}">${k<c.i?'✓ ':''}${nm(s)} <bdi class="en">${cbPct(s)}</bdi></span>`).join('<i>›</i>')}<i>›</i><span>${tr('جدولك','Your plan')}</span></div>
   <button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
 function dlWhy(){modal(`<h3>${tr('أسبوع خفيف','Light week')}</h3><div class="dsec" style="line-height:1.9">${tr('بعد 6 أسابيع تمرين ورا بعض، التعب بيتراكم حتى لو مش حاسس بيه. أسبوع خفيف (مجموعة أقل في كل تمرين، والأوزان 90%) بيخلّي جسمك يتخلص منه ويرجع أقوى. ومابيتحسبش في قاعدة الزيادة.','After 6 straight weeks fatigue builds up even if you do not feel it. A light week (one set less, 90% weights) lets your body clear it and come back stronger. It does not count toward the rule.')}</div><button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
+/* v134: أي نافذة شرح («إيه ده؟» / «ليه؟» / إزاي بيحسب الزيادة / دليل التطبيق) بتفتح بلغة الشرح المختارة في الإعدادات (howLang)،
+   مش بلغة الواجهة. وجوّاها زرار عربي/English للنافذة دي بس (من غير ما يغيّر الإعداد) */
+function xModal(k,l){const f={rule:ruleModal,cb:cbWhy,dl:dlWhy}[k];if(!f)return;const lg=l==='ar'||l==='en'?l:howLang(),keep=LANG;
+  LANG=lg;try{f()}finally{LANG=keep}
+  const bx=$('#modal .mbox'),h=bx&&bx.querySelector(':scope>h3');if(!h||$('#modal').hidden)return;
+  bx.setAttribute('dir',lg==='ar'?'rtl':'ltr');bx.setAttribute('lang',lg);
+  const w=document.createElement('div');w.className='gdh2';h.replaceWith(w);w.appendChild(h);
+  w.insertAdjacentHTML('beforeend',`<div class="thseg gdl"><button class="${lg==='ar'?'on':''}" data-a="xLang" data-l="ar" data-x="${k}">عربي</button><button class="${lg==='en'?'on':''}" data-a="xLang" data-l="en" data-x="${k}">English</button></div>`)}
 const swRow=(a,on,t,d)=>`<button class="swr" data-a="${a}" data-k="${on?'off':'on'}" role="switch" aria-checked="${on?'true':'false'}"><span class="swt2"><b>${t}</b><small>${d}</small></span><i class="swk${on?' on':''}"></i></button>`;
 function offerUndo(msg,snap){const el=$('#undo');if(!el)return;UND=snap;el.querySelector('span').textContent=msg;const b=el.querySelector('button');b.textContent=tr('تراجع','Undo');
   b.onclick=()=>{if(!UND)return;const o=JSON.parse(UND);UND=null;Object.assign(S,o);if(!o.fbDay)delete S.fbDay;save();queueBackup();el.classList.remove('on');if(!$('#sess').hidden&&!S.draft)closeSession();else if(S.draft&&$('#sess').hidden&&o.draft&&tab==='home')renderHome();go(tab);toast(tr('رجعت ✓','Restored ✓'))};
@@ -486,6 +501,8 @@ function exitAsk(){
   $('#xYes').onclick=()=>{try{Android.exitApp()}catch(e){}};
 }
 window.glBack=function(){
+  if(XP.el){xpClose();return true}
+  {const a=document.getElementById('ask');if(a){const n=a.querySelector('.no');n&&n.click();return true}}
   const M=$('#modal'),Sx=$('#sess');
   if(!M.hidden){if(hs().modal)history.back();else closeModal(true);return true}
   if(!Sx.hidden){if(hs().sess)history.back();else closeSession();return true}
@@ -509,7 +526,7 @@ window.addEventListener('popstate',e=>{
 });
 try{history.replaceState({},'')}catch(e){}
 function go(t){tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));({home:renderHome,hist:renderHistory,prog:renderProgram,lib:renderLib,data:renderData})[t]();{const v=$('#view');v.classList.remove('vin');void v.offsetWidth;v.classList.add('vin')}window.scrollTo(0,0);saveUI()}
-function modal(h){const m=$('#modal');m.querySelector('.mbox').innerHTML=h;if(m.hidden&&!hs().modal)history.pushState(Object.assign({tab:tab},hs(),{modal:1}),'');m.hidden=false}
+function modal(h){const m=$('#modal'),bx=m.querySelector('.mbox');bx.removeAttribute('dir');bx.removeAttribute('lang');bx.innerHTML=h;if(m.hidden&&!hs().modal)history.pushState(Object.assign({tab:tab},hs(),{modal:1}),'');m.hidden=false}
 let mClosed=0;
 function closeModal(silent){$('#modal').hidden=true;mClosed=Date.now();if(!silent&&hs().modal)history.back()}
 
@@ -561,7 +578,9 @@ function renderHome(){const _d=document.querySelector('#home .dtl, .dtl'),_o=_d&
 function renderHome0(){
   /* v129: الدايرة هي مركز كل حاجة. لو فيه رجوع أو أسبوع خفيف، الدايرة نفسها بتبقى الجلسة دي، وتحتها سطر هادي بالشرح ولينك «يومك العادي» */
   const L=T(),ds=done(),c=cbNow(),dlx=c?null:dlNow(),dcb=!!(S.draft&&S.draft.cb&&!S.draft.editing),dr=S.draft;
-  const mode=dr?'draft':c?'cb':(dlx&&!dlx.act)||(dlx&&dlx.act)?'dl':'norm';
+  const mode=dr?'draft':c?'cb':dlx&&!dlx.skip?'dl':'norm';
+  /* v134: لو اخترت يومك العادي (أو أجّلت)، الاختيار التعويضي بيفضل موجود تحت الدايرة لحد ما تبدأ تسجّل */
+  const nrm=!!(dr&&!dr.cb&&!dr.editing),alt=nrm&&dEmpty(dr);
   const nd=dr?(dr.day||nextDayId()):mode==='cb'&&c.step.k==='fb'?'FB':nextDayId(),fb=nd==='FB';
   const pl=dr||(mode==='cb'?planDraft(nd,c):mode==='dl'?(()=>{const x=planDraft(nd,{g:0,i:0,n:1,step:{k:'lt',p:.9}});x.cb.dl=1;return x})():planDraft(nd,null));
   const dName=fb?tr('جسم كامل','Full body'):String(pl.dayName||'').replace(/ · Light$/,'');
@@ -569,7 +588,7 @@ function renderHome0(){
   const n=days.length,g=n>1?9:0;
   const arcs=n>1&&!fb?days.map((x,k)=>{const dn=x.id!==nd&&ds.some(q=>q.cycle===cc&&(q.day===x.id||(!q.day&&q.dayName===x.name)));
     const pd=arcP(136,k*360/n+g/2,(k+1)*360/n-g/2);return (x.id===nd?`<path class="ar hl" d="${pd}"/>`:'')+`<path class="ar${x.id===nd?' cur':dn?' dn':''}" d="${pd}"/>`}).join('')
-    :`<circle class="ar cur one" cx="150" cy="150" r="136"/>`+['g1','g2','g3'].map(c=>`<circle class="gl ${c}" cx="150" cy="150" r="136" pathLength="100"/>`).join('');
+    :`<circle class="ar cur one" cx="150" cy="150" r="136"/><g class="cmt" style="animation-delay:-${((Date.now()%7000)/1000).toFixed(2)}s">${Array.from({length:24},(_,k)=>`<circle class="ct" cx="150" cy="150" r="136" pathLength="100" stroke-dasharray="1.34 98.66" stroke-dashoffset="${-(k*1.3).toFixed(2)}" style="opacity:${(.04+.96*Math.pow((k+1)/24,2.2)).toFixed(3)}"/>`).join('')}<circle class="ch" cx="150" cy="150" r="136" pathLength="100" stroke-dasharray="1.2 98.8" stroke-dashoffset="-31"/></g>`;
   let last='';
   if(ds[0]){const k=Math.max(0,daysAgo(ds[0].date));last=' · '+tr('آخر جلسة: ','Last: ')+(k===0?tr('النهارده','today'):k===1?tr('امبارح','yesterday'):tr(`من ${k} يوم`,`${k} days ago`))}
   const rowsOf=ex=>ex.map(e=>`<div class="dr${e.core?' c':''}"><span class="dn2 en">${esc(e.name)}</span><span class="dw en">${e.unit?'':fw(e.w)+' · '}${esc(String(+e.tsets||0))}×${tgt(e.treps,e.goal,e.unit)}${e.unit?' '+esc(unitTxt(e.unit)):''}</span></div>`).join('');
@@ -579,7 +598,9 @@ function renderHome0(){
   const act=dr?'resume':mode==='cb'?'cbGo':mode==='dl'?'dlGo':'start';
   /* سطر هادي تحت الدايرة */
   let q='';
-  if(mode==='cb'||(dcb&&!dr.cb.dl&&c))q=`<div class="cbq">${tr(`رجعت بعد ${c.g} يوم`,`Back after ${c.g} days`)} · <button data-a="cbWhy">${tr('إيه ده؟','What is this?')}</button>${dr?'':` · <button data-a="start" data-d="${esc(nextDayId())}">${tr('العب يومك العادي','Play your usual day')}</button>`}</div>`;
+  if(c&&nrm)q=`<div class="cbq">${tr(`رجعت بعد ${c.g} يوم`,`Back after ${c.g} days`)} · <button data-a="cbWhy">${tr('إيه ده؟','What is this?')}</button>${alt?` · <button data-a="cbGo">${tr('العب جلسة الرجوع بدله','Play the comeback session instead')}</button>`:''}</div>`;
+  else if(dlx&&(nrm||mode==='norm'))q=`<div class="cbq">${dlx.act?tr(`أسبوع خفيف · فاضل ${dlx.left} يوم`,`Light week · ${dlx.left} day(s) left`):tr(`${dlx.wk} أسابيع تمرين متواصل`,`${dlx.wk} weeks in a row`)} · <button data-a="dlWhy">${tr('إيه ده؟','What is this?')}</button>${!dr||alt?` · <button data-a="dlGo">${dr?tr('العب يوم خفيف بدله','Play a light day instead'):tr('العب يوم خفيف','Play a light day')}</button>`:''}</div>`;
+  else if(mode==='cb'||(dcb&&!dr.cb.dl&&c))q=`<div class="cbq">${tr(`رجعت بعد ${c.g} يوم`,`Back after ${c.g} days`)} · <button data-a="cbWhy">${tr('إيه ده؟','What is this?')}</button>${dr?'':` · <button data-a="start" data-d="${esc(nextDayId())}">${tr('العب يومك العادي','Play your usual day')}</button>`}</div>`;
   else if(mode==='dl'||(dcb&&dr.cb.dl))q=`<div class="cbq">${dlx&&dlx.act?tr(`أسبوع خفيف · فاضل ${dlx.left} يوم`,`Light week · ${dlx.left} day(s) left`):dlx?tr(`${dlx.wk} أسابيع تمرين متواصل`,`${dlx.wk} weeks in a row`):tr('أسبوع خفيف','Light week')} · <button data-a="dlWhy">${tr('إيه ده؟','What is this?')}</button>${dr||(dlx&&dlx.act)?'':` · <button data-a="dlSkip">${tr('مش دلوقتي','Not now')}</button>`}</div>`;
   else if(!dr&&new Date().getDay()===6&&ds.some(x=>daysAgo(x.date)>=1&&daysAgo(x.date)<=7))q=`<div class="cbq">${tr('أسبوعك اللي فات','Your last week')}: ${ds.filter(x=>daysAgo(x.date)>=1&&daysAgo(x.date)<=7).length}/3 · <button data-a="rep" data-d="7">${tr('التقرير','Report')} ›</button></div>`;
   let al='';
@@ -1544,7 +1565,7 @@ function renderData(){
   <details class="fsec" data-fk="csv"${fOpen.has('csv')?' open':''}><summary>${L.csvT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${L.csvHint}</div><button class="btn w" data-a="csv">${L.csvB}</button></div></details>
   <div class="fbody" style="padding-top:16px"><label class="fld" style="margin:0">${L.cycleL}<input class="inp" id="cyc0" inputmode="numeric" value="${esc(S.settings.cycle)}"></label></div>
   </details></div></details>
-  <details class="fsec" data-fk="lang"${fOpen.has('lang')?' open':''}><summary>Language · اللغة<span class="pchev">⌄</span></summary><div class="fbody"><button class="btn w" data-a="lang">${L.langBtn}</button><div class="mu" style="margin:16px 0 8px">${tr("لغة «كيفية الأداء» (شرح التمارين)","Exercise guide (how to perform) language")}</div><div class="thseg" style="margin:0"><button class="${howLang()==='ar'?'on':''}" data-a="howLang" data-k="ar">عربي</button><button class="${howLang()==='en'?'on':''}" data-a="howLang" data-k="en">English</button></div></div></details>
+  <details class="fsec" data-fk="lang"${fOpen.has('lang')?' open':''}><summary>Language · اللغة<span class="pchev">⌄</span></summary><div class="fbody"><button class="btn w" data-a="lang">${L.langBtn}</button><div class="mu" style="margin:16px 0 8px">${tr("لغة الشروحات (شرح التمارين، «إيه ده؟»، دليل التطبيق)","Explanations language (exercise guides, «What is this?», app guide)")}</div><div class="thseg" style="margin:0"><button class="${howLang()==='ar'?'on':''}" data-a="howLang" data-k="ar">عربي</button><button class="${howLang()==='en'?'on':''}" data-a="howLang" data-k="en">English</button></div></div></details>
 
   <div class="mu" style="text-align:center;margin:18px 0 0">${L.ver}: v${VER}</div>`;
   {const pi=$('#phIn');if(pi)pi.onchange=e=>{const f=e.target.files[0];if(f)phAdd(f);e.target.value=''}}phLoad();
@@ -1636,7 +1657,8 @@ document.addEventListener('click',ev=>{
     case 'appGuide':guideModal();break;
     case 'guideL':guideModal(b.dataset.l,!!b.dataset.o);break;
     case 'guideFull':guideModal(b.dataset.l);break;
-    case 'rule':ruleModal();break;
+    case 'rule':xModal('rule');break;
+    case 'xLang':xModal(b.dataset.x,b.dataset.l);break;
     case 'progShare':progShareModal();break;
     case 'progCopy':copy(progCode());break;
     case 'progImp':{let days;try{days=progFromCode($('#pgIn').value)}catch(e){toast(tr('الكود ده مش سليم','That code is not valid'));break}
@@ -1666,8 +1688,8 @@ document.addEventListener('click',ev=>{
     case 'swTgl':S.settings.swOn=S.settings.swOn?0:1;save();closeSheet();renderSession();toast(S.settings.swOn?tr('ساعة الإيقاف ظاهرة لكل التمارين','Stopwatch shown for every exercise'):tr('ساعة الإيقاف للتمارين اللي بالوقت بس','Stopwatch only for timed exercises'));break;
     case 'dateEd':{const x=$('#mdt');if(x)x.hidden=!x.hidden;break}
     case 'tools':toolsModal();break;
-    case 'cbWhy':cbWhy();break;
-    case 'dlWhy':dlWhy();break;
+    case 'cbWhy':xModal('cb');break;
+    case 'dlWhy':xModal('dl');break;
     case 'shareS':{const x=S.sessions.find(q=>q.id===b.dataset.id);if(x)shareModal(x);break}
     case 'clean':{const e=d.ex[curEx];e.clean=!e.clean;saveSoon();renderSession();break}
     case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
@@ -1805,5 +1827,47 @@ function restoreUI(u){try{if(!u||Date.now()-u.at>12*36e5)return;
 window.addEventListener('scroll',()=>{clearTimeout(window.__st);window.__st=setTimeout(saveUI,250)},{passive:true});
 window.addEventListener('pagehide',flushSave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){flushSave();saveUI();if(S.draft)queueDraftBackup()}else if(!$('#sess').hidden)wakeOn()});
+/* v134: مفيش أي قايمة أو تقويم من أندرويد جوّه التطبيق. أي <select> أو خانة تاريخ (دلوقتي أو بعدين) بتتبدّل تلقائي بزرار
+   بيفتح لوحة بنفس الثيم. الـ select الأصلي بيفضل مخفي وبيتحدّث، فالكود القديم (.value و onchange) شغال زي ما هو */
+const XP={el:null,done:null};
+function xpClose(){const w=XP.el;if(!w)return;XP.el=null;const f=XP.done;XP.done=null;w.classList.remove('on');setTimeout(()=>w.remove(),180);if(f)f()}
+function xpOpen(title,body,wire,done){xpClose();const w=document.createElement('div');w.id='xp';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');
+  w.innerHTML=`<div class="xpb">${title?`<div class="xpt">${esc(title)}</div>`:''}${body}</div>`;
+  w.addEventListener('click',e=>{if(e.target===w){e.stopPropagation();xpClose()}});
+  document.body.appendChild(w);XP.el=w;XP.done=done||null;void w.offsetWidth;w.classList.add('on');wire(w);try{navigator.vibrate&&navigator.vibrate(6)}catch(e){}}
+const xpTitle=el=>{const l=el.closest('label');if(l){let t='';l.childNodes.forEach(n=>{if(n.nodeType===3)t+=n.textContent});t=t.trim();if(t)return t}
+  if(el.tagName==='SELECT'&&el.options[0]&&el.options[0].value===''&&el.classList.contains('psel'))return el.options[0].text;return ''};
+const xpLabel=sel=>{const o=sel.options[sel.selectedIndex];return o?o.text:''};
+function xpSync(sel){const b=sel.nextElementSibling;if(b&&b.classList.contains('xsel'))b.querySelector('span').textContent=xpLabel(sel)}
+function xpFire(el,ev){el.dispatchEvent(new Event(ev,{bubbles:true}))}
+function xpSelect(sel){const ph=sel.classList.contains('psel')&&sel.options[0]&&sel.options[0].value==='';
+  let h='',i=0;const row=o=>{const k=i++;if(ph&&k===0)return '';return `<button type="button" class="xpo${o.selected&&!(ph&&o.value==='')?' on':''}" data-k="${k}"${o.disabled?' disabled':''}><span>${esc(o.text)}</span><i>✓</i></button>`};
+  for(const c of sel.children){if(c.tagName==='OPTGROUP'){const r=[...c.children].map(row).join('');if(r)h+=`<div class="xpg">${esc(c.label)}</div>`+r}else h+=row(c)}
+  xpOpen(xpTitle(sel),`<div class="xpl">${h}</div>`,w=>{
+    const on=w.querySelector('.xpo.on');if(on)on.scrollIntoView({block:'center'});
+    w.querySelector('.xpl').addEventListener('click',e=>{const b=e.target.closest('.xpo');if(!b||b.disabled)return;e.stopPropagation();
+      const k=+b.dataset.k,ch=sel.selectedIndex!==k;sel.selectedIndex=k;xpClose();if(ch){xpFire(sel,'input');xpFire(sel,'change')}xpSync(sel)})})}
+const XMN={ar:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],en:['January','February','March','April','May','June','July','August','September','October','November','December']};
+const XWD={ar:['س','ح','ن','ث','ر','خ','ج'],en:['Mo','Tu','We','Th','Fr','Sa','Su']};
+function xpDate(inp){const ar=LANG==='ar',v=/^\d{4}-\d{2}-\d{2}$/.test(inp.value)?inp.value:today(),td=today();
+  let y=+v.slice(0,4),m=+v.slice(5,7)-1;const p2=n=>String(n).padStart(2,'0');
+  const grid=()=>{const f=new Date(y,m,1).getDay(),st=ar?(f+1)%7:(f+6)%7,nd=new Date(y,m+1,0).getDate();let h='';
+    for(let k=0;k<st;k++)h+='<i></i>';
+    for(let d=1;d<=nd;d++){const iso=`${y}-${p2(m+1)}-${p2(d)}`,fu=iso>td;h+=`<button type="button" class="xd${iso===inp.value?' on':''}${iso===td?' td':''}" data-d="${iso}"${fu?' disabled':''}>${d}</button>`}
+    return `<div class="xch"><button type="button" class="xcn" data-n="-1">‹</button><b>${XMN[ar?'ar':'en'][m]} <bdi class="en">${y}</bdi></b><button type="button" class="xcn" data-n="1">›</button></div><div class="xcw">${XWD[ar?'ar':'en'].map(x=>`<span>${x}</span>`).join('')}</div><div class="xcg">${h}</div><button type="button" class="xct" data-d="${td}">${tr('النهارده','Today')}</button>`};
+  xpOpen(xpTitle(inp),`<div class="xcal" dir="${ar?'rtl':'ltr'}">${grid()}</div>`,w=>{const c=w.querySelector('.xcal');
+    c.addEventListener('click',e=>{e.stopPropagation();const n=e.target.closest('.xcn');
+      if(n){m+=+n.dataset.n;if(m<0){m=11;y--}if(m>11){m=0;y++}c.innerHTML=grid();return}
+      const d=e.target.closest('[data-d]');if(!d||d.disabled)return;const ch=inp.value!==d.dataset.d;inp.value=d.dataset.d;xpClose();if(ch){xpFire(inp,'input');xpFire(inp,'change')}xpSyncD(inp)})})}
+function xpSyncD(inp){const b=inp.nextElementSibling;if(b&&b.classList.contains('xsel'))b.querySelector('span').textContent=inp.value?fmtD(inp.value):'—'}
+function xpEnhance(root){(root||document).querySelectorAll('select:not([data-xp]),input[type=date]:not([data-xp])').forEach(el=>{el.dataset.xp='1';
+  const d=el.tagName==='INPUT',b=document.createElement('button');b.type='button';b.className=(el.className||'')+' xsel';if(el.id)b.dataset.for=el.id;
+  b.innerHTML=`<span></span><i aria-hidden="true">${d||el.classList.contains('psel')?'':'⌄'}</i>`;el.classList.add('xhid');el.tabIndex=-1;el.after(b);d?xpSyncD(el):xpSync(el);
+  if(!d)el.addEventListener('change',()=>setTimeout(()=>xpSync(el)));else el.addEventListener('change',()=>xpSyncD(el));
+  b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(el.disabled)return;d?xpDate(el):xpSelect(el)})})}
+new MutationObserver(ms=>{for(const m of ms)if(m.addedNodes.length){xpEnhance();break}}).observe(document.body,{childList:true,subtree:true});
+xpEnhance();
+/* أمان زيادة: لو أي select اتلمس بطريقة ما، اللوحة بتاعتنا هي اللي تفتح مش بتاعة النظام */
+document.addEventListener('mousedown',e=>{const t=e.target;if(t&&(t.tagName==='SELECT'||(t.tagName==='INPUT'&&t.type==='date'))){e.preventDefault();t.tagName==='SELECT'?xpSelect(t):xpDate(t)}},true);
 const UI0=readUI();
 boot().then(()=>{if(migTheme()){delete S.settings.thGr;delete S.settings.thDawn;save()}applyLang();if(S.impN){const k=S.impN;S.impN=0;save();setTimeout(()=>toast(T().histNote(k)),600)}go('home');restoreUI(UI0);if(S.onb)setTimeout(()=>onbModal(1),700);else if(!S.settings.legend){S.settings.legend=1;save();setTimeout(()=>guideModal(null,1),1200)}if(S.mig6ask){delete S.mig6ask;save();setTimeout(async()=>{if(await ask(tr('التطبيق بقى بيعتبر أداءك نضيف من الأول، وانت بتعلّم «مش نضيف» بس لو حصلت مرجحة. نعتبر جلساتك اللي فاتت نضيفة كمان، علشان قاعدة الزيادة تبدأ تحسب منها؟','Form now counts as clean by default; you mark «not clean» only when it is not. Count your past sessions as clean too, so the progression rule can use them?'),{yes:tr('أيوه','Yes'),no:tr('لأ','No')})){for(const x of S.sessions)if(!x.imp)for(const e of x.ex)e.clean=true;save();queueBackup();go(tab)}},900)}setTimeout(()=>('requestIdleCallback' in window?requestIdleCallback(warmTabs,{timeout:4000}):warmTabs()),2500);if(pendMig){toast(T().migNote);pendMig=false}if(SYNC.on&&SYNC.dirty)setTimeout(runBackup,1500)});

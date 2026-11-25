@@ -60,5 +60,26 @@ async function page(st) {
 { const { pg, errs, ctx } = await page(null);
   ok(await pg.evaluate(() => !!document.querySelector('[data-a="onbSys"]')), 'first run shows onboarding');
   ok(errs.length === 0, 'no page errors (first run) ' + errs.join(';')); await ctx.close(); }
+// 6) v134: الرجوع يفضل متاح بعد ما تختار يومك العادي + الشروحات بعربي/English + مفيش قوايم نظام
+{ const { pg, errs, ctx } = await page(state(20));
+  await pg.evaluate(() => closeModal(true));
+  await pg.click('.cbq [data-a="start"]'); await pg.waitForTimeout(500); await pg.evaluate(() => { closeSession(); go('home'); }); await pg.waitForTimeout(300);
+  ok(await pg.evaluate(() => !!document.querySelector('.cbq [data-a="cbGo"]')), 'after choosing the usual day, the comeback option stays under the circle');
+  await pg.evaluate(() => { S.settings.lang = 'en'; LANG = 'en'; S.settings.howLang = 'ar'; go('home'); }); await pg.waitForTimeout(200);
+  await pg.click('.cbq [data-a="cbWhy"]'); await pg.waitForTimeout(300);
+  ok(await pg.evaluate(() => /الغياب/.test(document.querySelector('#modal .mbox').textContent)), 'explanation opens in Arabic (the chosen explanations language) inside an English app');
+  await pg.click('#modal [data-a="xLang"][data-l="en"]'); await pg.waitForTimeout(300);
+  ok(await pg.evaluate(() => /break/.test(document.querySelector('#modal .mbox').textContent) && S.settings.howLang === 'ar'), 'in-window toggle switches language without changing the setting');
+  await pg.evaluate(() => closeModal()); await pg.waitForTimeout(300); await pg.evaluate(() => go('hist')); await pg.waitForTimeout(300);
+  ok(await pg.evaluate(() => [...document.querySelectorAll('select')].every(s => getComputedStyle(s).display === 'none') && !!document.querySelector('.xsel')), 'selects are replaced by themed buttons');
+  await pg.click('.xsel[data-for="dayPick"]'); await pg.waitForTimeout(300);
+  ok(await pg.evaluate(() => document.querySelectorAll('#xp .xpo').length > 0), 'themed picker opens with options');
+  await pg.click('#xp .xpo'); await pg.waitForTimeout(400);
+  ok(await pg.evaluate(() => !document.getElementById('xp') && !document.querySelector('#modal').hidden), 'picking an option fires the original handler');
+  ok(errs.length === 0, 'no page errors (v134) ' + errs.join(';')); await ctx.close(); }
+// 7) الحلقة الواحدة فيها ذيل بيلف
+{ const st = state(2); st.program.days = [st.program.days[0]]; const { pg, errs, ctx } = await page(st);
+  ok(await pg.evaluate(() => !!document.querySelector('.orb .cmt') && getComputedStyle(document.querySelector('.orb .cmt')).animationName === 'cmt'), 'single ring has a visibly rotating comet');
+  ok(errs.length === 0, 'no page errors (single ring) ' + errs.join(';')); await ctx.close(); }
 await br.close();
 console.log(fail ? `\n${fail} test(s) failed` : '\nall tests passed'); process.exit(fail ? 1 : 0);

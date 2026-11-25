@@ -70,7 +70,7 @@ The card you copy is plain text and ends with the «Essentials» line.`],
 ['Handy gestures',`• The small message at the bottom: swipe left or right to dismiss.
 • The quote on Home: swipe to change it, tap to copy.
 • “Details” on Home: protein, gym, another day, and tools.`]]};
-function guideModal(lg,only){lg=lg||(LANG==='ar'?'ar':'en');const G=GUIDE[lg],ar=lg==='ar';
+function guideModal(lg,only){lg=lg||(typeof howLang==='function'?howLang():(LANG==='ar'?'ar':'en'));const G=GUIDE[lg],ar=lg==='ar';
   const secs=only?G.slice(0,1):G;
   modal(`<div class="gdh2"><h3>${only?(ar?'قبل ما تبدأ':'Before you start'):(ar?'دليل التطبيق':'App guide')}</h3><div class="thseg gdl"><button class="${ar?'on':''}" data-a="guideL" data-l="ar" data-o="${only?1:''}">عربي</button><button class="${ar?'':'on'}" data-a="guideL" data-l="en" data-o="${only?1:''}">English</button></div></div>
   <div class="gdb" dir="${ar?'rtl':'ltr'}" lang="${lg}">${secs.map(([h,t])=>`<section><b>${h}</b><div>${esc(t)}</div></section>`).join('')}</div>
