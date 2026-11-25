@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0e0e0f">
 <meta name="robots" content="noindex,nofollow">
 <link rel="manifest" href="manifest.webmanifest">
@@ -12,8 +12,8 @@
 <title>چيم لوج</title>
 <style>
 @font-face{font-family:"Figtree";src:url(fonts/figtree.woff2) format("woff2");font-weight:300 900;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215}
-:root{--scb:#000;--sci:#0c0c0c;--font:"Figtree",system-ui,"Noto Naskh Arabic","Segoe UI",Tahoma,sans-serif;--fnum:inherit;--rad:14px;--radb:11px;--radp:99px;--bw:1px;--sh:none;--ttl:none;--ls:0;--bg:#0e0e0f;--s1:#17171a;--s2:#202024;--bd:#2d2d33;--tx:#ece8e1;--mu:#968f85;--ac:#c38d4f;--ac2:#e2b37c;--ok:#7bb072;--mid:#d6b05a;--bad:#d06c57;--onac:#160e05;--hero:#1d1810;--tx2:#cfc6b8;--ph:#55504a;--okbd:#3b5a37;--okbg:#1c2a1a;--midbd:#5c4d2a;--midbg:#2b2616;--badbg:#2a1a15;--acbd:#4a3a28;--acbg:#33261a;--oktx:#a6d69c;--midtx:#e5c97f;--badtx:#f0b3a3}
-html[data-th=morning]{color-scheme:light;--scb:#faf7f1;--sci:#fffdf9;--bg:#f3eee5;--s1:#faf7f1;--s2:#ece5d8;--bd:#d4c9b6;--tx:#1d1a16;--mu:#675e52;--ac:#8f5518;--ac2:#7a4515;--ok:#3a7335;--mid:#85600d;--bad:#b0432e;--onac:#fff8ee;--hero:#f7f0e2;--tx2:#3a342b;--ph:#a39a8a;--okbd:#a8c9a0;--okbg:#e4f0df;--midbd:#d8c283;--midbg:#f6edcf;--badbg:#f6dfd7;--acbd:#d9b78e;--acbg:#f3e4d0;--oktx:#2a5c26;--midtx:#6b4e08;--badtx:#8a2f1d}
+:root{--scb:#000;--sci:#0c0c0c;--font:"Figtree",system-ui,"Noto Naskh Arabic","Segoe UI",Tahoma,sans-serif;--fnum:inherit;--rad:14px;--radb:11px;--radp:99px;--bw:1px;--sh:none;--ttl:none;--ls:0;--bg:#0e0e0f;--s1:#17171a;--s2:#202024;--bd:#2d2d33;--tx:#ece8e1;--mu:#968f85;--ac:#c38d4f;--ac2:#e2b37c;--ok:#7bb072;--mid:#d6b05a;--bad:#d06c57;--onac:#160e05;--hero:#1d1810;--tx2:#cfc6b8;--ph:#8a8378;--okbd:#3b5a37;--okbg:#1c2a1a;--midbd:#5c4d2a;--midbg:#2b2616;--badbg:#2a1a15;--acbd:#4a3a28;--acbg:#33261a;--oktx:#a6d69c;--midtx:#e5c97f;--badtx:#f0b3a3}
+html[data-th=morning]{color-scheme:light;--scb:#faf7f1;--sci:#fffdf9;--bg:#f3eee5;--s1:#faf7f1;--s2:#ece5d8;--bd:#d4c9b6;--tx:#1d1a16;--mu:#675e52;--ac:#8f5518;--ac2:#7a4515;--ok:#3a7335;--mid:#85600d;--bad:#b0432e;--onac:#fff8ee;--hero:#f7f0e2;--tx2:#3a342b;--ph:#6f6659;--okbd:#a8c9a0;--okbg:#e4f0df;--midbd:#d8c283;--midbg:#f6edcf;--badbg:#f6dfd7;--acbd:#d9b78e;--acbg:#f3e4d0;--oktx:#2a5c26;--midtx:#6b4e08;--badtx:#8a2f1d}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 var(--font)}
 body{padding-bottom:calc(74px + env(safe-area-inset-bottom))}
@@ -372,6 +372,18 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 #ask .abt button{flex:1;min-height:48px;border-radius:14px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;border:1px solid var(--bd);background:var(--s2);color:var(--tx2)}
 #ask .abt .ok{background:var(--ac);border-color:var(--ac);color:var(--onac,#111)}
 #ask .abt .ok.dg{background:transparent;border-color:var(--badtx);color:var(--badtx)}
+/* v114: زرار الأداء النضيف، أسماء طويلة، شاشات قصيرة، حجم الخط، تراجع */
+.wcl{display:block;margin:14px auto 0;padding:8px 16px;min-height:40px;border-radius:99px;border:1px solid var(--bd);background:none;color:var(--mu);font:inherit;font-size:13.5px;cursor:pointer}
+.wcl.on{border-color:var(--acbd);color:var(--ac2)}
+.on1{max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+.on1.lg{font-size:clamp(24px,7vw,32px)}
+@media (max-height:700px){.hs.cbm .qt{display:none}}
+button,a,[data-a]{touch-action:manipulation}
+html[data-fs="2"] #view>:not(.homew),html[data-fs="2"] .mbox,html[data-fs="2"] .sbx,html[data-fs="2"] #sess .wmain,html[data-fs="2"] .dtl{zoom:1.12}
+html[data-fs="3"] #view>:not(.homew),html[data-fs="3"] .mbox,html[data-fs="3"] .sbx,html[data-fs="3"] #sess .wmain,html[data-fs="3"] .dtl{zoom:1.25}
+#undo{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);display:flex;align-items:center;gap:14px;background:var(--s2);border:1px solid var(--bd);border-radius:14px;padding:8px 8px 8px 16px;font-size:14.5px;z-index:61;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 32px)}
+#undo.on{opacity:1;pointer-events:auto;transform:translateX(-50%)}
+#undo button{border:1px solid var(--acbd);background:none;color:var(--ac2);border-radius:10px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
 .pfbn{font-size:13px;line-height:1.7;color:var(--mu);margin:0 2px 10px}
 .cbdh{margin:16px 0 6px;font-size:13px;color:var(--mu);text-align:start}
 .sxs{margin:0 0 10px}
@@ -549,13 +561,13 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 </nav>
 <section id="sess" hidden></section>
 <div id="modal" hidden><div class="mbox"></div></div>
-<div id="toast"></div>
+<div id="toast"></div><div id="undo" role="status"><span></span><button data-u="1"></button></div>
 
 <script src="quotes.js"></script>
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='113';
+const VER='114';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -750,6 +762,7 @@ function migrate(){
   }
   if((S.mig||0)<3){importHist();S.mig=3}
   if((S.mig||0)<4){importHist4();S.mig=4}
+  if((S.mig||0)<6){S.mig6ask=S.sessions.some(x=>!x.imp&&x.ex.some(e=>!e.clean&&!e.unit));S.mig=6}
   if((S.mig||0)<5){for(const x of S.sessions)if(x.imp){const dd=S.program.days.find(d=>d.name===x.dayName);x.status=dd&&dd.ex.every(t=>x.ex.some(e=>e.name===t.name))?'full':'imp'}S.mig=5}
 }
 /* v87: آخر مرة التطبيق كان مفتوح (لشاشة البداية) */
@@ -912,6 +925,8 @@ function progMsg(t,h,unit,name){
   if(p.k==='stuck')return{c:'bad',t:L.pStuck(p.n)};
   return{c:'mid',t:L.pQ1(t.sets,t.goal)};
 }
+/* v114: الهدف بالمدى اللي القاعدة مستنياه: 3×10–12 */
+const tgt=(r,g,u)=>esc(String(+r||0))+(!u&&+g>+r?'–'+esc(String(+g)):'');
 const durSum=e=>(e.dur||[]).reduce((a,b)=>a+(+b||0),0);
 const durLine=e=>e.dur&&e.dur.some(x=>x>0)?tr('الوقت','Time')+': '+e.dur.map(x=>x>0?mmss(x):'—').join(' | ')+' | '+tr('الإجمالي','Total')+' '+mmss(durSum(e)):'';
 function cardText(s){
@@ -969,7 +984,14 @@ async function shareText(t){
 const THEMES={iron:{ar:"ليل",en:"Night",bg:"#0e0e0f"},morning:{ar:"صبح",en:"Morning",bg:"#f3eee5"}};
 const fOpen=new Set();document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.dataset&&d.dataset.fk){d.open?fOpen.add(d.dataset.fk):fOpen.delete(d.dataset.fk)}},true);
 function migTheme(){const t=S.settings.theme;if(!THEMES[t]){S.settings.theme=(t==='sand'||t==='book')?'morning':'iron';return true}return false}
-function applyTheme(){const t=THEMES[S.settings.theme]?S.settings.theme:'iron';document.documentElement.dataset.th=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEMES[t].bg;try{window.Android&&Android.setBarsTheme(t!=='morning')}catch(e){}}
+/* v114: «تراجع» بعد أي مسح: نسخة من البرنامج والسجل قبل المسح، 7 ثواني */
+let UND=null;
+function offerUndo(msg,snap){const el=$('#undo');if(!el)return;UND=snap;el.querySelector('span').textContent=msg;const b=el.querySelector('button');b.textContent=tr('تراجع','Undo');
+  b.onclick=()=>{if(!UND)return;const o=JSON.parse(UND);UND=null;Object.assign(S,o);if(!o.fbDay)delete S.fbDay;save();queueBackup();el.classList.remove('on');if(!$('#sess').hidden&&!S.draft)closeSession();else if(S.draft&&$('#sess').hidden&&o.draft&&tab==='home')renderHome();go(tab);toast(tr('رجعت ✓','Restored ✓'))};
+  el.classList.add('on');clearTimeout(offerUndo.t);offerUndo.t=setTimeout(()=>{el.classList.remove('on');UND=null},7000)}
+const undoSnap=()=>JSON.stringify({program:S.program,sessions:S.sessions,draft:S.draft||null,fbDay:S.fbDay||null});
+function applyFs(){const k=+(S&&S.settings&&S.settings.fs)||1;if(k>1)document.documentElement.dataset.fs=k;else delete document.documentElement.dataset.fs}
+function applyTheme(){applyFs();const t=THEMES[S.settings.theme]?S.settings.theme:'iron';document.documentElement.dataset.th=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEMES[t].bg;try{window.Android&&Android.setBarsTheme(t!=='morning')}catch(e){}}
 /* ================= التنقل ================= */
 let tab='home';
 const TABICO=['<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>'];
@@ -1098,7 +1120,7 @@ function renderHome(){
     return `<path class="ar${x.id===nd?' cur':dn?' dn':''}" d="${arcP(136,k*360/n+g/2,(k+1)*360/n-g/2)}"/>`}).join(''):`<circle class="ar cur" cx="150" cy="150" r="136"/>`;
   let last='';
   if(ds[0]){const k=Math.max(0,daysAgo(ds[0].date));last=' · '+tr('آخر جلسة: ','Last: ')+(k===0?tr('النهارده','today'):k===1?tr('امبارح','yesterday'):tr(`من ${k} يوم`,`${k} days ago`))}
-  const rowsOf=ex=>ex.map(e=>`<div class="dr${e.core?' c':''}"><span class="dn2 en">${esc(e.name)}</span><span class="dw en">${e.unit?'':fw(e.w)+' · '}${e.tsets}×${e.treps}${e.unit?' '+esc(unitTxt(e.unit)):''}</span></div>`).join(''),rows=rowsOf(pl.ex);
+  const rowsOf=ex=>ex.map(e=>`<div class="dr${e.core?' c':''}"><span class="dn2 en">${esc(e.name)}</span><span class="dw en">${e.unit?'':fw(e.w)+' · '}${esc(String(+e.tsets||0))}×${tgt(e.treps,e.goal,e.unit)}${e.unit?' '+esc(unitTxt(e.unit)):''}</span></div>`).join(''),rows=rowsOf(pl.ex);
   const coreOf=ex=>`<div class="coreline">${L.coreL}: <span class="en">${esc(ex.filter(e=>e.core).map(e=>e.name).join(' + '))}</span></div>`;
   const tag=dr?L.resume:L.exN(pl.ex.length);
   /* تنبيهات: جوّه التفاصيل، ونقطة صغيرة على الزرار لو فيه حاجة */
@@ -1110,7 +1132,7 @@ function renderHome(){
   const h=`<div class="homew"><div class="hs${c?' cbm':''}">
     <button class="orb" data-a="${dr?'resume':'start'}"${dr?'':` data-d="${esc(nd)}"`}>
       <svg viewBox="0 0 300 300" aria-hidden="true">${arcs}</svg>
-      <span class="oc"><span class="on1"><bdi>${esc(dName)}</bdi></span><span class="on2">${tag}</span></span>
+      <span class="oc"><span class="on1${dName.length>11?' lg':''}"><bdi>${esc(dName)}</bdi></span><span class="on2">${tag}</span></span>
     </button>
     <div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
     ${c?cbCard(c,dcb):dcb?cbCard(null,true):''}
@@ -1129,11 +1151,12 @@ function renderHome(){
 }
 
 /* ================= الجلسة ================= */
-function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),h=hh.find(x=>!x.cb)||hh[0];return{exId:t.id,name:t.name,unit:t.unit||'',core:!!t.core,goal:t.goal,tsets:t.sets,treps:t.reps,note0:t.note||libHow(t.name),w:src?src.w:(h?h.w:t.w),sets:src?src.sets.map(String):Array(t.sets).fill(''),dur:src&&src.dur?src.dur.slice():[],clean:src?!!src.clean:false,note:src?src.note||'':''}}
+function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),h=hh.find(x=>!x.cb)||hh[0];return{exId:t.id,name:t.name,unit:t.unit||'',core:!!t.core,goal:t.goal,tsets:t.sets,treps:t.reps,note0:t.note||libHow(t.name),w:src?src.w:(h?h.w:t.w),sets:src?src.sets.map(String):Array(t.sets).fill(''),dur:src&&src.dur?src.dur.slice():[],clean:src?!!src.clean:true,note:src?src.note||'':''}}
 async function startSession(id){
   if(S.draft&&!dEmpty(S.draft)&&!await ask(T().confNew))return;
-  S.draft=null;
-  S.draft=planDraft(id,id==='FB'?cbNow():null);
+  const pd=planDraft(id,id==='FB'?cbNow():null);
+  if(!pd.ex.length){toast(tr('اليوم ده فاضي. ضيف تمارين من «البرنامج» الأول','This day is empty. Add exercises in Program first'));return}
+  S.draft=pd;
   openTips.clear();save();openSession();
 }
 async function editSession(id){
@@ -1145,7 +1168,7 @@ async function editSession(id){
   if(d)for(const t of d.ex)if(!ex.some(e=>e.exId===t.id)){const e=draftEx(t);if(s.cb)cbApply(e,s.cb);ex.push(e)}
   S.draft.ex=ex;openTips.clear();save();closeModal(true);openSession();
 }
-function openSession(){const dd=S.draft,k0=dd.ex.findIndex(e=>!fullyIn(e));curEx=dd.editing?0:(k0<0?dd.ex.length-1:k0);finishing=false;renderSession();$('#sess').hidden=false;$('#sess').classList.remove('in');void $('#sess').offsetWidth;$('#sess').classList.add('in');$('#sess').scrollTop=0;document.body.style.overflow='hidden';wakeOn();if(!hs().sess){const n=Object.assign({tab:tab},hs(),{sess:1});delete n.modal;if(hs().modal)history.replaceState(n,'');else history.pushState(n,'')}saveUI()}
+function openSession(){if(!S.draft||!S.draft.ex.length){S.draft=null;save();if(tab==='home')renderHome();return}const dd=S.draft,k0=dd.ex.findIndex(e=>!fullyIn(e));curEx=dd.editing?0:(k0<0?dd.ex.length-1:k0);finishing=false;renderSession();$('#sess').hidden=false;$('#sess').classList.remove('in');void $('#sess').offsetWidth;$('#sess').classList.add('in');$('#sess').scrollTop=0;document.body.style.overflow='hidden';wakeOn();if(!hs().sess){const n=Object.assign({tab:tab},hs(),{sess:1});delete n.modal;if(hs().modal)history.replaceState(n,'');else history.pushState(n,'')}saveUI()}
 let WL=null;async function wakeOn(){try{window.Android&&Android.keepAwake(true)}catch(e){}try{if('wakeLock' in navigator&&!WL&&!document.hidden){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}}catch(e){}}
 function wakeOff(){try{window.Android&&Android.keepAwake(false)}catch(e){}try{WL&&WL.release()}catch(e){}WL=null}
 function closeSession(){wakeOff();swHalt();flushSave();$('#sess').hidden=true;document.body.style.overflow='';if(tab==='home')renderHome();saveUI();if(hs().sess)history.back()}
@@ -1228,7 +1251,7 @@ function renderSession(){
   const u=e.unit?' '+esc(unitTxt(e.unit)):'',showW=!(noW(e.w)&&e.unit);
   const showL=openTips.has('l'+i),showH=openTips.has('h'+i),showN=openTips.has('n'+i)||!!e.note;
   const seg=d.ex.map((x,k)=>{const s=exSt(x);return `<button class="sg${k===i?' cur':''}${fullyIn(x)?' dn':s==='part'?' wn':''}" data-a="exGo" data-i="${k}" aria-label="${k+1}"><i></i></button>`}).join('');
-  const du=e.dur||[],cir=e.sets.map((r,j)=>{const v=num(r)>0;return `<div class="cw"><button class="cir${v?' on':''}" data-a="setTap" data-j="${j}" aria-label="${tr('مجموعة','Set')} ${j+1}"><span class="en">${v?esc(r):e.treps}</span></button><small class="ct en">${du[j]>0?mmss(du[j]):''}</small></div>`}).join('');
+  const du=e.dur||[],cir=e.sets.map((r,j)=>{const v=num(r)>0;return `<div class="cw"><button class="cir${v?' on':''}" data-a="setTap" data-j="${j}" aria-label="${tr('مجموعة','Set')} ${j+1}"><span class="en">${v?esc(r):esc(String(+e.treps||0))}</span></button><small class="ct en">${du[j]>0?mmss(du[j]):''}</small></div>`}).join('');
   const lastP=h.length?h.slice(0,3).map(x=>`<div><bdi>${fmtD(x.date)}</bdi> · <bdi class="en">${fw(x.w)} | ${esc(setsStr(x))}</bdi></div>`).join(''):`<div>${L.first}</div>`;
   const ar=LANG==='ar';
   $('#sess').innerHTML=`<div class="wtop"><button class="wx" data-a="closeS" aria-label="${L.back}">✕</button><div class="wseg">${seg}</div><button class="wx" data-a="menu" aria-label="${tr('خيارات','Options')}">⋯</button></div>
@@ -1236,8 +1259,9 @@ function renderSession(){
   ${d.cb?`<div class="cbn">${cbLine(d.cb)}</div>`:''}
   <div class="wmain${wAnim?' wa':''}" data-i="${i}">
     <button class="wname en${e.core?' core':''}" data-a="guide" aria-label="${tr('طريقة الأداء','How to perform')}">${esc(e.name)}<span class="wgh">${tr('اضغط لطريقة الأداء','Tap to see how to perform')}</span></button>
-    <div class="wtg">${showW?`<button class="wwt en${earn?' earn':''}" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>`:''}<span class="wsr en">${e.tsets}×${e.treps}${u}</span></div>
+    <div class="wtg">${showW?`<button class="wwt en${earn?' earn':''}" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>`:''}<span class="wsr en">${esc(String(+e.tsets||0))}×${tgt(e.treps,e.goal,e.unit)}${u}</span></div>
     <div class="wsets">${cir}</div>
+    ${e.unit?'':`<button class="wcl${e.clean?' on':''}" data-a="clean" aria-pressed="${e.clean?'true':'false'}">${e.clean?tr('✓ أداء نضيف','✓ Clean form'):tr('مش نضيف (مرجحة أو أداء مكسور)','Not clean (swinging or broken form)')}</button>`}
     <div class="wrest">${swHtml(e)}</div>
     <div class="whint${showH?' open':''}" dir="auto" data-a="tgl" data-k="h${i}">${esc(e.note0&&e.note0!==libHowAlt(e.name)?e.note0:(libHow(e.name)||e.note0||''))}</div>
     <div class="wlinks"><button data-a="tgl" data-k="l${i}">↺ ${tr('آخر أداء','Last')}</button><button data-a="tgl" data-k="n${i}">✎ ${L.note}</button><button data-a="addset" data-i="${i}">+ ${tr('مجموعة','Set')}</button></div>
@@ -1555,7 +1579,7 @@ function sysModal(){
 function dayModal(){
   const d=day(pDay);
   modal(`<h3>${tr('تعديل اليوم','Edit day')}</h3>
-  <label class="fld">${tr('اسم اليوم','Day name')}<input class="inp en" id="dName" value="${esc(d.name)}" style="text-align:left"></label>
+  <label class="fld">${tr('اسم اليوم','Day name')}<input class="inp en" id="dName" maxlength="24" value="${esc(d.name)}" style="text-align:left"></label>
   <div class="row"><button class="btn pri sp" data-a="daySave">${T().saveB}</button>${S.program.days.length>1&&pDay!=='FB'?`<button class="btn dan" data-a="dayDel">${tr('احذف اليوم','Delete day')}</button>`:''}<button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);
 }
 function tplModal(i){
@@ -1600,7 +1624,7 @@ async function deriveKey(pass,salt,iter){
 }
 async function sealBytes(key,bytes){const iv=crypto.getRandomValues(new Uint8Array(12));return{iv,ct:new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,bytes))}}
 /* كل اللي محتاجينه عشان الاسترجاع يرجّع كل حاجة (نفس الشكل في الملف وGitHub) */
-const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],libOv:S.libOv||{},exNotes:S.exNotes||{},steps:S.steps||{},body:S.body||[],mig:S.mig||0});
+const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],libOv:S.libOv||{},exNotes:S.exNotes||{},steps:S.steps||{},body:S.body||[],mig:S.mig||0,fbDay:S.fbDay||null});
 async function packBackup(){
   const payload=enc.encode(JSON.stringify({app:'gymlog',v:1,at:Date.now(),data:snapData()}));
   let z=null;try{z=await pipe(payload,new CompressionStream('gzip'))}catch(e){}
@@ -1706,14 +1730,21 @@ async function restoreRemote(){
 }
 /* ================= الاسترجاع (ملف أو GitHub) ================= */
 const HIST_MIG=5;/* آخر ترحيل بيستورد السجل القديم: بعد الاسترجاع مايتعادش أبدًا */
+/* v114: أي رقم جاي من ملف بيتحوّل رقم فعلًا، والوحدة من قايمة ثابتة (ملف متلغّم مايقدرش يحط كود) */
+const nn=(v,a,b,d)=>{const x=Number(v);return isFinite(x)?Math.min(b,Math.max(a,x)):d};
+const UNITS=['','ث','خطوة','د'],okU=u=>UNITS.includes(u)?u:'';
+const cleanEx=e=>({exId:String(e.exId||'h:'+e.name),name:String(e.name).slice(0,80),unit:okU(e.unit),core:!!e.core,goal:nn(e.goal,0,999,12),tsets:nn(e.tsets,1,20,3),treps:nn(e.treps,0,999,10),w:e.w===''||e.w==null?'':nn(e.w,0,2000,0),sets:e.sets.map(Number).filter(v=>isFinite(v)&&v>0).map(v=>Math.min(v,999)),dur:Array.isArray(e.dur)?e.dur.map(x=>nn(x,0,36000,0)):undefined,clean:!!e.clean,note:String(e.note||'').slice(0,500)});
+const cleanT=t=>({id:String(t.id),name:String(t.name).slice(0,80),w:nn(t.w,0,2000,0),sets:nn(t.sets,1,20,3),reps:nn(t.reps,1,999,10),goal:nn(t.goal,1,999,12),unit:okU(t.unit),core:!!t.core,note:String(t.note||'').slice(0,1000)});
 function cleanSession(s){
   if(!s||typeof s!=='object'||typeof s.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s.date)||!Array.isArray(s.ex))return null;
-  const ex=s.ex.filter(e=>e&&typeof e.name==='string'&&Array.isArray(e.sets)).map(e=>Object.assign({},e,{sets:e.sets.map(Number).filter(v=>!isNaN(v)),exId:e.exId||'h:'+e.name,unit:e.unit||'',note:e.note||''}));
-  return Object.assign({},s,{id:s.id||uid(),dayName:String(s.dayName||s.day||'?'),cycle:+s.cycle||1,status:s.status||'part',ts:+s.ts||new Date(s.date+'T12:00:00').getTime(),ex});
+  const ex=s.ex.filter(e=>e&&typeof e.name==='string'&&Array.isArray(e.sets)).map(cleanEx);
+  const cb=s.cb&&typeof s.cb==='object'?{k:s.cb.k==='fb'?'fb':'lt',p:nn(s.cb.p,.3,1,.9),g:nn(s.cb.g,0,9999,8),i:nn(s.cb.i,0,9,0),n:nn(s.cb.n,1,9,1)}:undefined;
+  const o={id:String(s.id||uid()),date:s.date,day:String(s.day||''),dayName:String(s.dayName||s.day||'?').slice(0,80),cycle:nn(s.cycle,1,9999,1),status:['full','core','part','imp'].includes(s.status)?s.status:'part',ts:nn(s.ts,0,9e15,new Date(s.date+'T12:00:00').getTime()),ex};
+  if(s.imp)o.imp=1;if(cb)o.cb=cb;return o;
 }
 function cleanRestore(d){
   if(!d||!d.program||!Array.isArray(d.program.days)||!Array.isArray(d.sessions))throw new Error('fmt');
-  const days=d.program.days.filter(x=>x&&x.id&&Array.isArray(x.ex)).map(x=>Object.assign({},x,{name:String(x.name||x.id),ex:x.ex.filter(t=>t&&t.id&&typeof t.name==='string')}));
+  const days=d.program.days.filter(x=>x&&x.id&&Array.isArray(x.ex)).map(x=>({id:String(x.id),name:String(x.name||x.id).slice(0,40),ex:x.ex.filter(t=>t&&t.id&&typeof t.name==='string').map(cleanT)}));
   if(!days.length)throw new Error('fmt');
   const ss=d.sessions.map(cleanSession).filter(Boolean);
   return{days,ss,bad:d.sessions.length-ss.length};
@@ -1723,7 +1754,7 @@ async function applyRestore(d){
   if(!await ask(T().confRestore(c.ss.length),{danger:1}))return false;
   /* نسخة من اللي على الموبايل قبل الاسترجاع، عشان «تراجع» */
   try{await idb.set('state.prerestore',{at:Date.now(),data:JSON.parse(JSON.stringify(S))})}catch(e){}
-  S={v:1,program:Object.assign({},d.program,{days:c.days}),sessions:c.ss,settings:Object.assign({cycle:8},d.settings||{},{lang:LANG}),draft:d.draft||null,sys:d.sys||undefined,custom:Array.isArray(d.custom)?d.custom:[],libOv:(d.libOv&&typeof d.libOv==='object')?d.libOv:{},exNotes:(d.exNotes&&typeof d.exNotes==='object')?d.exNotes:{},steps:(d.steps&&typeof d.steps==='object')?d.steps:{},body:Array.isArray(d.body)?d.body:[],mig:Math.max(+d.mig||0,HIST_MIG)};
+  S={v:1,program:Object.assign({},d.program,{days:c.days}),sessions:c.ss,settings:Object.assign({cycle:1},d.settings&&typeof d.settings==='object'?d.settings:{},{lang:LANG}),draft:null,fbDay:d.fbDay&&Array.isArray(d.fbDay.ex)?{id:'FB',name:String(d.fbDay.name||'Full Body').slice(0,40),ex:d.fbDay.ex.filter(t=>t&&t.id&&typeof t.name==='string').map(cleanT)}:undefined,sys:d.sys||undefined,custom:Array.isArray(d.custom)?d.custom:[],libOv:(d.libOv&&typeof d.libOv==='object')?d.libOv:{},exNotes:(d.exNotes&&typeof d.exNotes==='object')?d.exNotes:{},steps:(d.steps&&typeof d.steps==='object')?d.steps:{},body:Array.isArray(d.body)?d.body:[],mig:Math.max(+d.mig||0,HIST_MIG)};
   if(S.draft&&(!Array.isArray(S.draft.ex)))S.draft=null;
   save();queueBackup();toast(c.bad?T().restoredSkip(c.bad):T().restored);go('home');return true;
 }
@@ -1895,6 +1926,7 @@ function renderData(){
     <div class="mu">${L.lastBk}: ${lb?new Date(lb).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.never}</div>
     ${persisted===true?`<div class="mu">✓ ${L.persisted}</div>`:''}</div>
   <div class="thseg" role="group" aria-label="${L.themeT}"><button class="${(S.settings.theme||'iron')==='iron'?'on':''}" data-a="theme" data-k="iron">${THEMES.iron[LANG]}</button><button class="${S.settings.theme==='morning'?'on':''}" data-a="theme" data-k="morning">${THEMES.morning[LANG]}</button></div>
+  <div class="qrow"><div class="mu">${tr('حجم الخط','Text size')}</div><div class="thseg">${[1,2,3].map(k=>`<button class="${(+S.settings.fs||1)===k?'on':''}" data-a="fs" data-k="${k}" style="font-size:${[14,16,18][k-1]}px">${[tr('عادي','Normal'),tr('أكبر','Larger'),tr('كبير','Large')][k-1]}</button>`).join('')}</div></div>
   <div class="qrow"><div class="mu">${tr('بيت الشعر: دوسة = نسخ · سحب = تنقل','Verse: tap = copy · swipe = browse')}</div><div class="thseg"><button class="${qGestOn()?'on':''}" data-a="qGest" data-k="on">${tr('شغّال','On')}</button><button class="${qGestOn()?'':'on'}" data-a="qGest" data-k="off">${tr('مقفول','Off')}</button></div></div>
   ${bodySec()}
   <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?`<span class="pdot${SYNC.err?' er':''}" style="margin-inline-start:6px"></span>`:''}<span class="pchev">⌄</span></summary><div class="fbody">
@@ -1974,7 +2006,7 @@ document.addEventListener('click',ev=>{
     case 'resume':if(b.classList.contains('orb'))orbGo(b,openSession);else openSession();break;
     case 'closeS':flushSave();closeSession();if(S.draft)queueDraftBackup();break;
     case 'shareDraft':shareDraft();break;
-    case 'discard':ask(d.editing?L.confCancelEdit:L.confDiscard,{danger:1}).then(ok=>{if(ok){S.draft=null;openTips.clear();save();closeSession()}});break;
+    case 'discard':ask(d.editing?L.confCancelEdit:L.confDiscard,{danger:1}).then(ok=>{if(ok){const _u=undoSnap();S.draft=null;openTips.clear();save();closeSession();offerUndo(tr('الجلسة اتلغت','Session discarded'),_u)}});break;
     case 'addset':d.ex[i].sets.push('');save();renderSession();break;
     case 'exGo':goEx(i);break;
     case 'setTap':{const j=+b.dataset.j,e=d.ex[curEx];if(num(e.sets[j])>0){openPick('s',j);break}
@@ -1985,6 +2017,7 @@ document.addEventListener('click',ev=>{
         if(ps&&ps.k==='up'&&!e.unit&&v>(isNaN(old)?0:old)&&+e.goal>8){e.goal=8;e.treps=8;toast(tr('وزن جديد: الهدف النهارده ٨ عدّات','New weight: today\'s target is 8 reps'))}
         e.w=String(v)}else e.sets[pk.j]=String(v);saveSoon();closeSheet();renderSession();break}
     case 'stepSet':{const e=d.ex[curEx];S.steps=S.steps||{};S.steps[nk(e.name)]=+b.dataset.v;save();b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderSession();break}
+    case 'clean':{const e=d.ex[curEx];e.clean=!e.clean;saveSoon();renderSession();break}
     case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
     case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value);if(!(w>0)&&!(c>0)){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}
       S.body=S.body||[];const t=today();let r=S.body.find(x=>x.d===t);if(!r){r={d:t};S.body.push(r)}if(w>0)r.w=w;if(c>0)r.c=c;fOpen.add('body');save();queueBackup();renderData();toast(tr('اتسجّل ✓','Logged ✓'));break}
@@ -2005,7 +2038,7 @@ document.addEventListener('click',ev=>{
     case 'aiS':{const s=S.sessions.find(x=>x.id===b.dataset.id);if(s)shareText(aiText(s,s.id));break}
     case 'editS':editSession(b.dataset.id);break;
     case 'undoRestore':undoRestore();break;
-    case 'delS':ask(L.confDel,{danger:1}).then(ok=>{if(ok){S.sessions=S.sessions.filter(x=>x.id!==b.dataset.id);if(S.draft&&S.draft.editing===b.dataset.id)S.draft=null;save();queueBackup();closeModal();go(tab)}});break;
+    case 'delS':ask(L.confDel,{danger:1}).then(ok=>{if(ok){const _u=undoSnap();S.sessions=S.sessions.filter(x=>x.id!==b.dataset.id);if(S.draft&&S.draft.editing===b.dataset.id)S.draft=null;save();queueBackup();closeModal();go(tab);offerUndo(tr('الجلسة اتمسحت','Session deleted'),_u)}});break;
     case 'closeM':closeModal();break;
     case 'pday':pDay=b.dataset.d;renderProgram();break;
     case 'fbReset':ask(tr('ترجّع الفول بادي للاختيار التلقائي من برنامجك؟','Reset the full body to the automatic pick from your program?')).then(ok=>{if(ok){S.fbDay=null;fbDay();save();queueBackup();renderProgram();toast(tr('اترجع ✓','Reset ✓'))}});break;
@@ -2032,6 +2065,7 @@ document.addEventListener('click',ev=>{
     case 'hwReset':{const n=b.dataset.n,old=libHow(n);if(S.libOv)delete S.libOv[n];hwApply(n,old);toast(tr('رجع الأصلي ✓','Restored ✓'));break}
     case 'cuSave':cuSave(b.dataset.n);break;
     case 'cuDel':ask(tr('تحذف التمرين ده من مكتبتك؟ برنامجك وسجلك مش هيتأثروا.','Delete this exercise from your library? Your program and log are not affected.'),{danger:1}).then(ok=>{if(ok){S.custom=(S.custom||[]).filter(x=>x.name!==b.dataset.n);save();queueBackup();closeModal();renderLib()}});break;
+    case 'fs':S.settings.fs=+b.dataset.k;applyFs();save();renderData();break;
     case 'qGest':S.settings.qGest=b.dataset.k==='off'?0:1;save();renderData();break;
     case 'howLang':S.settings.howLang=b.dataset.k==='en'?'en':'ar';save();renderData();break;
     case 'lbE':lbE=b.dataset.e;{const c=$('#lbEC'),l=$('#lbL');if(c)c.innerHTML=lbEChips();if(l)l.innerHTML=libRows()}break;
@@ -2042,11 +2076,11 @@ document.addEventListener('click',ev=>{
     case 'dayAdd':{const nd={id:'D'+uid(),name:tr('يوم جديد','New day'),ex:[]};S.program.days.push(nd);pDay=nd.id;save();queueBackup();renderProgram();dayModal();break}
     case 'dayEdit':dayModal();break;
     case 'daySave':{const v=$('#dName').value.trim();if(v){day(pDay).name=v;save();queueBackup()}closeModal();renderProgram();break}
-    case 'dayDel':ask(tr('تحذف اليوم ده بتمارينه؟ السجل القديم مش هيتأثر.','Delete this day and its exercises? Your log is not affected.'),{danger:1}).then(ok=>{if(ok){S.program.days=S.program.days.filter(x=>x.id!==pDay);pDay=S.program.days[0].id;save();queueBackup();closeModal();renderProgram()}});break;
+    case 'dayDel':ask(tr('تحذف اليوم ده بتمارينه؟ السجل القديم مش هيتأثر.','Delete this day and its exercises? Your log is not affected.'),{danger:1}).then(ok=>{if(ok){const _u=undoSnap();S.program.days=S.program.days.filter(x=>x.id!==pDay);pDay=S.program.days[0].id;save();queueBackup();closeModal();renderProgram();offerUndo(tr('اليوم اتمسح','Day deleted'),_u)}});break;
     case 'editT':tplModal(i);break;
     case 'addT':cuModal();break;
     case 'saveT':saveTpl(i);break;
-    case 'delT':ask(L.confDelEx,{danger:1}).then(ok=>{if(ok){day(pDay).ex.splice(i,1);save();queueBackup();closeModal();renderProgram()}});break;
+    case 'delT':ask(L.confDelEx,{danger:1}).then(ok=>{if(ok){const _u=undoSnap();day(pDay).ex.splice(i,1);save();queueBackup();closeModal();renderProgram();offerUndo(tr('التمرين اتشال','Exercise removed'),_u)}});break;
     case 'copyT':copy(tplCard(day(pDay)));break;
     case 'backup':backupNow();break;
     case 'share':shareBackup();break;
@@ -2098,7 +2132,7 @@ window.addEventListener('scroll',()=>{clearTimeout(window.__st);window.__st=setT
 window.addEventListener('pagehide',flushSave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){flushSave();saveUI();if(S.draft)queueDraftBackup()}else if(!$('#sess').hidden)wakeOn()});
 const UI0=readUI();
-boot().then(()=>{if(migTheme()){delete S.settings.thGr;delete S.settings.thDawn;save()}applyLang();if(S.impN){const k=S.impN;S.impN=0;save();setTimeout(()=>toast(T().histNote(k)),600)}go('home');restoreUI(UI0);setTimeout(()=>('requestIdleCallback' in window?requestIdleCallback(warmTabs,{timeout:4000}):warmTabs()),2500);if(pendMig){toast(T().migNote);pendMig=false}if(SYNC.on&&SYNC.dirty)setTimeout(runBackup,1500)});
+boot().then(()=>{if(migTheme()){delete S.settings.thGr;delete S.settings.thDawn;save()}applyLang();if(S.impN){const k=S.impN;S.impN=0;save();setTimeout(()=>toast(T().histNote(k)),600)}go('home');restoreUI(UI0);if(S.mig6ask){delete S.mig6ask;save();setTimeout(async()=>{if(await ask(tr('التطبيق بقى بيعتبر أداءك نضيف من الأول، وانت بتعلّم «مش نضيف» بس لو حصلت مرجحة. نعتبر جلساتك اللي فاتت نضيفة كمان، علشان قاعدة الزيادة تبدأ تحسب منها؟','Form now counts as clean by default; you mark «not clean» only when it is not. Count your past sessions as clean too, so the progression rule can use them?'),{yes:tr('أيوه','Yes'),no:tr('لأ','No')})){for(const x of S.sessions)if(!x.imp)for(const e of x.ex)e.clean=true;save();queueBackup();go(tab)}},900)}setTimeout(()=>('requestIdleCallback' in window?requestIdleCallback(warmTabs,{timeout:4000}):warmTabs()),2500);if(pendMig){toast(T().migNote);pendMig=false}if(SYNC.on&&SYNC.dirty)setTimeout(runBackup,1500)});
 </script>
 </body>
 </html>
