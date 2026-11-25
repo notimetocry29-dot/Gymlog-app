@@ -362,6 +362,7 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 .cbh:active{transform:scale(.98);background:var(--s2)}
 .cbh .cbt{display:block}
 .cbgo{display:block;margin-top:9px;padding-top:8px;border-top:1px solid var(--bd);color:var(--ac2);font-weight:600;font-size:13.5px}
+.pfbn{font-size:13px;line-height:1.7;color:var(--mu);margin:0 2px 10px}
 .cbdh{margin:16px 0 6px;font-size:13px;color:var(--mu);text-align:start}
 .sxs{margin:0 0 10px}
 .cbh b{display:block;color:var(--tx2);font-weight:600;font-size:14px;margin-bottom:3px}
@@ -544,7 +545,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='111';
+const VER='112';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -772,7 +773,11 @@ async function boot(){
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 }
 
-const day=id=>S.program.days.find(d=>d.id===id)||S.program.days[0];
+/* v112: «Full Body» بتاع الرجوع يوم متخزّن تعدّله من تبويب البرنامج زي أي يوم (مش جزء من الدورة) */
+function fbDay(){
+  if(!S.fbDay||!Array.isArray(S.fbDay.ex)){S.fbDay={id:'FB',name:'Full Body',ex:fbPick().map(x=>Object.assign({},x.t,{id:uid(),core:x.core,sets:2}))};saveSoon()}
+  return S.fbDay}
+const day=id=>id==='FB'?fbDay():S.program.days.find(d=>d.id===id)||S.program.days[0];
 const coreNames=d=>d.ex.filter(e=>e.core).map(e=>e.name);
 const done=()=>S.sessions.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);
 function dayIdx(s){const o=S.program.days;let i=o.findIndex(d=>d.id===s.day);if(i<0)i=o.findIndex(d=>d.name===s.dayName);return i}
@@ -783,7 +788,7 @@ function calcCycle(dayId){const l=realLast();if(!l)return S.settings.cycle||1;co
 const nk=n=>String(n||'').trim().toLowerCase();
 /* تاريخ التمرين: بالاسم من كل الجلسات (مش مربوط بيوم معين) */
 function exHist(exId,skip){const out=[];
-  const me=S.program.days.flatMap(d=>d.ex).find(x=>x.id===exId),nm=me?nk(me.name):null;
+  const me=S.program.days.concat(S.fbDay?[S.fbDay]:[]).flatMap(d=>d.ex).find(x=>x.id===exId),nm=me?nk(me.name):null;
   for(const s of done()){if(s.id===skip)continue;const e=s.ex.find(x=>x.exId===exId)||(nm&&s.ex.find(x=>nk(x.name)===nm));if(e)out.push(Object.assign({date:s.date,cycle:s.cycle,cb:s.cb?1:0},e))}return out}
 function histMap(){const m={};for(const s of done())for(const e of s.ex){const k=nk(e.name);(m[k]||(m[k]=[])).push(Object.assign({date:s.date,cycle:s.cycle,cb:s.cb?1:0},e))}return m}
 function setsStr(e){const a=e.sets;const u=e.unit?' '+unitTxt(e.unit):'';if(!a.length)return '';return a.every(r=>r===a[0])?`${a.length}×${a[0]}${u}`:a.join('/')+u}
@@ -805,7 +810,7 @@ const dGap=(a,b)=>Math.round((new Date(a+'T12:00:00')-new Date(b+'T12:00:00'))/8
 function cbNow(){
   const ds=done();if(!ds.length)return null;
   const at=(g,i)=>{let st=cbSteps(g);if(i>=st.length)return null;
-    if(st.some(x=>x.k==='fb')&&fbPick().length<3)st=st.map(x=>({k:'lt',p:x.p}));
+    if(st.some(x=>x.k==='fb')&&fbDay().ex.length<2)st=st.map(x=>({k:'lt',p:x.p}));
     return{g,i,n:st.length,st,step:st[i],after:ds.slice(0,i).reverse()}};
   const g0=daysAgo(ds[0].date);if(g0>=CBD)return at(g0,0);
   for(let i=0;i<Math.min(ds.length-1,4);i++){const g=dGap(ds[i].date,ds[i+1].date);if(g>=CBD)return at(g,i+1)}
@@ -827,16 +832,16 @@ function fbPick(){
 }
 /* التخفيف: فول بادي = مجموعتين. مخففة = مجموعة أقل (أقل حاجة ٢). الوزن نسبة من وزنك قبل الغياب */
 function cbApply(e,cb){
-  const n=cb.k==='fb'?2:Math.max(2,(+e.tsets||3)-1);if(n!==+e.tsets){e.tsets=n;e.sets=Array(n).fill('');e.dur=[]}
+  const n=cb.k==='fb'?(+e.tsets||2):Math.max(2,(+e.tsets||3)-1);if(n!==+e.tsets){e.tsets=n;e.sets=Array(n).fill('');e.dur=[]}
   const w=num(e.w);if(!e.unit&&w>0){const st=stepOf(e.name);e.w=String(Math.min(w,Math.max(st,Math.round(w*cb.p/st)*st)))}
 }
 /* الجلسة اللي هتتلعب (من غير حفظ): الرئيسية بتعرضها، و«ابدأ» بيفتحها */
 function planDraft(id,c){
   const fb=id==='FB';let ex,dd=null;
-  if(fb)ex=fbPick().map(x=>Object.assign(draftEx(x.t),{core:x.core}));
+  if(fb)ex=fbDay().ex.map(t=>draftEx(t));
   else{dd=day(id);ex=dd.ex.map(t=>draftEx(t))}
   const l=realLast();
-  const dr={id:uid(),editing:null,date:today(),day:fb?'FB':dd.id,dayName:fb?'Full Body':dd.name,cycle:fb?(l?l.cycle:(S.settings.cycle||1)):calcCycle(dd.id),ex};
+  const dr={id:uid(),editing:null,date:today(),day:fb?'FB':dd.id,dayName:fb?fbDay().name:dd.name,cycle:fb?(l?l.cycle:(S.settings.cycle||1)):calcCycle(dd.id),ex};
   if(c){dr.cb={k:fb?'fb':'lt',p:c.step.p,g:c.g,i:c.i,n:c.n};if(!fb)dr.dayName+=' · Light';ex.forEach(e=>cbApply(e,dr.cb))}
   return dr;
 }
@@ -1106,7 +1111,7 @@ function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),h=hh.find
 function startSession(id){
   if(S.draft&&!dEmpty(S.draft)&&!confirm(T().confNew))return;
   S.draft=null;
-  S.draft=planDraft(id,null);
+  S.draft=planDraft(id,id==='FB'?cbNow():null);
   openTips.clear();save();openSession();
 }
 function editSession(id){
@@ -1474,7 +1479,7 @@ function shortDay(n){
 function renderProgram(){
   sysInit();const L=T(),days=S.program.days;
   if(!pInit){pInit=true;try{pDay=nextDayId()}catch(e){}}
-  if(!days.some(d=>d.id===pDay))pDay=days[0].id;
+  if(pDay!=='FB'&&!days.some(d=>d.id===pDay))pDay=days[0].id;
   const d=day(pDay),sp=SYSTEMS.find(x=>x.id===S.sys.cur)||SYSTEMS[0];
   const cores=d.ex.filter(t=>t.core).map(t=>esc(t.name));
   const rows=d.ex.map((t,i)=>{
@@ -1484,12 +1489,13 @@ function renderProgram(){
     const last=l?`${setsStr(l)?setsStr(l)+' · ':''}${fw(l.w)} · ${esc(l.date||'')}`:tr('لسه ماتلعبش','Not logged yet');
     return `<details class="pr2"><summary><span class="pno${t.core?' cr':''}">${i+1}</span><div class="sp"><div class="pnm en">${esc(t.name)}</div><div class="mu">${meta}${lb?` · ${GRP[lb[1]][LANG==='ar'?0:1]}`:''}</div></div><span class="pchev">⌄</span></summary><div class="pdrop"><div class="mu">${tr('آخر أداء','Last time')}: <span class="en">${last}</span></div><button class="plink" data-a="exInfo" data-i="${i}">${tr('طريقة اللعب','How to perform')}</button></div></details>`;
   }).join('')||`<div class="empty">${tr('اليوم فاضي.','Empty day.')}</div>`;
-  const tabs=days.map((x,k)=>`<button class="${x.id===pDay?'on':''}" data-a="pday" data-d="${x.id}">${esc(shortDay(x.name))}</button>`).join('')+(pEdit?`<button data-a="dayAdd" aria-label="${tr('يوم جديد','New day')}">+</button>`:'');
+  const tabs=days.map((x,k)=>`<button class="${x.id===pDay?'on':''}" data-a="pday" data-d="${x.id}">${esc(shortDay(x.name))}</button>`).join('')+`<button class="${pDay==='FB'?'on':''}" data-a="pday" data-d="FB">${tr('رجوع','Comeback')}</button>`+(pEdit?`<button data-a="dayAdd" aria-label="${tr('يوم جديد','New day')}">+</button>`:'');
   $('#view').innerHTML=`<button class="psys" data-a="sysOpen"><span class="en">${esc(sysName(sp))}</span><span class="pchev">⌄</span></button>
   <div class="ptabs">${tabs}</div>
   <div class="phead"><div class="pdn en">${esc(d.name)}</div><button class="ptxt" data-a="pedit">${pEdit?tr('تم','Done'):tr('تعديل','Edit')}</button></div>
+  ${pDay==='FB'?`<div class="pfbn">${tr('ده الفول بادي اللي بيتلعب في جلسة الرجوع بعد الغياب. مش جزء من الدورة. عدّل تمارينه ومجموعاته زي ما انت عايز، والتطبيق بيحط الأوزان المخففة لوحده.','The full body played in the comeback session after a break. It is not part of the rotation. Edit its exercises and sets as you like; the app sets the reduced weights itself.')}</div>`:''}
   <div class="plist${pEdit?' ed':''}">${rows}</div>
-  ${pEdit?`<div class="pact"><button class="plink" data-a="libOpen">+ ${tr('تمرين','Exercise')}</button><button class="plink" data-a="dayEdit">${tr('اسم اليوم','Rename day')}</button><button class="plink" data-a="copyT">${L.copyTpl}</button></div>`
+  ${pEdit?`<div class="pact"><button class="plink" data-a="libOpen">+ ${tr('تمرين','Exercise')}</button>${pDay==='FB'?`<button class="plink" data-a="fbReset">${tr('رجّعه للاختيار التلقائي','Reset to automatic')}</button>`:''}<button class="plink" data-a="dayEdit">${tr('اسم اليوم','Rename day')}</button><button class="plink" data-a="copyT">${L.copyTpl}</button></div>`
   :`${cores.length?`<div class="pcore"><b>${tr('الأساسي','Essentials')}:</b> <span class="en">${cores.join(' + ')}</span></div>`:''}${d.ex.length?`<button class="btn pri w pgo" data-a="start" data-d="${d.id}">${tr('ابدأ اليوم ده','Start this day')}</button>`:`<button class="btn pri w pgo" data-a="libOpen">+ ${tr('ضيف تمرين من المكتبة','Add from library')}</button>`}`}`;
 }
 function infoModal(i){
@@ -1528,7 +1534,7 @@ function dayModal(){
   const d=day(pDay);
   modal(`<h3>${tr('تعديل اليوم','Edit day')}</h3>
   <label class="fld">${tr('اسم اليوم','Day name')}<input class="inp en" id="dName" value="${esc(d.name)}" style="text-align:left"></label>
-  <div class="row"><button class="btn pri sp" data-a="daySave">${T().saveB}</button>${S.program.days.length>1?`<button class="btn dan" data-a="dayDel">${tr('احذف اليوم','Delete day')}</button>`:''}<button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);
+  <div class="row"><button class="btn pri sp" data-a="daySave">${T().saveB}</button>${S.program.days.length>1&&pDay!=='FB'?`<button class="btn dan" data-a="dayDel">${tr('احذف اليوم','Delete day')}</button>`:''}<button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);
 }
 function tplModal(i){
   const L=T(),d=day(pDay),t=i>-1?d.ex[i]:{name:'',w:'',sets:3,reps:12,goal:12,unit:'',core:false,note:''};
@@ -1980,6 +1986,7 @@ document.addEventListener('click',ev=>{
     case 'delS':if(confirm(L.confDel)){S.sessions=S.sessions.filter(x=>x.id!==b.dataset.id);if(S.draft&&S.draft.editing===b.dataset.id)S.draft=null;save();queueBackup();closeModal();go(tab)}break;
     case 'closeM':closeModal();break;
     case 'pday':pDay=b.dataset.d;renderProgram();break;
+    case 'fbReset':if(confirm(tr('ترجّع الفول بادي للاختيار التلقائي من برنامجك؟','Reset the full body to the automatic pick from your program?'))){S.fbDay=null;fbDay();save();queueBackup();renderProgram();toast(tr('اترجع ✓','Reset ✓'))}break;
     case 'exInfo':infoModal(i);break;
     case 'sysOpen':sysModal();break;
     case 'pedit':pEdit=!pEdit;renderProgram();break;
