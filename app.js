@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='129';
+const VER='130';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -407,6 +407,7 @@ function cbWhy(){const c=cbNow();if(!c)return;const nm=s=>s.k==='fb'?tr('جسم 
   <div class="cbs" dir="${LANG==='ar'?'rtl':'ltr'}">${c.st.map((s,k)=>`<span class="${k<c.i?'ok':k===c.i?'on':''}">${k<c.i?'✓ ':''}${nm(s)} <bdi class="en">${cbPct(s)}</bdi></span>`).join('<i>›</i>')}<i>›</i><span>${tr('جدولك','Your plan')}</span></div>
   <button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
 function dlWhy(){modal(`<h3>${tr('أسبوع خفيف','Light week')}</h3><div class="dsec" style="line-height:1.9">${tr('بعد 6 أسابيع تمرين ورا بعض، التعب بيتراكم حتى لو مش حاسس بيه. أسبوع خفيف (مجموعة أقل في كل تمرين، والأوزان 90%) بيخلّي جسمك يتخلص منه ويرجع أقوى. ومابيتحسبش في قاعدة الزيادة.','After 6 straight weeks fatigue builds up even if you do not feel it. A light week (one set less, 90% weights) lets your body clear it and come back stronger. It does not count toward the rule.')}</div><button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
+const swRow=(a,on,t,d)=>`<button class="swr" data-a="${a}" data-k="${on?'off':'on'}" role="switch" aria-checked="${on?'true':'false'}"><span class="swt2"><b>${t}</b><small>${d}</small></span><i class="swk${on?' on':''}"></i></button>`;
 function offerUndo(msg,snap){const el=$('#undo');if(!el)return;UND=snap;el.querySelector('span').textContent=msg;const b=el.querySelector('button');b.textContent=tr('تراجع','Undo');
   b.onclick=()=>{if(!UND)return;const o=JSON.parse(UND);UND=null;Object.assign(S,o);if(!o.fbDay)delete S.fbDay;save();queueBackup();el.classList.remove('on');if(!$('#sess').hidden&&!S.draft)closeSession();else if(S.draft&&$('#sess').hidden&&o.draft&&tab==='home')renderHome();go(tab);toast(tr('رجعت ✓','Restored ✓'))};
   el.classList.add('on');clearTimeout(offerUndo.t);offerUndo.t=setTimeout(()=>{el.classList.remove('on');UND=null},7000)}
@@ -759,8 +760,12 @@ function finishSession(){
     if(w>mw)sm.push(`★ <bdi class="en">${esc(e.name)}</bdi>: ${tr('أتقل وزن','heaviest ever')} <b class="en">${w} k</b>`);
     else if(w===mw&&Math.max(...e.sets)>bestR&&bestR>0)sm.push(`★ <bdi class="en">${esc(e.name)}</bdi>: ${tr('أكتر عدّات على','most reps at')} <b class="en">${w} k</b>`);
     const ps=progState({sets:e.tsets,goal:e.goal},exHist(e.exId));if(ps&&ps.k==='up')sm.push(`↑ <bdi class="en">${esc(e.name)}</bdi>: ${tr('استحقيت الزيادة','increase earned')}`)}
+  {const t=$('#toast');if(t)t.classList.remove('on')}
+  const nx=s.ex.filter(e=>!e.unit&&(()=>{const p=progState({sets:e.tsets,goal:e.goal},exHist(e.exId));return p&&p.k==='up'})()).map(e=>e.name);
+  sm.push(nx.length?`${tr('الجاية: زوّد في','Next time: add weight on')} <bdi class="en">${esc(nx.join('، '))}</bdi>`:tr('الجاية: نفس الأوزان، وحاول تكمّل الهدف','Next time: same weights, aim to complete the target'));
+  for(let k=sm.length-2;k>=0;k--)if(/استحقيت الزيادة|increase earned/.test(sm[k]))sm.splice(k,1);
   $('#sess').innerHTML=`<div class="wdone"><div class="wchk">✓</div><div class="wdt"><bdi>${esc(nm)}</bdi></div><div class="wds">${s.status==='full'?L.savedFull:s.status==='core'?L.savedCore:L.saved}</div>${sm.length?`<div class="wsum">${sm.map(x=>`<div>${x}</div>`).join('')}</div>`:''}</div>
-  <div class="wnav"><button class="btn wb wt" data-a="copyDone">${tr('انسخ الكارت','Copy card')}</button><button class="btn wb wt" data-a="imgDone">${tr('صورة','Image')}</button><button class="btn pri wb wt" data-a="doneClose">${tr('تمام','Done')}</button></div>`;
+  <div class="wdn2"><button class="plink" data-a="shareDone">${tr('مشاركة…','Share…')}</button><button class="btn pri w" data-a="doneClose">${tr('تمام','Done')}</button></div>`;
 }
 const logged=e=>e.sets.some(r=>num(r)>0);
 /* حالة التمرين: none | part (ناقص خانات) | low (كل الخانات مليانة بس أقل من الهدف) | ok */
@@ -813,7 +818,7 @@ let hsList=[],hsN=0,hsLast='';
 function histChunk(){const L=T(),part=hsList.slice(hsN,hsN+(hsN?30:12));hsN+=part.length;
   return part.map(s=>{
     let mh='';try{const m=new Date(s.date+'T00:00:00').toLocaleDateString(loc(),{month:'long',year:'numeric'});if(m!==hsLast){hsLast=m;mh=`<div class="pmon">${m}</div>`}}catch(e){}
-    return `${mh}<div class="pr2"><div class="pr2b" data-a="sess" data-id="${s.id}"><div class="sp"><div class="pnm"><bdi>${esc(s.dayName)}</bdi></div><div class="mu">${fmtD(s.date)} · <span class="en">C${s.cycle}</span> · ${L.exN(s.ex.length)}</div></div><span class="pst ${s.status}">${L.st[s.status]||''}</span></div></div>`}).join('')}
+    return `${mh}<div class="pr2"><div class="pr2b" data-a="sess" data-id="${s.id}"><div class="sp"><div class="pnm"><bdi>${esc(s.dayName)}</bdi></div><div class="mu">${fmtD(s.date)} · ${L.exN(s.ex.length)}${s.cb?' · '+(s.cb.dl?tr('خفيف','light'):tr('رجوع','comeback')):''}</div></div>${s.status==='full'?'':`<span class="pst ${s.status}">${L.st[s.status]||''}</span>`}</div></div>`}).join('')}
 /* v122: إحصائيات: الالتزام آخر 16 أسبوع، ومجموعات كل عضلة في آخر 7 أيام */
 function statsHtml(ds){if(!ds.length)return '';
   const wk=iso=>Math.floor((new Date(iso+'T12:00:00')-new Date('2000-01-01T12:00:00'))/(7*864e5)),now=wk(today()),c={};for(const x of ds){const k=now-wk(x.date);if(k>=0&&k<16)c[k]=(c[k]||0)+1}
@@ -822,14 +827,14 @@ function statsHtml(ds){if(!ds.length)return '';
   const rows=Object.keys(GRP).filter(g=>mg[g]).map(g=>`<div class="mgr"><span>${GRP[g][LANG==='ar'?0:1]}</span><i style="width:${Math.min(100,mg[g]/20*100).toFixed(0)}%"></i><b class="en">${mg[g]}</b></div>`).join('');
   return `<details class="fsec sts" data-fk="stats"${fOpen.has('stats')?' open':''}><summary>${tr('الإحصائيات','Stats')}<span class="pchev">⌄</span></summary><div class="fbody">
     <div class="row" style="margin-bottom:12px"><button class="btn sp" data-a="rep" data-d="7">${tr('تقرير الأسبوع','Weekly report')}</button><button class="btn sp" data-a="rep" data-d="30">${tr('تقرير الشهر','Monthly report')}</button></div>
-    <div class="mu">${tr('جلسات كل أسبوع (آخر 16 أسبوع، الأحدث على الطرف). الدهبي = حققت 3','Sessions per week (last 16 weeks, newest at the end). Gold = hit 3')}</div><div class="wkb" dir="ltr">${bars}</div>
+    <div class="mu">${tr('جلسات كل أسبوع (آخر 16 أسبوع، الأحدث على اليمين). الدهبي = حققت 3','Sessions per week (last 16 weeks, newest on the right). Gold = hit 3')}</div><div class="wkb" dir="ltr">${bars}</div>
     ${rows?`<div class="mu" style="margin-top:14px">${tr('مجموعات كل عضلة في آخر 7 أيام (10–20 في الأسبوع مدى كويس للنمو)','Sets per muscle in the last 7 days (10–20 a week is a good range for growth)')}</div><div class="mgs">${rows}</div>`:''}</div></details>`}
 /* v125: تقرير أسبوعي / شهري */
 function reportText(days){const ds=done(),inP=x=>{const a=daysAgo(x.date);return a>=0&&a<days},cur=ds.filter(inP),prev=ds.filter(x=>!inP(x)&&daysAgo(x.date)>=0);
   const L=[tr(`تقرير آخر ${days} يوم — ${today()}`,`Report for the last ${days} days — ${today()}`),''];
   const sets=cur.reduce((a,x)=>a+x.ex.reduce((b,e)=>b+e.sets.length,0),0),vol=cur.reduce((a,x)=>a+x.ex.reduce((b,e)=>b+(e.unit?0:e.sets.reduce((c,r,j)=>c+r*(+(e.ws&&e.ws[j])||+e.w||0),0)),0),0);
   L.push(`${tr('الجلسات','Sessions')}: ${cur.length}${days===7?` (${tr('الهدف 3','goal 3')})`:` (${tr('متوسط','avg')} ${(cur.length/(days/7)).toFixed(1)} ${tr('في الأسبوع','per week')})`}`);
-  L.push(`${tr('إجمالي المجموعات','Total sets')}: ${sets} · ${tr('الحجم (وزن × عدّات)','Volume (weight × reps)')}: ${Math.round(vol)} kg`);
+  L.push(`${tr('إجمالي المجموعات','Total sets')}: ${sets}`);
   const pr=[],up=[],stk=[];const seen=new Set();
   for(const x of cur)for(const e of x.ex){const k=nk(e.name);if(e.unit||seen.has(k))continue;seen.add(k);const w=Math.max(...cur.filter(q=>q.ex.some(z=>nk(z.name)===k)).map(q=>+q.ex.find(z=>nk(z.name)===k).w||0));
     const pw=Math.max(0,...prev.flatMap(q=>q.ex.filter(z=>nk(z.name)===k).map(z=>+z.w||0)));if(pw>0&&w>pw)pr.push(`${e.name}: ${pw} → ${w} kg`);
@@ -876,11 +881,11 @@ function dayHistModal(k){
 }
 function sessModal(id){
   const L=T(),s=S.sessions.find(x=>x.id===id);if(!s)return;
-  modal(`<h3><bdi>${esc(s.dayName)}</bdi> · ${fmtD(s.date)}</h3><pre class="cardtxt">${esc(cardText(s))}</pre>
-  <div class="row"><button class="btn pri sp" data-a="copyS" data-id="${s.id}">${L.copyCard}</button><button class="btn sp" data-a="aiS" data-id="${s.id}">${L.shareAI}</button></div><button class="btn w mt" data-a="imgS" data-id="${s.id}">${tr('صورة للجلسة','Session image')}</button>
-  <div class="row mt"><button class="btn sp" data-a="editS" data-id="${s.id}">${L.edit}</button><button class="btn dan sp" data-a="delS" data-id="${s.id}">${L.del}</button></div>
-  <button class="btn w ghost mt" data-a="closeM">${L.close}</button>`);
+  modal(`<h3><bdi>${esc(s.dayName)}</bdi> · ${fmtD(s.date)}</h3><div class="dl">${s.ex.map(e=>`<div class="dr"><span class="dn2 en">${esc(e.name)}</span><span class="dw en">${e.unit?'':fw(e.w)+' · '}${esc(setsStr(e))}</span></div>`).join('')}</div>
+  <div class="row mt"><button class="btn pri sp" data-a="editS" data-id="${s.id}">${L.edit}</button><button class="btn sp" data-a="shareS" data-id="${s.id}">${tr('مشاركة…','Share…')}</button></div>
+  <button class="mrow dan" data-a="delS" data-id="${s.id}">${L.del}</button>`);
 }
+function shareModal(s){modal(`<h3>${tr('مشاركة الجلسة','Share the session')}</h3><button class="mrow" data-a="copyS" data-id="${s.id}"><i>⧉</i>${tr('انسخ الكارت','Copy the card')}</button><button class="mrow" data-a="imgS" data-id="${s.id}"><i>▣</i>${tr('صورة للجلسة','Session image')}</button><button class="mrow" data-a="aiS" data-id="${s.id}"><i>↗</i>${tr('ابعتها للتحليل','Send for analysis')}</button><button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
 
 /* ================= البرنامج ================= */
 /* ================= مكتبة التمارين + الأنظمة ================= */
@@ -961,10 +966,10 @@ function libRows(){
 }
 function renderLib(){
   $('#view').innerHTML=`<div class="lsearch"><input id="lbS" dir="auto" placeholder="${tr('ابحث عن تمرين…','Search exercises…')}" value="${esc(lbQ)}" style="text-align:start"><button class="ptxt" data-a="cuNew">+ ${tr('تمرين مخصص','Custom')}</button></div>
-  <div class="ptabs scr" id="lbC">${lbChips()}</div>
-  <div class="ptabs scr" id="lbEC">${lbEChips()}</div>
+  <div class="lbf"><select id="lbEq" class="psel">${['all'].concat(EQ_ORDER).map(e=>`<option value="${e}"${lbE===e?' selected':''}>${e==='all'?tr('كل الأدوات','All gear'):EQN[e][LANG==='ar'?0:1]}</option>`).join('')}</select></div>
   <div class="mu lcount">${allLib().length} ${tr('تمرين','exercises')} · <span class="pdot in"></span> ${tr('في برنامجك','in your program')}</div>
   <div class="plist" id="lbL">${libRows()}</div>`;
+  $('#lbEq').onchange=e=>{lbE=e.target.value;const l=$('#lbL');if(l)l.innerHTML=libRows()};
 }
 const lbEChips=()=>`<button class="${lbE==='all'?'on':''}" data-a="lbE" data-e="all">${tr('كل الأدوات','All gear')}</button>${EQ_ORDER.map(e=>`<button class="${lbE===e?'on':''}" data-a="lbE" data-e="${e}">${EQN[e][LANG==='ar'?0:1]}</button>`).join('')}`;
 const lbChips=()=>`<button class="${lbG==='all'?'on':''}" data-a="lbG" data-g="all">${tr('الكل','All')}</button>${Object.keys(GRP).map(g=>`<button class="${lbG===g?'on':''}" data-a="lbG" data-g="${g}">${GRP[g][LANG==='ar'?0:1]}</button>`).join('')}`;
@@ -1441,11 +1446,17 @@ function renderData(){
     ${persisted===true?`<div class="mu">✓ ${L.persisted}</div>`:''}</div>
   <div class="thseg" role="group" aria-label="${L.themeT}"><button class="${(S.settings.theme||'iron')==='iron'?'on':''}" data-a="theme" data-k="iron">${THEMES.iron[LANG]}</button><button class="${S.settings.theme==='morning'?'on':''}" data-a="theme" data-k="morning">${THEMES.morning[LANG]}</button></div>
   <div class="qrow"><div class="mu">${tr('حجم الخط','Text size')}</div><div class="thseg">${[1,2,3].map(k=>`<button class="${(+S.settings.fs||1)===k?'on':''}" data-a="fs" data-k="${k}" style="font-size:${[14,16,18][k-1]}px">${[tr('عادي','Normal'),tr('أكبر','Larger'),tr('كبير','Large')][k-1]}</button>`).join('')}</div></div>
-  <div class="qrow"><div class="mu">${tr('ملف أمان: في الاقتراحات والتبديل والفول بادي، الأجهزة والكابل بيطلعوا الأول (أقل خطورة من الأوزان الحرة).','Safety profile: machines and cables come first in suggestions, swaps and the full body (lower risk than free weights).')}</div><div class="thseg"><button class="${S.settings.safe?'on':''}" data-a="safe" data-k="on">${tr('شغّال','On')}</button><button class="${S.settings.safe?'':'on'}" data-a="safe" data-k="off">${tr('مقفول','Off')}</button></div></div>
-  <div class="qrow"><div class="mu">${tr('وضع رمضان: مجموعة أقل في كل تمرين، وراحة أطول 30 ثانية. أحسن وقت للتمرين بعد الفطار بساعة ونص لساعتين.','Ramadan mode: one set less per exercise and 30 s longer rests. Best time to train is 1.5–2 hours after iftar.')}</div><div class="thseg"><button class="${S.settings.ram?'on':''}" data-a="ram" data-k="on">${tr('شغّال','On')}</button><button class="${S.settings.ram?'':'on'}" data-a="ram" data-k="off">${tr('مقفول','Off')}</button></div></div>
-  <div class="qrow"><div class="mu">${tr('بيت الشعر: دوسة = نسخ · سحب = تنقل','Verse: tap = copy · swipe = browse')}</div><div class="thseg"><button class="${qGestOn()?'on':''}" data-a="qGest" data-k="on">${tr('شغّال','On')}</button><button class="${qGestOn()?'':'on'}" data-a="qGest" data-k="off">${tr('مقفول','Off')}</button></div></div>
+  ${swRow('safe',S.settings.safe,tr('ملف أمان','Safety profile'),tr('الأجهزة والكابل الأول في الاقتراحات والتبديل','Machines and cables first in suggestions and swaps'))}
+  ${swRow('ram',S.settings.ram,tr('وضع رمضان','Ramadan mode'),tr('مجموعة أقل وراحة أطول. اتمرن بعد الفطار بساعة ونص لساعتين','One set less, longer rests. Train 1.5–2 h after iftar'))}
+  ${swRow('qGest',qGestOn(),tr('بيت الشعر','Home verse'),tr('دوسة = نسخ · سحب = تنقل','Tap = copy · swipe = browse'))}
   ${bodySec()}
   ${photoSec()}
+  <details class="fsec" data-fk="prot"${fOpen.has('prot')?' open':''}><summary>${tr('حماية بياناتك','Protect your data')}<span class="fst">${lb?'✓ '+tr('آخر نسخة','Last backup')+': '+new Date(lb).toLocaleDateString(loc(),{day:'numeric',month:'short'}):tr('لسه مفيش نسخة','No backup yet')}</span><span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${L.bkHint}</div>
+    <button class="btn pri w" data-a="backup">${L.bkSave}</button>
+    <button class="btn w mt" data-a="share">${L.bkShare}</button>
+    <label class="btn w mt" style="cursor:pointer">${L.restore}<input type="file" id="imp" accept=".md,.txt,.json,.csv,text/markdown,text/plain,text/csv,application/json" hidden></label>
+    ${canUndo?`<button class="btn w mt dan" data-a="undoRestore">${L.undoRestore}</button>`:''}
+  <details class="fsub"><summary>${tr('متقدم','Advanced')}</summary>
   <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?`<span class="pdot${SYNC.err?' er':''}" style="margin-inline-start:6px"></span>`:''}<span class="pchev">⌄</span></summary><div class="fbody">
     ${SYNC.on?`<div class="note-ok" style="margin:0 0 10px">${L.syncOnL} · ${L.syncLast}: ${SYNC.last?new Date(SYNC.last).toLocaleString(loc(),{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):L.syncNever}${SYNC.dirty?' · '+L.syncWait(Math.max(1,SYNC.missed)):''}</div>${SYNC.err?`<div class="warn" style="margin:0 0 10px">${L.syncErr(esc(syncMsg(SYNC.err)))}</div>`:''}${syncPublic()?`<div class="warn" style="margin:0 0 10px">${L.syncPub}</div>`:''}
       <button class="btn pri w" data-a="syncNow">${L.syncNow}</button><button class="btn dan w mt" data-a="syncOff">${L.syncOffB}</button>`
@@ -1458,14 +1469,11 @@ function renderData(){
       <button class="btn pri w" data-a="syncOn">${L.syncEnable}</button>
       <button class="btn w mt" data-a="syncRestore">${L.syncRestore}</button><div class="mu mt">${L.syncRestoreHint}</div>`}</div></details>
   ${FS||NL?`<details class="fsec" data-fk="auto"${fOpen.has('auto')?' open':''}><summary>${L.autoT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${S.settings.linked?L.autoLinked('<span class="en">'+esc(S.settings.linked)+'</span>'):L.autoHint}</div><button class="btn w" data-a="link">${S.settings.linked?L.relinkB:L.linkB}</button></div></details>`:''}
-  <details class="fsec" data-fk="bk"${fOpen.has('bk')?' open':''}><summary>${L.bkT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${L.bkHint}</div>
-    <button class="btn pri w" data-a="backup">${L.bkSave}</button>
-    <button class="btn w mt" data-a="share">${L.bkShare}</button>
-    <label class="btn w mt" style="cursor:pointer">${L.restore}<input type="file" id="imp" accept=".md,.txt,.json,.csv,text/markdown,text/plain,text/csv,application/json" hidden></label>
-    ${canUndo?`<button class="btn w mt dan" data-a="undoRestore">${L.undoRestore}</button>`:''}</div></details>
   <details class="fsec" data-fk="csv"${fOpen.has('csv')?' open':''}><summary>${L.csvT}<span class="pchev">⌄</span></summary><div class="fbody"><div class="mu" style="margin-bottom:10px">${L.csvHint}</div><button class="btn w" data-a="csv">${L.csvB}</button></div></details>
-  <details class="fsec" data-fk="lang"${fOpen.has('lang')?' open':''}><summary>Language · اللغة<span class="pchev">⌄</span></summary><div class="fbody"><button class="btn w" data-a="lang">${L.langBtn}</button><div class="mu" style="margin:16px 0 8px">${tr("لغة «كيفية الأداء» (شرح التمارين)","Exercise guide (how to perform) language")}</div><div class="thseg" style="margin:0"><button class="${howLang()==='ar'?'on':''}" data-a="howLang" data-k="ar">عربي</button><button class="${howLang()==='en'?'on':''}" data-a="howLang" data-k="en">English</button></div></div></details>
   <div class="fbody" style="padding-top:16px"><label class="fld" style="margin:0">${L.cycleL}<input class="inp" id="cyc0" inputmode="numeric" value="${esc(S.settings.cycle)}"></label></div>
+  </details></div></details>
+  <details class="fsec" data-fk="lang"${fOpen.has('lang')?' open':''}><summary>Language · اللغة<span class="pchev">⌄</span></summary><div class="fbody"><button class="btn w" data-a="lang">${L.langBtn}</button><div class="mu" style="margin:16px 0 8px">${tr("لغة «كيفية الأداء» (شرح التمارين)","Exercise guide (how to perform) language")}</div><div class="thseg" style="margin:0"><button class="${howLang()==='ar'?'on':''}" data-a="howLang" data-k="ar">عربي</button><button class="${howLang()==='en'?'on':''}" data-a="howLang" data-k="en">English</button></div></div></details>
+
   <div class="mu" style="text-align:center;margin:18px 0 0">${L.ver}: v${VER}</div>`;
   {const pi=$('#phIn');if(pi)pi.onchange=e=>{const f=e.target.files[0];if(f)phAdd(f);e.target.value=''}}phLoad();
   $('#imp').onchange=e=>{const f=e.target.files[0];if(f)importFile(f);e.target.value=''};
@@ -1579,6 +1587,7 @@ document.addEventListener('click',ev=>{
     case 'tools':toolsModal();break;
     case 'cbWhy':cbWhy();break;
     case 'dlWhy':dlWhy();break;
+    case 'shareS':{const x=S.sessions.find(q=>q.id===b.dataset.id);if(x)shareModal(x);break}
     case 'clean':{const e=d.ex[curEx];e.clean=!e.clean;saveSoon();renderSession();break}
     case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
     case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value),mx={};for(const [k] of BMX){const v=num(($('#b_'+k)||{}).value);if(v>0&&v<400)mx[k]=v}if(!(w>0)&&!(c>0)&&!Object.keys(mx).length){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}
@@ -1591,6 +1600,7 @@ document.addEventListener('click',ev=>{
     case 'sw':swTap();break;
     case 'finish':finishSession();break;
     case 'copyDone':if(lastDone)copy(cardText(lastDone));break;
+    case 'shareDone':if(lastDone)shareModal(lastDone);break;
     case 'imgDone':if(lastDone)shareImg(lastDone);break;
     case 'imgS':{const x=S.sessions.find(q=>q.id===b.dataset.id);if(x)shareImg(x);break}
     case 'doneClose':closeSession();go('home');break;

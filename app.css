@@ -605,3 +605,19 @@ html[dir=rtl] .mrow small{margin:-12px 34px 8px 0}
 .top{border-bottom:0}
 @media (max-height:700px){.hs .qt{display:none}.hs .orb{width:min(80vw,calc(100dvh - 330px))}}
 .on3{font-size:12.5px;color:var(--mu);opacity:.75;margin-top:-4px}
+
+/* v130: الملف والسجل والختام + توحيد الشكل */
+.swr{display:flex;align-items:center;gap:12px;width:100%;padding:12px 2px;background:none;border:0;border-bottom:1px solid color-mix(in srgb,var(--bd) 55%,transparent);color:var(--tx2);font:inherit;text-align:start;cursor:pointer}
+.swt2{flex:1;display:flex;flex-direction:column;gap:2px}.swt2 b{font-weight:600;font-size:15px}.swt2 small{font-size:12.5px;color:var(--mu)}
+.swk{flex:none;width:44px;height:26px;border-radius:99px;background:var(--s2);border:1px solid var(--bd);position:relative;transition:background .2s}
+.swk::after{content:'';position:absolute;top:3px;inset-inline-start:3px;width:18px;height:18px;border-radius:50%;background:var(--mu);transition:inset-inline-start .2s,background .2s}
+.swk.on{background:var(--acbd);border-color:var(--ac)}.swk.on::after{inset-inline-start:21px;background:var(--ac2)}
+.thseg button.on{background:var(--bg);color:var(--tx);box-shadow:none}
+.thseg{min-height:0}.thseg button{min-height:40px;padding:8px 0;font-size:14.5px}
+.fst{font-size:12px;color:var(--mu);font-weight:400;margin-inline-start:8px}
+.fsub{margin-top:14px}.fsub>summary{font-size:13.5px;color:var(--mu);padding:8px 0;cursor:pointer}.fsub .fsec{margin-top:6px}
+.wdone{justify-content:center}.wdn2{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 16px calc(24px + env(safe-area-inset-bottom));max-width:560px;width:100%;margin:0 auto}
+.lbf{margin:0 0 10px}.lbf .psel{width:100%}
+.btn{border-radius:99px}.inp{border-radius:14px}.mbox,.sbx{border-radius:20px 20px 0 0}
+.tabs{border-top:0;box-shadow:0 -1px 0 color-mix(in srgb,var(--bd) 40%,transparent)}
+.wb{min-height:52px;font-size:22px}
