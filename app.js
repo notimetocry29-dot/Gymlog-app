@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='150';
+const VER='151';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -729,7 +729,7 @@ var SND_K=['ui','tab','orb','start','log','rest','end'];
 function sndOn(k){return !!(S&&S.settings)&&S.settings['s_'+k]!==0}
 function vibOn(){return !(S&&S.settings)||S.settings.vib!==0}
 function vib(p){if(!vibOn())return false;try{return navigator.vibrate&&navigator.vibrate(p)}catch(e){return false}}
-function acGet(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended'&&AC.resume)AC.resume().catch(()=>{});return AC}catch(e){return null}}
+function acGet(){try{if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();sfxLoad(AC)}if(AC.state==='suspended'&&AC.resume)AC.resume().catch(()=>{});return AC}catch(e){return null}}
 /* الصوت محتاج أول لمسة عشان يشتغل (قاعدة المتصفح والـ APK) */
 document.addEventListener('pointerdown',()=>{if(SND_K.some(sndOn))acGet()},{passive:true});
 /* v145: محرّك أصوات تكتيكي (معدن، ضربة واطية، هوا) — كله متولّد بالكود، أوفلاين ومن غير ملفات */
@@ -767,7 +767,14 @@ const wHammer=(a,t,v)=>{wClick(a,t,v*.6);wClick(a,t+.045,v);sClank(a,t+.045,280,
 const wShot=(a,t,v)=>{sNz(a,t,.012,1700,.7,v*1.2,'lowpass');sOsc(a,t,.55,95,v,'sine',32,.002);sOsc(a,t,.18,190,v*.4,'triangle',60,.001);sNz(a,t,.5,1600,.8,v*.9,'lowpass',140,.004);sNz(a,t+.05,1.3,260,.7,v*.35,'lowpass',90,.08)};
 /* تعمير مسدس: سلايد قصير بيتسحب، تكّة آخر المشوار، ورجوع سريع بخبطة ناشفة */
 const wPistol=(a,t,v)=>{wClick(a,t,v*.55);wSlide(a,t+.008,.04,v*.6,1);wClick(a,t+.05,v*.7);sNz(a,t+.075,.02,1500,1,v*.9,'lowpass');wClick(a,t+.078,v);sThump(a,t+.078,v*.55);sClank(a,t+.078,330,v*.45,.08)};
-function snd(k){if(!sndOn(k==='charge'?'orb':k))return;const a=acGet();if(!a)return;const t=a.currentTime+.015;
+/* v151: تسجيلات أسلحة حقيقية (CC0 — sfx/CREDITS.md). لو الملفات لسه ماتحمّلتش، بيشتغل الصوت المتولّد كاحتياطي */
+const SFX={},SFX_F=['ui','tab1','tab2','orb','hold','rest','end'];
+const SFX_MAP={ui:['ui'],tab:['tab1','tab2'],start:['tab1','tab2'],log:['tab2','tab1'],orb:['orb'],charge:['hold'],rest:['rest'],end:['end']};
+const SFX_VOL={ui:.8,tab:.9,start:.95,log:.95,orb:1,charge:.9,rest:1,end:1};
+function sfxLoad(a){SFX_F.forEach(n=>{fetch('sfx/'+n+'.mp3').then(r=>r.ok?r.arrayBuffer():Promise.reject()).then(b=>new Promise((ok,no)=>{const p=a.decodeAudioData(b,ok,no);if(p&&p.then)p.then(ok,no)})).then(buf=>{SFX[n]=buf}).catch(()=>{})})}
+function sfxPlay(a,k){const l=SFX_MAP[k];if(!l)return false;const n=l[Math.floor(Math.random()*l.length)],b=SFX[n]||SFX[l[0]];if(!b)return false;
+  const s=a.createBufferSource(),g=a.createGain();s.buffer=b;g.gain.value=SFX_VOL[k]||1;s.connect(g);g.connect(a.destination);s.start(a.currentTime+.005);return true}
+function snd(k){if(!sndOn(k==='charge'?'orb':k))return;const a=acGet();if(!a)return;if(sfxPlay(a,k))return;const t=a.currentTime+.015;
   if(k==='ui')wClick(a,t,.8);
   else if(k==='tab')wPistol(a,t,.7);
   else if(k==='orb'){wMag(a,t,.75);wRack(a,t+.28,.85)}
@@ -1814,12 +1821,12 @@ function renderData(){
   ${swRow('ram',S.settings.ram,tr('وضع رمضان','Ramadan mode'),tr('مجموعة أقل وراحة أطول. اتمرن بعد الفطار بساعة ونص لساعتين','One set less, longer rests. Train 1.5–2 h after iftar'))}
   <details class="fsec" data-fk="snd"${fOpen.has('snd')?' open':''}><summary>${tr('الأصوات والاهتزاز','Sounds & vibration')}<span class="fst">${SND_K.some(sndOn)?tr('شغّالة','On'):tr('مقفولة','Off')}</span><span class="pchev">⌄</span></summary><div class="fbody">
     <div class="mu" style="margin-bottom:8px">${tr('التطبيق مايعرفش إن الموبايل على الصامت، فاقفل الأصوات من هنا لو محتاج.','The app can’t tell when your phone is on silent, so turn sounds off here if needed.')}</div>
-    ${swRow('sndT',sndOn('orb'),tr('الدايرة','The circle'),tr('خزنة وتعمير لما تبدأ، وسحب الأقسام وانت ضاغط','Magazine in and rack on start, slow bolt pull while you hold'),'orb')}
+    ${swRow('sndT',sndOn('orb'),tr('الدايرة','The circle'),tr('خزنة وتعمير لما تبدأ، وسحب مقبض التعمير وانت ضاغط','Magazine in and rack on start, charging handle while you hold'),'orb')}
     ${swRow('sndT',sndOn('tab'),tr('التنقل','Navigation'),tr('تعمير مسدس وانت بتقلب التابات وبين التمارين','A pistol rack when switching tabs and exercises'),'tab')}
-    ${swRow('sndT',sndOn('ui'),tr('الأزرار','Buttons'),tr('تكّة سن الأمان مع كل دوسة','A safety-selector click on every tap'),'ui')}
+    ${swRow('sndT',sndOn('ui'),tr('الأزرار','Buttons'),tr('تكّة زناد مع كل دوسة','A trigger click on every tap'),'ui')}
     ${swRow('sndT',sndOn('start'),tr('بداية المجموعة','Set start'),tr('تعمير مسدس لما تبدأ الساعة','A pistol rack when the stopwatch starts'),'start')}
     ${swRow('sndT',sndOn('log'),tr('تسجيل المجموعة','Set logged'),tr('تعمير مسدس: المجموعة اتسجلت','Pistol rack: set logged'),'log')}
-    ${swRow('sndT',sndOn('rest'),tr('آخر الراحة','End of rest'),tr('تعمير الديك وبعده تعمير: المجموعة الجاية','Hammer cock, then rack: next set'),'rest')}
+    ${swRow('sndT',sndOn('rest'),tr('آخر الراحة','End of rest'),tr('تعمير شوتجن: المجموعة الجاية','Shotgun pump: next set'),'rest')}
     ${swRow('sndT',sndOn('end'),tr('نهاية الجلسة','Session end'),tr('تعمير وطلقة: المهمة خلصت','Rack and a shot: mission complete'),'end')}
     ${swRow('vibT',vibOn(),tr('الاهتزاز','Vibration'),tr('هزّة مع الدوسات وآخر الراحة','Haptics on taps and at the end of rest'))}
     <button class="btn w mt" data-a="sndTest">${tr('اسمع الأصوات','Play the sounds')}</button>
