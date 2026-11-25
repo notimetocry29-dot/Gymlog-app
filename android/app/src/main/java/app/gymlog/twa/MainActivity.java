@@ -14,6 +14,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.util.Base64;
 import android.view.View;
@@ -45,9 +46,11 @@ import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /** غلاف جيم لوج: بيفتح نفس صفحة GitHub Pages (نفس الـ origin عشان البيانات تفضل) مع ربط أصلي للحفظ والنسخ والرجوع. */
 public class MainActivity extends ComponentActivity {
@@ -68,8 +71,11 @@ public class MainActivity extends ComponentActivity {
     private ConnectivityManager cm;
     private ConnectivityManager.NetworkCallback netCb;
 
-    // حفظ ملف (النسخة الاحتياطية)
-    private String pendingName, pendingMime, pendingContent;
+    // حفظ ملف (النسخة الاحتياطية / صورة الجلسة): البايتات نفسها، مش نص، عشان الصور ماتبوظش
+    private String pendingName, pendingMime;
+    private byte[] pendingData;
+    // الكتابة في الملف المربوط بتحصل في الخلفية (Drive وغيره ممكن ياخدوا ثواني) بالترتيب
+    private final ExecutorService io = Executors.newSingleThreadExecutor();
     private ActivityResultLauncher<Intent> saveLauncher, openLauncher, linkLauncher;
     private ValueCallback<Uri[]> fileCallback;
 
@@ -100,9 +106,9 @@ public class MainActivity extends ComponentActivity {
         saveLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), r -> {
             boolean ok = false;
             Uri u = r.getData() == null ? null : r.getData().getData();
-            if (r.getResultCode() == RESULT_OK && u != null && pendingContent != null) ok = writeUri(u, pendingContent);
+            if (r.getResultCode() == RESULT_OK && u != null && pendingData != null) ok = writeUri(u, pendingData);
             boolean cancelled = r.getResultCode() != RESULT_OK;
-            pendingContent = null;
+            pendingData = null;
             if (!cancelled) js("window.__glSaved&&__glSaved(" + ok + ")");
         });
         // الـ WebView ممنوع يقرا content:// (أمان)، فإحنا بنقرا الملف هنا ونديه للصفحة نصّ
@@ -116,14 +122,14 @@ public class MainActivity extends ComponentActivity {
         // ربط ملف للحفظ التلقائي: بناخد صلاحية دايمة عليه ونحفظ عنوانه
         linkLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), r -> {
             Uri u = r.getResultCode() == RESULT_OK && r.getData() != null ? r.getData().getData() : null;
-            if (u == null) { pendingContent = null; return; }
+            if (u == null) { pendingData = null; return; }
             boolean ok = false;
             try {
                 getContentResolver().takePersistableUriPermission(u, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                ok = pendingContent == null || writeUri(u, pendingContent);
+                ok = pendingData == null || writeUri(u, pendingData);
                 if (ok) prefs.edit().putString("link", u.toString()).putString("linkName", pendingName == null ? "gym-log.md" : pendingName).apply();
             } catch (Exception ignored) {}
-            pendingContent = null;
+            pendingData = null;
             js("window.__glLinked&&__glLinked(" + ok + "," + org.json.JSONObject.quote(ok ? prefs.getString("linkName", "") : "") + ")");
         });
 
@@ -196,11 +202,14 @@ public class MainActivity extends ComponentActivity {
                 return true;
             }
         });
-        // تنزيل blob: (احتياطي لو الصفحة استخدمت <a download>) بيتحوّل للـ bridge
+        // تنزيل blob: (احتياطي لو الصفحة استخدمت <a download>) بيتحوّل للـ bridge كـ base64
+        // (قبل كده كان r.text() + text/plain = صورة PNG بايظة ورسالة «اتحفظ»)
         web.setDownloadListener((url, ua, cd, mime, len) -> {
             if (!trusted || url == null || !url.startsWith("blob:")) return;
             String name = android.webkit.URLUtil.guessFileName(url, cd, mime);
-            js("fetch(" + org.json.JSONObject.quote(url) + ").then(r=>r.text()).then(t=>Android.saveFile(" + org.json.JSONObject.quote(name) + "," + org.json.JSONObject.quote(mime == null ? "text/plain" : mime) + ",t))");
+            js("fetch(" + org.json.JSONObject.quote(url) + ").then(r=>r.blob()).then(b=>new Promise((ok,no)=>{const f=new FileReader();f.onload=()=>ok([b.type,f.result]);f.onerror=no;f.readAsDataURL(b)}))"
+                    + ".then(([t,d])=>{if(!Android.saveBase64(" + org.json.JSONObject.quote(name) + ",t||" + org.json.JSONObject.quote(mime == null ? "" : mime) + ",d))window.__glSaved&&__glSaved(false)})"
+                    + ".catch(()=>window.__glSaved&&__glSaved(false))");
         });
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -272,15 +281,51 @@ public class MainActivity extends ComponentActivity {
         return "https".equals(u.getScheme()) && HOST.equals(u.getHost()) && (p.equals(PATH) || p.startsWith(PATH + "/"));
     }
 
-    private boolean writeUri(Uri u, String content) {
-        byte[] data = content.getBytes(StandardCharsets.UTF_8);
-        for (String mode : new String[]{"wt", "w", "rwt"}) {   // بعض الأماكن (زي Drive) مش بتقبل "wt"
-            try (OutputStream o = getContentResolver().openOutputStream(u, mode)) {
-                if (o == null) continue;
-                o.write(data); o.flush(); return true;
+    /** بيكتب البايتات في الملف ويمسح أي حاجة قديمة بعدها. "rwt" الأول (أضمن مع SAF على Android 10+)،
+     *  وبعدين "wt"، وآخر حاجة "w" (Drive وغيره) — ومع "w" بنقصّ الملف بإيدينا عشان النسخة الأقصر ماتسيبش ذيل قديم. */
+    private boolean writeUri(Uri u, byte[] data) {
+        for (String mode : new String[]{"rwt", "wt", "w"}) {
+            try {
+                ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(u, mode);
+                if (pfd == null) continue;
+                // AutoCloseOutputStream بيقفل الـ pfd معاه؛ لو القفل نفسه فشل (Drive بيرفع وقت القفل) بنعتبرها فشلت
+                try (FileOutputStream o = new ParcelFileDescriptor.AutoCloseOutputStream(pfd)) {
+                    o.write(data); o.flush();
+                    try { o.getChannel().truncate(data.length); } catch (Exception ignored) {}   // pipe (Drive) مابيدعمش ده، عادي
+                    try { o.getFD().sync(); } catch (Exception ignored) {}
+                }
+                return true;
             } catch (Exception ignored) {}
         }
         return false;
+    }
+
+    private boolean writeUri(Uri u, String content) { return writeUri(u, content.getBytes(StandardCharsets.UTF_8)); }
+
+    static String safeName(String name, String def) {
+        String s = (name == null ? def : name).replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", "_").trim();
+        return s.isEmpty() || s.length() > 100 || s.startsWith(".") ? def : s;
+    }
+
+    /** نوع الملف اللي بنسمح بيه في الحفظ (أي حاجة تانية = بايتات عامة). */
+    static String safeMime(String mime) {
+        String m = mime == null ? "" : mime.toLowerCase(java.util.Locale.ROOT);
+        int semi = m.indexOf(';'); if (semi >= 0) m = m.substring(0, semi).trim();
+        switch (m) {
+            case "text/plain": case "text/markdown": case "text/csv": case "application/json":
+            case "image/png": case "image/jpeg": case "image/webp": case "application/pdf":
+                return m;
+            default: return "application/octet-stream";
+        }
+    }
+
+    /** بيفتح شاشة «حفظ باسم» بتاعة النظام للبايتات الجاهزة؛ النتيجة بترجع في window.__glSaved(ok). */
+    private void launchSave(String name, String mime, byte[] data) {
+        pendingName = name; pendingMime = mime; pendingData = data;
+        runOnUiThread(() -> {
+            Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(mime).putExtra(Intent.EXTRA_TITLE, name);
+            try { saveLauncher.launch(i); } catch (Exception e) { pendingData = null; js("window.__glSaved&&__glSaved(false)"); }
+        });
     }
 
     private String readUri(Uri u) {
@@ -316,32 +361,63 @@ public class MainActivity extends ComponentActivity {
 
     /** الأوامر اللي الصفحة تقدر تناديها — بتشتغل بس لو الصفحة الحالية من origin التطبيق. */
     class Bridge {
+        /** حفظ نص (النسخة الاحتياطية / CSV / JSON). النتيجة: window.__glSaved(ok) — ولو المستخدم لغى مفيش رد. */
         @JavascriptInterface public void saveFile(String name, String mime, String content) {
             if (!trusted || content == null || content.length() > MAX_FILE) return;
-            String safe = (name == null ? "gymlog.txt" : name).replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", "_");
-            if (safe.length() > 100 || safe.isEmpty()) safe = "gymlog.txt";
             String m = "text/markdown".equals(mime) || "text/csv".equals(mime) || "application/json".equals(mime) ? mime : "text/plain";
-            pendingName = safe; pendingMime = m; pendingContent = content;
-            final String fn = safe, fm = m;
-            runOnUiThread(() -> {
-                Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(fm).putExtra(Intent.EXTRA_TITLE, fn);
-                try { saveLauncher.launch(i); } catch (Exception e) { pendingContent = null; js("window.__glSaved&&__glSaved(false)"); }
-            });
+            launchSave(safeName(name, "gymlog.txt"), m, content.getBytes(StandardCharsets.UTF_8));
+        }
+        /** حفظ ملف ثنائي (زي صورة الجلسة PNG) من base64 أو data: URL، بنوعه الحقيقي.
+         *  بترجع false فورًا لو الطلب مرفوض (مفيش رد بعدها)؛ true = شاشة الحفظ هتفتح والنتيجة في window.__glSaved(ok)
+         *  (ok = true بس لو البايتات اتكتبت فعلًا؛ لو المستخدم لغى مفيش رد، زي saveFile). */
+        @JavascriptInterface public boolean saveBase64(String name, String mime, String b64) {
+            if (!trusted || b64 == null || b64.length() > MAX_FILE / 3 * 4 + 1024) return false;
+            String m = mime, s = b64;
+            if (s.startsWith("data:")) {                       // data:image/png;base64,....
+                int comma = s.indexOf(',');
+                if (comma < 0 || !s.substring(0, comma).endsWith(";base64")) return false;
+                if (m == null || m.isEmpty()) m = s.substring(5, comma - 7);
+                s = s.substring(comma + 1);
+            }
+            byte[] data;
+            try { data = Base64.decode(s, Base64.DEFAULT); } catch (IllegalArgumentException e) { return false; }
+            if (data.length == 0 || data.length > MAX_FILE) return false;
+            launchSave(safeName(name, "gymlog.bin"), safeMime(m), data);
+            return true;
         }
         @JavascriptInterface public void linkFile(String name, String content) {
             if (!trusted || content == null || content.length() > MAX_FILE) return;
-            String safe = (name == null ? "gym-log.md" : name).replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", "_");
-            pendingName = safe; pendingContent = content;
+            String safe = safeName(name, "gym-log.md");
+            pendingName = safe; pendingData = content.getBytes(StandardCharsets.UTF_8);
             runOnUiThread(() -> {
                 Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/markdown").putExtra(Intent.EXTRA_TITLE, safe)
                         .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                try { linkLauncher.launch(i); } catch (Exception e) { pendingContent = null; js("window.__glLinked&&__glLinked(false,'')"); }
+                try { linkLauncher.launch(i); } catch (Exception e) { pendingData = null; js("window.__glLinked&&__glLinked(false,'')"); }
             });
         }
+        /** القديمة (متزامنة): لسه شغالة للتوافق، بس بتوقّف الصفحة لحد ما الكتابة تخلص. استخدم writeLinkedAsync. */
         @JavascriptInterface public boolean writeLinked(String content) {
             if (!trusted || content == null || content.length() > MAX_FILE) return false;
             String l = prefs.getString("link", null);
             return l != null && writeUri(Uri.parse(l), content);
+        }
+        /** كتابة في الملف المربوط في الخلفية. بترجع false فورًا لو مفيش ملف مربوط/الطلب مرفوض (مفيش رد بعدها)؛
+         *  true = الكتابة اتجدولت، والنتيجة بتيجي مرة واحدة في window.__glWrote(ok) على الـ UI thread.
+         *  الكتابات بتتنفذ بالترتيب (واحدة ورا التانية). */
+        @JavascriptInterface public boolean writeLinkedAsync(String content) {
+            if (!trusted || content == null || content.length() > MAX_FILE) return false;
+            String l = prefs.getString("link", null);
+            if (l == null) return false;
+            final Uri u = Uri.parse(l);
+            final byte[] data = content.getBytes(StandardCharsets.UTF_8);
+            try {
+                io.execute(() -> {
+                    boolean ok = false;
+                    try { ok = writeUri(u, data); } catch (Exception ignored) {}
+                    js("window.__glWrote&&__glWrote(" + ok + ")");
+                });
+            } catch (Exception e) { return false; }   // الـ executor اتقفل (النشاط بيتقفل)
+            return true;
         }
         @JavascriptInterface public String linkedName() {
             if (!trusted || prefs.getString("link", null) == null) return "";
@@ -368,5 +444,5 @@ public class MainActivity extends ComponentActivity {
 
     @Override protected void onPause() { super.onPause(); web.onPause(); }
     @Override protected void onResume() { super.onResume(); web.onResume(); }
-    @Override protected void onDestroy() { try { if (cm != null && netCb != null) cm.unregisterNetworkCallback(netCb); } catch (Exception ignored) {} if (web != null) { root.removeView(web); web.destroy(); } super.onDestroy(); }
+    @Override protected void onDestroy() { io.shutdown(); try { if (cm != null && netCb != null) cm.unregisterNetworkCallback(netCb); } catch (Exception ignored) {} if (web != null) { root.removeView(web); web.destroy(); } super.onDestroy(); }
 }

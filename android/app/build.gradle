@@ -1,9 +1,29 @@
 plugins { id 'com.android.application' }
 
-// رقم النسخة بييجي من app.js (const VER) عشان يفضل متطابق مع الصفحة والـ service worker
-// (كان بيتقرا من index.html، بس VER اتنقل لـ app.js — فالبناء كان هيقع). لو مش لاقيه ناخده من sw.js
-def verM = (file('../../app.js').text =~ /const VER='(\d+)'/)
-def webVer = verM.find() ? verM.group(1) : (file('../../sw.js').text =~ /const BUILD='(\d+)'/)[0][1]
+// رقم النسخة بييجي من app.js (const VER) عشان يفضل متطابق مع الصفحة والـ service worker (sw.js const BUILD).
+// file() هنا نسبةً لـ android/app، يعني ../../ = جذر الريبو. لو VER مش موجود ناخد BUILD؛ ولو الاتنين مش موجودين البناء يقع بوضوح.
+def readVer = { String f, String name ->
+    def src = file("../../${f}")
+    if (!src.exists()) return null
+    def m = (src.getText('UTF-8') =~ /const\s+${name}\s*=\s*['"](\d+)['"]/)
+    m.find() ? m.group(1) : null
+}
+def appVer = readVer('app.js', 'VER'), swVer = readVer('sw.js', 'BUILD')
+def webVer = appVer ?: swVer
+if (!webVer) throw new GradleException("Couldn't read the web version: no const VER='NNN' in app.js and no const BUILD='NNN' in sw.js")
+if (appVer && swVer && appVer != swVer) logger.warn("WARNING: app.js VER=${appVer} but sw.js BUILD=${swVer}; using ${webVer}")
+
+// توقيع النسخة النهائية: لازم المفتاح الحقيقي. من غيره بناء release يقع (مفيش رجوع صامت لمفتاح debug،
+// عشان APK بمفتاح تاني مايتثبتش فوق القديم). المهام التانية (help / assembleDebug) شغالة عادي من غير أسرار.
+def ksFile = System.getenv('KEYSTORE_FILE'), ksPass = System.getenv('KEYSTORE_PASSWORD'), ksAlias = System.getenv('KEY_ALIAS')
+def missingKeys = []
+if (!ksFile) { missingKeys << 'KEYSTORE_FILE' } else if (!file(ksFile).exists()) { missingKeys << "KEYSTORE_FILE (${ksFile} not found)" }
+if (!ksPass) missingKeys << 'KEYSTORE_PASSWORD'
+if (!ksAlias) missingKeys << 'KEY_ALIAS'
+gradle.taskGraph.whenReady { graph ->
+    if (missingKeys && graph.allTasks.any { it.project == project && it.name.toLowerCase().contains('release') })
+        throw new GradleException("Release signing secrets missing: ${missingKeys.join(', ')}. Refusing to build an unsigned/debug-signed release.")
+}
 
 android {
     namespace 'app.gymlog.twa'
@@ -16,12 +36,12 @@ android {
         versionName = "1.0.${webVer}"
     }
     signingConfigs {
-        if (System.getenv('KEYSTORE_FILE')) {
-            release {
-                storeFile file(System.getenv('KEYSTORE_FILE'))
-                storePassword System.getenv('KEYSTORE_PASSWORD')
-                keyAlias System.getenv('KEY_ALIAS')
-                keyPassword System.getenv('KEYSTORE_PASSWORD')
+        release {
+            if (!missingKeys) {
+                storeFile file(ksFile)
+                storePassword ksPass
+                keyAlias ksAlias
+                keyPassword ksPass
             }
         }
     }
@@ -29,7 +49,7 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig System.getenv('KEYSTORE_FILE') ? signingConfigs.release : signingConfigs.debug
+            signingConfig signingConfigs.release
         }
     }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }

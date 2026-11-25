@@ -9,16 +9,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with: { distribution: temurin, java-version: 17 }
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
         with: { gradle-version: 8.9 }
-      - name: Restore signing key (if secrets are set)
+      # No silent fallback to debug signing: a release signed with another key can't update the installed app.
+      # (android/app/build.gradle also refuses any *Release task without these.)
+      - name: Restore signing key
         env:
           KS: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          if [ -n "$KS" ]; then echo "$KS" | base64 -d > "$RUNNER_TEMP/gymlog.jks"; echo "KEYSTORE_FILE=$RUNNER_TEMP/gymlog.jks" >> $GITHUB_ENV; fi
+          missing=""
+          [ -n "$KS" ] || missing="$missing KEYSTORE_B64"
+          [ -n "$KEYSTORE_PASSWORD" ] || missing="$missing KEYSTORE_PASSWORD"
+          [ -n "$KEY_ALIAS" ] || missing="$missing KEY_ALIAS"
+          if [ -n "$missing" ]; then echo "::error::Missing signing secrets:$missing"; exit 1; fi
+          echo "$KS" | base64 -d > "$RUNNER_TEMP/gymlog.jks"
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/gymlog.jks" >> "$GITHUB_ENV"
       - name: Build
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -28,10 +38,10 @@ jobs:
           mkdir out
           cp android/app/build/outputs/apk/release/app-release.apk out/GymLog.apk
           cp android/app/build/outputs/bundle/release/app-release.aab out/GymLog.aab
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: android-${{ github.run_number }}
-          name: GymLog Android #${{ github.run_number }}
+          name: 'GymLog Android #${{ github.run_number }}'
           target_commitish: ${{ github.sha }}
           files: |
             out/GymLog.apk
