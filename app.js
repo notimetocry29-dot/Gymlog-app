@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='147';
+const VER='148';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -735,30 +735,30 @@ document.addEventListener('pointerdown',()=>{if(SND_K.some(sndOn))acGet()},{pass
 /* v145: محرّك أصوات تكتيكي (معدن، ضربة واطية، هوا) — كله متولّد بالكود، أوفلاين ومن غير ملفات */
 let NB=null,MST=null;
 function sNoise(a){if(NB&&NB.sampleRate===a.sampleRate)return NB;const n=a.sampleRate,b=a.createBuffer(1,n,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;return NB=b}
-function sOut(a){if(MST&&MST.context===a)return MST;const c=a.createDynamicsCompressor();c.threshold.value=-16;c.knee.value=6;c.ratio.value=5;c.attack.value=.002;c.release.value=.12;const g=a.createGain();g.gain.value=.85;c.connect(g);g.connect(a.destination);return MST=c}
+function sOut(a){if(MST&&MST.context===a)return MST;const lp=a.createBiquadFilter(),sh=a.createBiquadFilter(),c=a.createDynamicsCompressor();lp.type='lowpass';lp.frequency.value=1700;lp.Q.value=.5;sh.type='lowshelf';sh.frequency.value=180;sh.gain.value=5;lp.connect(sh);sh.connect(c);c.threshold.value=-16;c.knee.value=6;c.ratio.value=5;c.attack.value=.002;c.release.value=.12;const g=a.createGain();g.gain.value=.85;c.connect(g);g.connect(a.destination);return MST=lp}
 function sEnv(g,t,v,dur,att){g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v),t+att);g.gain.exponentialRampToValueAtTime(.0001,t+dur)}
 function sOsc(a,t,dur,f,v,type,f2,att){const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur*.85);sEnv(g,t,v,dur,att||.002);o.connect(g);g.connect(sOut(a));o.start(t);o.stop(t+dur+.05)}
 function sNz(a,t,dur,f,q,v,type,f2,att){const src=a.createBufferSource(),fl=a.createBiquadFilter(),g=a.createGain();src.buffer=sNoise(a);fl.type=type||'bandpass';fl.frequency.setValueAtTime(f,t);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,t+dur);fl.Q.value=q;sEnv(g,t,v,dur,att||.001);src.connect(fl);fl.connect(g);g.connect(sOut(a));src.start(t,Math.random()*.4);src.stop(t+dur+.05)}
 /* ضربة واطية (sub) */
-const sThump=(a,t,v)=>{sOsc(a,t,.26,150,v,'sine',40,.003);sNz(a,t,.05,700,.8,v*.3,'lowpass')};
+const sThump=(a,t,v)=>{sOsc(a,t,.32,120,v,'sine',36,.003);sOsc(a,t,.12,240,v*.25,'triangle',90,.002);sNz(a,t,.06,500,.8,v*.35,'lowpass')};
 /* رنّة معدن: ترددات غير متناسقة زي الحديد، بتموت بسرعة */
-const sClank=(a,t,f,v,d)=>{[1,2.32,4.25,6.63].forEach((m,i)=>sOsc(a,t,d/(1+i*.7),f*m,v/(1.4+i*1.3),'sine'));sNz(a,t,.02,f*2.2,4,v*.9)};
+const sClank=(a,t,f,v,d)=>{[1,1.47,2.09].forEach((m,i)=>sOsc(a,t,d/(1+i*.8),f*m,v/(1.2+i*1.1),'triangle',f*m*.82));sNz(a,t,.035,f*3,1.2,v*.8,'lowpass')};
 /* تكّة ميكانيكية قصيرة */
-const sTick=(a,t,f,v)=>{sNz(a,t,.016,f,7,v);sOsc(a,t,.012,f*.45,v*.25,'square')};
+const sTick=(a,t,f,v)=>{sNz(a,t,.028,Math.min(f,1500),1,v,'lowpass');sOsc(a,t,.02,Math.min(f,1500)*.12,v*.4,'triangle')};
 /* هوا (whoosh) */
 const sAir=(a,t,dur,f1,f2,v)=>sNz(a,t,dur,f1,1.4,v,'bandpass',f2,dur*.45);
 /* تعمير السلاح: سحب الأقسام لورا وبعدين رجوعها بخبطة حديد */
-const sRack=(a,t,v)=>{sTick(a,t,2600,v*.7);sNz(a,t+.01,.08,1500,2.5,v*.35,'bandpass',2800,.03);sClank(a,t+.09,900,v*.75,.16);sTick(a,t+.09,3200,v*.8);sThump(a,t+.09,v*.6)};
+const sRack=(a,t,v)=>{sTick(a,t,1300,v*.9);sNz(a,t+.01,.08,600,1.5,v*.4,'lowpass',1100,.03);sClank(a,t+.09,240,v*.8,.16);sTick(a,t+.09,1500,v*.9);sThump(a,t+.09,v*.85)};
 /* v146: أصوات حديد تقيلة بس — مفيش أجراس ولا صفارات، والرنّة قصيرة ومكتومة */
 function snd(k){if(!sndOn(k==='charge'?'orb':k))return;const a=acGet();if(!a)return;const t=a.currentTime+.015;
-  if(k==='ui'){sThump(a,t,.4);sTick(a,t,1900,.9);sClank(a,t,640,.16,.07)}
-  else if(k==='tab')sRack(a,t,.5);
-  else if(k==='orb'){sRack(a,t,.6);sThump(a,t+.2,1);sClank(a,t+.2,430,.42,.28);sNz(a,t+.2,.3,160,.7,.3,'lowpass')}
-  else if(k==='charge'){for(let n=0,x=0;n<9;n++){x+=.11*Math.pow(.86,n);sTick(a,t+x,2200+n*120,.55);sClank(a,t+x,700+n*30,.12,.05)}sNz(a,t,.8,110,.8,.35,'lowpass',220,.5)}
-  else if(k==='start')sRack(a,t,.55);
-  else if(k==='log'){sThump(a,t,.75);sClank(a,t,1050,.34,.2);sTick(a,t,3400,.35)}
-  else if(k==='rest'){sRack(a,t,.75);sRack(a,t+.38,.9);sThump(a,t+.47,1);sClank(a,t+.47,520,.4,.25)}
-  else if(k==='end'){sRack(a,t,.7);sThump(a,t+.3,1);sClank(a,t+.3,260,.5,.35);sNz(a,t+.3,.55,130,.7,.4,'lowpass');sThump(a,t+.62,.85);sClank(a,t+.62,390,.38,.28)}}
+  if(k==='ui'){sThump(a,t,.5);sTick(a,t,1200,.7);sClank(a,t,200,.18,.08)}
+  else if(k==='tab')sRack(a,t,.55);
+  else if(k==='orb'){sRack(a,t,.6);sThump(a,t+.2,1);sClank(a,t+.2,150,.5,.3);sNz(a,t+.2,.4,120,.7,.35,'lowpass')}
+  else if(k==='charge'){for(let n=0,x=0;n<9;n++){x+=.11*Math.pow(.86,n);sTick(a,t+x,900+n*50,.7);sClank(a,t+x,170+n*8,.16,.05)}sNz(a,t,.8,90,.8,.4,'lowpass',180,.5)}
+  else if(k==='start')sRack(a,t,.6);
+  else if(k==='log'){sThump(a,t,.85);sClank(a,t,260,.42,.18);sTick(a,t,1300,.45)}
+  else if(k==='rest'){sRack(a,t,.8);sRack(a,t+.38,.95);sThump(a,t+.47,1);sClank(a,t+.47,190,.45,.25)}
+  else if(k==='end'){sRack(a,t,.75);sThump(a,t+.3,1);sClank(a,t+.3,120,.55,.4);sNz(a,t+.3,.6,110,.7,.45,'lowpass');sThump(a,t+.62,.9);sClank(a,t+.62,175,.42,.3)}}
 function beep(n){snd(n>=3?'end':n>=2?'rest':'start')}
 function restStart(e){const d=S.draft;if(!d||!e)return;d.rest={t0:Date.now(),dur:restFor(e)};saveSoon();if(!rsIv)rsIv=setInterval(restTick,250);restTick()}
 /* v139: عدّاد الراحة بيتبني مرة واحدة، وبعدها بيتحدّث الرقم والشريط بس (الأزرار مابتتبنيش كل ربع ثانية فمابتضيعش دوسات) */
