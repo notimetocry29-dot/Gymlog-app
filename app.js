@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='130';
+const VER='131';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -272,10 +272,27 @@ function progMsg(t,h,unit,name){
 const tgt=(r,g,u)=>esc(String(+r||0))+(!u&&+g>+r?'–'+esc(String(+g)):'');
 const durSum=e=>(e.dur||[]).reduce((a,b)=>a+(+b||0),0);
 const durLine=e=>e.dur&&e.dur.some(x=>x>0)?tr('الوقت','Time')+': '+e.dur.map(x=>x>0?mmss(x):'—').join(' | ')+' | '+tr('الإجمالي','Total')+' '+mmss(durSum(e)):'';
+/* v131: «ملف التسجيل»: كل تفصيلة اتسجلت في الجلسة بتطلع في الكارت والتحليل والنسخة وExcel */
+const gymName=id=>!id||id==='main'?'':((S.gyms||[]).find(g=>g.id===id)||{}).name||id;
+const hm=t=>new Date(t).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+const rdyTxt=v=>[tr('وحش','poor'),tr('متوسط','OK'),tr('كويس','good')][v];
+function sessMeta(s){const a=[];
+  if(!s.imp&&s.t0&&s.ts&&s.ts>s.t0){const mn=Math.round((s.ts-s.t0)/60000);a.push(`${hm(s.t0)}–${hm(s.ts)}`+(mn>0&&mn<600?` · ${mn} ${tr('دقيقة','min')}`:''))}
+  else if(!s.imp&&s.ts)a.push(hm(s.ts));
+  const g=gymName(s.gym);if(g)a.push(tr('الجيم: ','Gym: ')+g);
+  if(s.rdy!=null)a.push(tr('النوم والطاقة: ','Sleep/energy: ')+rdyTxt(s.rdy));
+  return a}
+function exFlags(e,s){const a=[];
+  if(e.from)a.push(tr(`بدل ${e.from}`,`instead of ${e.from}`));else if(e.add)a.push(tr('اتضاف في الجلسة','added in session'));
+  if(e.ss&&s){const k=s.ex.indexOf(e),nx=s.ex[k+1];if(nx)a.push(tr(`سوبرسيت مع ${nx.name}`,`superset with ${nx.name}`))}
+  return a}
 function cardText(s){
-  const tm=!s.imp&&s.ts?new Date(s.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
-  const L=[`Cycle ${s.cycle}`,`${s.dayName} — ${s.date}${tm?' · '+tm:''}`];if(s.cb)L.push(s.cb.dl?tr(`أسبوع خفيف  · الأوزان ${cbPct(s.cb)}`,`Light week · weights ${cbPct(s.cb)}`):tr(`رجوع بعد ${s.cb.g} يوم · الأوزان ${cbPct(s.cb)}`,`Back after ${s.cb.g} days · weights ${cbPct(s.cb)}`));L.push('');
-  for(const e of s.ex){L.push(e.name);L.push(`${fw(e.w)} | ${setsStr(e)}${e.clean?' | '+T().clean:''}${e.rir!=null?' | '+tr('فاضل ','RIR ')+e.rir:''}`);const dl=durLine(e);if(dl)L.push(dl);if(e.note)L.push(e.note);L.push('')}
+  const L=[`Cycle ${s.cycle}`,`${s.dayName} — ${s.date}`];
+  L.push(...sessMeta(s));
+  if(s.cb)L.push(s.cb.dl?tr(`أسبوع خفيف · الأوزان ${cbPct(s.cb)}`,`Light week · weights ${cbPct(s.cb)}`):tr(`رجوع بعد ${s.cb.g} يوم · الأوزان ${cbPct(s.cb)}`,`Back after ${s.cb.g} days · weights ${cbPct(s.cb)}`));L.push('');
+  for(const e of s.ex){const f=exFlags(e,s);L.push(e.name+(f.length?` (${f.join(' · ')})`:''));
+    L.push(`${fw(e.w)} | ${setsStr(e)}${e.clean?' | '+T().clean:' | '+tr('مش نضيف','not clean')}${e.rir!=null?' | '+tr('فاضل ','RIR ')+(e.rir===3?'3+':e.rir):''}`);
+    const dl=durLine(e);if(dl)L.push(dl);if(e.note)L.push(e.note);L.push('')}
   const tot=s.ex.reduce((a,e)=>a+durSum(e),0);if(tot>0)L.push(tr('إجمالي وقت المجموعات: ','Total set time: ')+mmss(tot),'');
   const d=S.program.days.find(x=>x.id===s.day);const c=d?coreNames(d):s.ex.filter(e=>e.core).map(e=>e.name);
   if(c.length)L.push(T().coreLine+': '+c.join(' + '));
@@ -295,18 +312,20 @@ function aiText(s,skip){
   const coreAll=tpl.filter(t=>t.core),coreDone=coreAll.filter(t=>s.ex.some(e=>e.exId===t.id)).length;
   out.push(L.aiHead(s.dayName,s.cycle));
   out.push(`${L.aiDate}: ${s.date} (${fmtD(s.date)})`);
+  {const m=sessMeta(s).filter(x=>!/^(النوم|Sleep)/.test(x));if(m.length)out.push(m.join(' · '))}
   if(s.rdy!=null)out.push(tr('النوم والطاقة قبل الجلسة: ','Sleep and energy before the session: ')+[tr('وحش','poor'),tr('متوسط','OK'),tr('كويس','good')][s.rdy]);
   if(coreAll.length)out.push(L.aiCore(coreDone,coreAll.length));
   if(s.cb)out.push(tr(`جلسة رجوع بعد غياب ${s.cb.g} يوم (${s.cb.k==='fb'?'جسم كامل':'يوم مخفف'}): الأوزان ${cbPct(s.cb)} من أوزانه قبل الغياب والمجموعات أقل عن قصد، ومابتتحسبش في قاعدة الزيادة.`,`Comeback session after a ${s.cb.g}-day break (${s.cb.k==='fb'?'full body':'light day'}): weights at ${cbPct(s.cb)} of pre-break and fewer sets on purpose; it does not count toward the progression rule.`));
   out.push(L.aiUnits);out.push(L.aiRule);out.push('');
   s.ex.forEach((e,i)=>{
     const u=e.unit?' '+unitTxt(e.unit):'';
-    out.push(`${i+1}. ${e.name}${e.core?' '+L.aiCoreTag:''}`);
+    {const f=exFlags(e,s);out.push(`${i+1}. ${e.name}${e.core?' '+L.aiCoreTag:''}${f.length?' ('+f.join(' · ')+')':''}`)}
     out.push(`   ${L.aiTarget}: ${e.tsets||e.sets.length}×${e.treps||''}${u}`);
     out.push(`   ${L.aiWeight}: ${noW(e.w)?(e.unit?'—':L.bw):(+e.w)+' kg'}`);
     out.push(`   ${L.aiSets}: ${e.sets.join(', ')}${u}`);
+    if(Array.isArray(e.ws)&&e.ws.some(x=>+x!==+e.w))out.push(`   ${tr('وزن كل مجموعة','Weight per set')}: ${e.ws.map(x=>(+x)+' kg').join(', ')}`);
     {const dl=durLine(e);if(dl)out.push('   '+dl)}
-    if(e.clean)out.push(`   ${L.aiForm}: ${L.aiClean}`);
+    out.push(`   ${L.aiForm}: ${e.clean?L.aiClean:tr('مش نضيف (مرجحة أو أداء مكسور)','not clean (swinging or broken form)')}`);
     if(e.rir!=null)out.push(`   ${tr('العدّات اللي كانت فاضلة في آخر مجموعة (RIR)','Reps in reserve on the last set (RIR)')}: ${e.rir===3?'3+':e.rir}`);
     const h=exHist(e.exId,skip).filter(x=>x.date<=s.date);const prev=h[0];
     if(prev)out.push(`   ${L.aiLast} (${prev.date}): ${noW(prev.w)?'—':(+prev.w)+' kg'} — ${prev.sets.join('/')}${u}${prev.clean?', '+L.clean:''}`);
@@ -580,7 +599,7 @@ function renderHome(){
 }
 
 /* ================= الجلسة ================= */
-function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),g=gymId(),h=hh.find(x=>!x.cb&&x.gym===g)||hh.find(x=>!x.cb)||hh[0];return{exId:t.id,name:t.name,unit:t.unit||'',core:!!t.core,goal:t.goal,tsets:t.sets,treps:t.reps,note0:t.note||libHow(t.name),w:src?src.w:(h?h.w:t.w),sets:src?src.sets.map(String):Array(t.sets).fill(''),ss:!!(src?src.ss:t.ss),ws:src&&src.ws?src.ws.map(String):[],rir:src&&src.rir!=null?src.rir:null,dur:src&&src.dur?src.dur.slice():[],clean:src?!!src.clean:true,note:src?src.note||'':''}}
+function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),g=gymId(),h=hh.find(x=>!x.cb&&x.gym===g)||hh.find(x=>!x.cb)||hh[0];return{exId:t.id,name:t.name,unit:t.unit||'',core:!!t.core,goal:t.goal,tsets:t.sets,treps:t.reps,note0:t.note||libHow(t.name),w:src?src.w:(h?h.w:t.w),sets:src?src.sets.map(String):Array(t.sets).fill(''),ss:!!(src?src.ss:t.ss),ws:src&&src.ws?src.ws.map(String):[],add:src?src.add:undefined,from:src?src.from:undefined,rir:src&&src.rir!=null?src.rir:null,dur:src&&src.dur?src.dur.slice():[],clean:src?!!src.clean:true,note:src?src.note||'':''}}
 async function startSession(id){
   if(S.draft&&!dEmpty(S.draft)&&!await ask(T().confNew))return;
   const pd=planDraft(id,id==='FB'?cbNow():null);
@@ -592,7 +611,7 @@ async function editSession(id){
   const s=S.sessions.find(x=>x.id===id);if(!s)return;
   if(S.draft&&!await ask(T().confEditOver))return;
   const d=S.program.days.find(x=>x.id===s.day);
-  S.draft={gym:s.gym,id:s.id,editing:s.id,date:s.date,day:s.day,dayName:s.dayName,cycle:s.cycle,ex:[]};if(s.cb)S.draft.cb=s.cb;
+  S.draft={t0:s.t0,gym:s.gym,id:s.id,editing:s.id,date:s.date,day:s.day,dayName:s.dayName,cycle:s.cycle,ex:[]};if(s.cb)S.draft.cb=s.cb;
   const ex=s.ex.map(e=>{const t=d&&d.ex.find(x=>x.id===e.exId)||{id:e.exId,name:e.name,unit:e.unit,core:e.core,goal:e.goal,sets:e.tsets||e.sets.length,reps:e.treps||e.sets[0],note:''};return draftEx(t,e)});
   if(d)for(const t of d.ex)if(!ex.some(e=>e.exId===t.id)){const e=draftEx(t);if(s.cb)cbApply(e,s.cb);ex.push(e)}
   S.draft.ex=ex;openTips.clear();save();closeModal(true);openSession();
@@ -784,11 +803,11 @@ function updCore(){
 function buildFromDraft(){
   const d=S.draft,ex=[];
   for(const e of d.ex){const sets=[],dur=[],wsx=[];e.sets.forEach((r,j)=>{const v=num(r);if(!isNaN(v)&&v>0){sets.push(v);dur.push(+((e.dur||[])[j])||0);const x=num((e.ws||[])[j]);wsx.push(x>0?x:num(e.w))}});if(!sets.length)continue;const w=num(e.w);
-    const o={exId:e.exId,name:e.name,unit:e.unit,core:e.core,goal:e.goal,tsets:e.tsets,treps:e.treps,w:isNaN(w)?'':w,sets,clean:!!e.clean,note:(e.note||'').trim()};if(dur.some(x=>x>0))o.dur=dur;if(e.rir!=null)o.rir=e.rir;if(e.ss)o.ss=1;if(!e.unit&&wsx.some(x=>x!==num(e.w)))o.ws=wsx;ex.push(o)}
+    const o={exId:e.exId,name:e.name,unit:e.unit,core:e.core,goal:e.goal,tsets:e.tsets,treps:e.treps,w:isNaN(w)?'':w,sets,clean:!!e.clean,note:(e.note||'').trim()};if(dur.some(x=>x>0))o.dur=dur;if(e.rir!=null)o.rir=e.rir;if(e.ss)o.ss=1;if(e.add)o.add=1;if(e.from)o.from=String(e.from);if(!e.unit&&wsx.some(x=>x!==num(e.w)))o.ws=wsx;ex.push(o)}
   if(!ex.length)return null;
   const core=d.ex.filter(e=>e.core).every(e=>ex.some(x=>x.exId===e.exId));
   const all=d.ex.every(e=>ex.some(x=>x.exId===e.exId));
-  const o={gym:d.gym||gymId(),rdy:d.rdy,id:d.editing||d.id,date:d.date||today(),day:d.day,dayName:d.dayName,cycle:+num(d.cycle)||1,ex,status:all?'full':core?'core':'part',ts:Date.now()};
+  const o={t0:d.t0||undefined,gym:d.gym||gymId(),rdy:d.rdy,id:d.editing||d.id,date:d.date||today(),day:d.day,dayName:d.dayName,cycle:+num(d.cycle)||1,ex,status:all?'full':core?'core':'part',ts:Date.now()};
   if(d.cb)o.cb=d.cb;if(o.rdy==null)delete o.rdy;if(o.gym==='main')delete o.gym;return o;
 }
 function persistDraft(){
@@ -1250,14 +1269,14 @@ const HIST_MIG=5;/* آخر ترحيل بيستورد السجل القديم: ب
 /* v114: أي رقم جاي من ملف بيتحوّل رقم فعلًا، والوحدة من قايمة ثابتة (ملف متلغّم مايقدرش يحط كود) */
 const nn=(v,a,b,d)=>{const x=Number(v);return isFinite(x)?Math.min(b,Math.max(a,x)):d};
 const UNITS=['','ث','خطوة','د'],okU=u=>UNITS.includes(u)?u:'';
-const cleanEx=e=>({exId:String(e.exId||'h:'+e.name),name:String(e.name).slice(0,80),unit:okU(e.unit),core:!!e.core,goal:nn(e.goal,0,999,12),tsets:nn(e.tsets,1,20,3),treps:nn(e.treps,0,999,10),w:e.w===''||e.w==null?'':nn(e.w,0,2000,0),sets:e.sets.map(Number).filter(v=>isFinite(v)&&v>0).map(v=>Math.min(v,999)),dur:Array.isArray(e.dur)?e.dur.map(x=>nn(x,0,36000,0)):undefined,rir:e.rir==null?undefined:nn(e.rir,0,3,2),ss:e.ss?1:undefined,ws:Array.isArray(e.ws)?e.ws.map(x=>nn(x,0,2000,0)):undefined,clean:!!e.clean,note:String(e.note||'').slice(0,500)});
+const cleanEx=e=>({exId:String(e.exId||'h:'+e.name),name:String(e.name).slice(0,80),unit:okU(e.unit),core:!!e.core,goal:nn(e.goal,0,999,12),tsets:nn(e.tsets,1,20,3),treps:nn(e.treps,0,999,10),w:e.w===''||e.w==null?'':nn(e.w,0,2000,0),sets:e.sets.map(Number).filter(v=>isFinite(v)&&v>0).map(v=>Math.min(v,999)),dur:Array.isArray(e.dur)?e.dur.map(x=>nn(x,0,36000,0)):undefined,rir:e.rir==null?undefined:nn(e.rir,0,3,2),ss:e.ss?1:undefined,add:e.add?1:undefined,from:e.from?String(e.from).slice(0,80):undefined,ws:Array.isArray(e.ws)?e.ws.map(x=>nn(x,0,2000,0)):undefined,clean:!!e.clean,note:String(e.note||'').slice(0,500)});
 const cleanT=t=>({ss:!!t.ss,id:String(t.id),name:String(t.name).slice(0,80),w:nn(t.w,0,2000,0),sets:nn(t.sets,1,20,3),reps:nn(t.reps,1,999,10),goal:nn(t.goal,1,999,12),unit:okU(t.unit),core:!!t.core,note:String(t.note||'').slice(0,1000)});
 function cleanSession(s){
   if(!s||typeof s!=='object'||typeof s.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s.date)||!Array.isArray(s.ex))return null;
   const ex=s.ex.filter(e=>e&&typeof e.name==='string'&&Array.isArray(e.sets)).map(cleanEx);
   const cb=s.cb&&typeof s.cb==='object'?{k:s.cb.k==='fb'?'fb':'lt',dl:s.cb.dl?1:undefined,p:nn(s.cb.p,.3,1,.9),g:nn(s.cb.g,0,9999,8),i:nn(s.cb.i,0,9,0),n:nn(s.cb.n,1,9,1)}:undefined;
   const o={id:String(s.id||uid()),date:s.date,day:String(s.day||''),dayName:String(s.dayName||s.day||'?').slice(0,80),cycle:nn(s.cycle,1,9999,1),status:['full','core','part','imp'].includes(s.status)?s.status:'part',ts:nn(s.ts,0,9e15,new Date(s.date+'T12:00:00').getTime()),ex};
-  if(s.imp)o.imp=1;if(cb)o.cb=cb;if(s.gym&&typeof s.gym==='string')o.gym=s.gym.slice(0,40);if(s.rdy!=null)o.rdy=nn(s.rdy,0,2,1);return o;
+  if(s.imp)o.imp=1;if(cb)o.cb=cb;if(s.gym&&typeof s.gym==='string')o.gym=s.gym.slice(0,40);if(s.rdy!=null)o.rdy=nn(s.rdy,0,2,1);if(s.t0)o.t0=nn(s.t0,0,9e15,0)||undefined;return o;
 }
 function cleanRestore(d){
   if(!d||!d.program||!Array.isArray(d.program.days)||!Array.isArray(d.sessions))throw new Error('fmt');
@@ -1296,8 +1315,10 @@ function backupMD(){
   }
   o.push(`## ${L.mdLog}`,'');
   for(const s of done()){
-    o.push(`### ${s.date} — ${s.dayName} · Cycle ${s.cycle} · ${L.st[s.status]||''}`,'',rowMd(L.mdSCols),rowMd(L.mdSCols.map(()=>'---')));
-    for(const e of s.ex)o.push(rowMd([e.name+(e.core?' ★':''),fw(e.w),e.sets.join(' / ')+(e.unit?' '+unitTxt(e.unit):''),e.clean?L.yes:'',e.note]));
+    o.push(`### ${s.date} — ${s.dayName} · Cycle ${s.cycle} · ${L.st[s.status]||''}`,'');
+    {const m=sessMeta(s);if(s.cb)m.push(s.cb.dl?tr('أسبوع خفيف ','Light week ')+cbPct(s.cb):tr(`رجوع بعد ${s.cb.g} يوم `,`Comeback after ${s.cb.g} days `)+cbPct(s.cb));if(m.length)o.push(m.join(' · '),'')}
+    o.push(rowMd(L.mdSCols),rowMd(L.mdSCols.map(()=>'---')));
+    for(const e of s.ex){const f=exFlags(e,s);o.push(rowMd([e.name+(e.core?' ★':'')+(f.length?' ('+f.join(' · ')+')':''),fw(e.w),setsStr(e),e.dur&&e.dur.some(x=>x>0)?e.dur.map(x=>x>0?mmss(x):'—').join(' / '):'',e.rir!=null?(e.rir===3?'3+':String(e.rir)):'',e.clean?L.yes:tr('لأ','no'),e.note]))}
     o.push('');
   }
   const data=JSON.stringify({app:'gymlog',v:1,exported:new Date().toISOString(),data:snapData()}).replace(/-->/g,'--\\u003e');
@@ -1364,7 +1385,7 @@ async function autoFile(){if(NL){try{if(Android.linkedName()&&Android.writeLinke
 function exportCSV(){
   const q=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
   const rows=[T().csvH];
-  for(const s of done().reverse())for(const e of s.ex)rows.push([s.date,s.cycle,s.dayName,e.name,e.w,e.sets.join('/'),e.sets.length,e.sets.reduce((a,b)=>a+b,0),e.clean?'1':'0',e.core?'1':'0',e.note]);
+  for(const s of done().reverse())for(const e of s.ex)rows.push([s.date,s.cycle,s.dayName,e.name,e.w,e.sets.join('/'),e.sets.length,e.sets.reduce((a,b)=>a+b,0),e.clean?'1':'0',e.core?'1':'0',e.note,Array.isArray(e.ws)?e.ws.join('/'):'',Array.isArray(e.dur)?e.dur.join('/'):'',e.rir!=null?e.rir:'',e.ss?'1':'',e.from?'swap:'+e.from:e.add?'add':'',gymName(s.gym),s.rdy!=null?s.rdy:'',s.cb?(s.cb.dl?'light':'comeback')+' '+Math.round(s.cb.p*100)+'%':'',s.t0?hm(s.t0):'',s.ts&&!s.imp?hm(s.ts):'',s.t0&&s.ts?Math.round((s.ts-s.t0)/60000):'',e.unit||'']);
   download(`gym-log-${today()}.csv`,'﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n'),'text/csv');toast(T().csvDone);
 }
 /* ملف Excel (CSV) اللي التطبيق بيصدّره: بنقراه بالترتيب مش بأسماء الأعمدة، فبيشتغل عربي وإنجليزي */
@@ -1390,7 +1411,13 @@ function csvToSessions(txt){
     let s=map.get(key);
     if(!s){s={id:uid(),date:r[0],cycle:+r[1]||1,dayName:r[2]||'?',status:'imp',ts:new Date(r[0]+'T12:00:00').getTime(),ex:[]};map.set(key,s)}
     const sets=String(r[5]).split('/').map(Number).filter(v=>!isNaN(v)&&String(v)!=='');
-    s.ex.push({name:r[3],exId:'h:'+r[3],w:+r[4]||0,sets,unit:'',clean:r[8]==='1',core:r[9]==='1',note:r[10]||''});
+    const ex={name:r[3],exId:'h:'+r[3],w:+r[4]||0,sets,unit:UNITS.includes(r[22])?r[22]:'',clean:r[8]==='1',core:r[9]==='1',note:r[10]||''};
+    if(r[11]){const a=String(r[11]).split('/').map(Number);if(a.length===sets.length&&a.every(isFinite))ex.ws=a}
+    if(r[12]){const a=String(r[12]).split('/').map(Number);if(a.every(isFinite))ex.dur=a}
+    if(r[13]!==''&&r[13]!=null&&isFinite(+r[13]))ex.rir=+r[13];if(r[14]==='1')ex.ss=1;
+    if(/^swap:/.test(r[15]||''))ex.from=r[15].slice(5);else if(r[15]==='add')ex.add=1;
+    if(r[17]!==''&&r[17]!=null&&isFinite(+r[17]))s.rdy=+r[17];
+    s.ex.push(ex);
   }
   return[...map.values()].filter(s=>s.ex.length);
 }
@@ -1624,7 +1651,7 @@ document.addEventListener('click',ev=>{
     case 'sxOpen':closeSheet();libQ='';libG='all';libFor='sess';libModal();break;
     case 'swOpen':{closeSheet();const cur=S.draft&&S.draft.ex[curEx],L0=cur&&libGet(cur.name);libQ='';libG=L0?L0[1]:'all';libFor='swap';libModal();break}
     case 'sxSwap':{const d=S.draft;if(!d)break;const n=b.dataset.n,old=d.ex[curEx];if(!old||nk(old.name)===nk(n)){closeModal();break}
-      const e=draftEx(mk(n));e.core=old.core;if(d.cb)cbApply(e,d.cb);d.ex[curEx]=e;save();closeModal();renderSession();toast(tr('اتبدّل للجلسة دي ✓','Swapped for this session ✓'));break}
+      const e=draftEx(mk(n));e.core=old.core;e.from=old.from||old.name;if(d.cb)cbApply(e,d.cb);d.ex[curEx]=e;save();closeModal();renderSession();toast(tr('اتبدّل للجلسة دي ✓','Swapped for this session ✓'));break}
     case 'rtOpen':closeSheet();rtModal();break;
     case 'rtGo':{const w=Math.max(5,+num($('#rtW').value)||180),r=Math.max(0,+num($('#rtR').value)||0),n=Math.max(1,Math.min(50,+num($('#rtN').value)||5));S.settings.rt={w,r,n};save();if(RT)clearInterval(RT.iv);RT={t0:Date.now(),w,r,n,ph:''};wakeOn();beep(1);RT.iv=setInterval(rtTick,250);rtTick();break}
     case 'rtStop':rtEnd(false);closeModal();break;
@@ -1632,7 +1659,7 @@ document.addEventListener('click',ev=>{
     case 'sxAdd':{const d=S.draft;if(!d)break;const n=b.dataset.n;let k=d.ex.findIndex(e=>nk(e.name)===nk(n));
       if(k<0){const pd=S.program.days.find(x=>x.id===d.day);let t=null;
         if(pd&&S.settings.sxProg){t=pd.ex.find(x=>nk(x.name)===nk(n));if(!t){t=mk(n);pd.ex.push(t)}}
-        const e=draftEx(t||mk(n));if(d.cb)cbApply(e,d.cb);d.ex.push(e);k=d.ex.length-1;save();queueBackup();
+        const e=draftEx(t||mk(n));e.add=1;if(d.cb)cbApply(e,d.cb);d.ex.push(e);k=d.ex.length-1;save();queueBackup();
         toast(pd&&S.settings.sxProg?tr('اتضاف للجلسة وللبرنامج ✓','Added to the session and the program ✓'):tr('اتضاف للجلسة ✓','Added to the session ✓'))}
       else toast(tr('التمرين موجود في الجلسة','Already in this session'));
       closeModal();curEx=k;wAnim=true;renderSession();wAnim=false;$('#sess').scrollTop=0;break}
