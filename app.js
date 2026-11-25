@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='137';
+const VER='138';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';

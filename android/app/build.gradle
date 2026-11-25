@@ -1,7 +1,9 @@
 plugins { id 'com.android.application' }
 
-// رقم النسخة بييجي من index.html (const VER) عشان يفضل متطابق مع الصفحة والـ service worker
-def webVer = (file('../../index.html').text =~ /const VER='(\d+)'/)[0][1]
+// رقم النسخة بييجي من app.js (const VER) عشان يفضل متطابق مع الصفحة والـ service worker
+// (كان بيتقرا من index.html، بس VER اتنقل لـ app.js — فالبناء كان هيقع). لو مش لاقيه ناخده من sw.js
+def verM = (file('../../app.js').text =~ /const VER='(\d+)'/)
+def webVer = verM.find() ? verM.group(1) : (file('../../sw.js').text =~ /const BUILD='(\d+)'/)[0][1]
 
 android {
     namespace 'app.gymlog.twa'

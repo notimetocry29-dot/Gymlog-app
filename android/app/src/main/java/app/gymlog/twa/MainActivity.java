@@ -9,9 +9,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Base64;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -59,6 +63,10 @@ public class MainActivity extends ComponentActivity {
     private volatile boolean trusted = false;   // الصفحة الحالية من الـ origin بتاعنا؟ (الـ bridge بيشتغل معاها بس)
     private boolean pageDone = false, onAppPage = false;
     private boolean dark = true;
+    private boolean offlineShown = false;   // شاشة «أول فتحة محتاجة نت» ظاهرة دلوقتي
+    private long lastAuto = 0;
+    private ConnectivityManager cm;
+    private ConnectivityManager.NetworkCallback netCb;
 
     // حفظ ملف (النسخة الاحتياطية)
     private String pendingName, pendingMime, pendingContent;
@@ -145,7 +153,7 @@ public class MainActivity extends ComponentActivity {
         web.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 Uri u = r.getUrl();
-                if ("gymlog".equals(u.getScheme())) { v.loadUrl(URL); return true; }   // زرار «إعادة المحاولة» في صفحة الأوفلاين
+                if ("gymlog".equals(u.getScheme())) { retry(); return true; }   // زرار «حاول تاني» في شاشة أول فتحة
                 if (isAppUrl(u)) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (ActivityNotFoundException ignored) {}
                 return true;                                                            // فيسبوك وأي رابط برّه: برّه التطبيق
@@ -156,12 +164,12 @@ public class MainActivity extends ComponentActivity {
                 recreate();
                 return true;
             }
-            @Override public void onPageStarted(WebView v, String url, Bitmap f) { trusted = url != null && isAppUrl(Uri.parse(url)); }
+            @Override public void onPageStarted(WebView v, String url, Bitmap f) { trusted = url != null && isAppUrl(Uri.parse(url)); if (trusted) offlineShown = false; }
             @Override public void onPageFinished(WebView v, String url) { pageDone = true; onAppPage = trusted; }
             @Override public void onReceivedError(WebView v, WebResourceRequest r, WebResourceError e) {
                 if (!r.isForMainFrame()) return;
                 trusted = false; onAppPage = false; pageDone = true;
-                v.loadDataWithBaseURL(null, readAsset("offline.html"), "text/html", "utf-8", null);
+                showOffline();
             }
         });
         web.setWebChromeClient(new WebChromeClient() {
@@ -204,7 +212,59 @@ public class MainActivity extends ComponentActivity {
             }
         });
 
+        watchNetwork();
         web.loadUrl(URL);   // الصفحة بترجّع شاشتها لوحدها (restoreState كان بيطلّع شاشة سودا بعد ما النظام يقفل التطبيق في الخلفية)
+    }
+
+    /** شاشة أول فتحة من غير نت: جوه الـ APK نفسه، بثيم التطبيق والخطوط بتاعته (متضمّنة جوه الصفحة). */
+    private void showOffline() {
+        String h = readAsset("offline.html")
+                .replace("{{TH}}", dark ? "night" : "morning")
+                .replace("{{F_R4}}", fontUri("readex-400")).replace("{{F_R6}}", fontUri("readex-600"))
+                .replace("{{F_RQ}}", fontUri("ruqaa")).replace("{{F_FT}}", fontUri("figtree"));
+        offlineShown = true;
+        web.loadDataWithBaseURL(null, h, "text/html", "utf-8", null);
+    }
+
+    private String fontUri(String n) {
+        try (InputStream in = getAssets().open("fonts/" + n + ".woff2")) {
+            ByteArrayOutputStream o = new ByteArrayOutputStream(); byte[] buf = new byte[8192]; int k;
+            while ((k = in.read(buf)) > 0) o.write(buf, 0, k);
+            return "data:font/woff2;base64," + Base64.encodeToString(o.toByteArray(), Base64.NO_WRAP);
+        } catch (Exception e) { return "about:blank"; }
+    }
+
+    private boolean hasNet() {
+        try {
+            NetworkCapabilities c = cm == null ? null : cm.getNetworkCapabilities(cm.getActiveNetwork());
+            return c != null && c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        } catch (Exception e) { return true; }   // لو مش عارفين، نجرّب
+    }
+
+    /** «حاول تاني»: لو مفيش نت أصلًا نقول كده في الشاشة بدل ما نحمّل ونفشل. */
+    private void retry() {
+        if (!hasNet()) { js("window.glNet&&glNet('none')"); return; }
+        js("window.glNet&&glNet('try')");
+        web.loadUrl(URL);
+    }
+
+    /** أول ما النت يرجع (ويتأكد إنه شغال فعلًا) والشاشة ظاهرة: التطبيق يفتح لوحده. */
+    private void watchNetwork() {
+        try {
+            cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            netCb = new ConnectivityManager.NetworkCallback() {
+                @Override public void onCapabilitiesChanged(Network n, NetworkCapabilities c) {
+                    if (!c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) || !c.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) return;
+                    runOnUiThread(() -> {
+                        long now = SystemClock.uptimeMillis();
+                        if (!offlineShown || web == null || now - lastAuto < 8000) return;   // مرة كل ٨ ثواني بالكتير
+                        lastAuto = now;
+                        retry();
+                    });
+                }
+            };
+            cm.registerDefaultNetworkCallback(netCb);
+        } catch (Exception ignored) { netCb = null; }
     }
 
     static boolean isAppUrl(Uri u) {
@@ -237,7 +297,7 @@ public class MainActivity extends ComponentActivity {
             ByteArrayOutputStream o = new ByteArrayOutputStream(); byte[] buf = new byte[4096]; int k;
             while ((k = in.read(buf)) > 0) o.write(buf, 0, k);
             return o.toString("UTF-8");
-        } catch (Exception e) { return "<h1>Offline</h1>"; }
+        } catch (Exception e) { return "<body style='background:#0e0e0f;color:#ece8e1;font-family:sans-serif;text-align:center;padding-top:40vh' dir='rtl'>أول فتحة محتاجة نت</body>"; }
     }
 
     private void js(String code) { runOnUiThread(() -> { if (web != null) web.evaluateJavascript(code, null); }); }
@@ -308,5 +368,5 @@ public class MainActivity extends ComponentActivity {
 
     @Override protected void onPause() { super.onPause(); web.onPause(); }
     @Override protected void onResume() { super.onResume(); web.onResume(); }
-    @Override protected void onDestroy() { if (web != null) { root.removeView(web); web.destroy(); } super.onDestroy(); }
+    @Override protected void onDestroy() { try { if (cm != null && netCb != null) cm.unregisterNetworkCallback(netCb); } catch (Exception ignored) {} if (web != null) { root.removeView(web); web.destroy(); } super.onDestroy(); }
 }
