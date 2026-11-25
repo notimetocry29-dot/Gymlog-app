@@ -11,8 +11,10 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>چيم لوج</title>
 <style>
+@font-face{font-family:"ArUI";src:url(fonts/readex-400.woff2) format("woff2");font-weight:300 500;font-display:swap;unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F,U+0660-0669}
+@font-face{font-family:"ArUI";src:url(fonts/readex-600.woff2) format("woff2");font-weight:600 900;font-display:swap;unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F,U+0660-0669}
 @font-face{font-family:"Figtree";src:url(fonts/figtree.woff2) format("woff2");font-weight:300 900;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215}
-:root{--scb:#000;--sci:#0c0c0c;--font:"Figtree",system-ui,"Noto Naskh Arabic","Segoe UI",Tahoma,sans-serif;--fnum:inherit;--rad:14px;--radb:11px;--radp:99px;--bw:1px;--sh:none;--ttl:none;--ls:0;--bg:#0e0e0f;--s1:#17171a;--s2:#202024;--bd:#2d2d33;--tx:#ece8e1;--mu:#968f85;--ac:#c38d4f;--ac2:#e2b37c;--ok:#7bb072;--mid:#d6b05a;--bad:#d06c57;--onac:#160e05;--hero:#1d1810;--tx2:#cfc6b8;--ph:#8a8378;--okbd:#3b5a37;--okbg:#1c2a1a;--midbd:#5c4d2a;--midbg:#2b2616;--badbg:#2a1a15;--acbd:#4a3a28;--acbg:#33261a;--oktx:#a6d69c;--midtx:#e5c97f;--badtx:#f0b3a3}
+:root{--scb:#000;--sci:#0c0c0c;--font:"Figtree","ArUI",system-ui,"Noto Naskh Arabic","Segoe UI",Tahoma,sans-serif;--fnum:inherit;--rad:14px;--radb:11px;--radp:99px;--bw:1px;--sh:none;--ttl:none;--ls:0;--bg:#0e0e0f;--s1:#17171a;--s2:#202024;--bd:#2d2d33;--tx:#ece8e1;--mu:#968f85;--ac:#c38d4f;--ac2:#e2b37c;--ok:#7bb072;--mid:#d6b05a;--bad:#d06c57;--onac:#160e05;--hero:#1d1810;--tx2:#cfc6b8;--ph:#8a8378;--okbd:#3b5a37;--okbg:#1c2a1a;--midbd:#5c4d2a;--midbg:#2b2616;--badbg:#2a1a15;--acbd:#4a3a28;--acbg:#33261a;--oktx:#a6d69c;--midtx:#e5c97f;--badtx:#f0b3a3}
 html[data-th=morning]{color-scheme:light;--scb:#faf7f1;--sci:#fffdf9;--bg:#f3eee5;--s1:#faf7f1;--s2:#ece5d8;--bd:#d4c9b6;--tx:#1d1a16;--mu:#675e52;--ac:#8f5518;--ac2:#7a4515;--ok:#3a7335;--mid:#85600d;--bad:#b0432e;--onac:#fff8ee;--hero:#f7f0e2;--tx2:#3a342b;--ph:#6f6659;--okbd:#a8c9a0;--okbg:#e4f0df;--midbd:#d8c283;--midbg:#f6edcf;--badbg:#f6dfd7;--acbd:#d9b78e;--acbg:#f3e4d0;--oktx:#2a5c26;--midtx:#6b4e08;--badtx:#8a2f1d}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 var(--font)}
@@ -410,6 +412,7 @@ html[data-fs="3"] #view>:not(.homew),html[data-fs="3"] .mbox,html[data-fs="3"] .
 .prb{display:flex;gap:6px;justify-content:center;margin-top:10px}.prb button{flex:1;border:1px solid var(--bd);background:none;color:var(--tx2);border-radius:10px;min-height:40px;font:inherit;font-size:14px}
 .rdy{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;margin:0 16px 8px;font-size:13px;color:var(--mu)}.rdy button{border:1px solid var(--bd);background:none;color:var(--tx2);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;min-height:34px}
 .stk{color:var(--ac2)}
+.cimg{width:100%;border-radius:12px;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
 .pfbn{font-size:13px;line-height:1.7;color:var(--mu);margin:0 2px 10px}
 .cbdh{margin:16px 0 6px;font-size:13px;color:var(--mu);text-align:start}
 .sxs{margin:0 0 10px}
@@ -593,7 +596,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='120';
+const VER='121';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -891,6 +894,7 @@ function planDraft(id,c){
   else{dd=day(id);ex=dd.ex.map(t=>draftEx(t))}
   const l=realLast();
   const dr={id:uid(),t0:Date.now(),editing:null,date:today(),day:fb?'FB':dd.id,dayName:fb?fbDay().name:dd.name,cycle:fb?(l?l.cycle:(S.settings.cycle||1)):calcCycle(dd.id),ex};
+  if(!c&&S.settings.ram)ex.forEach(e=>{const n=Math.max(2,(+e.tsets||3)-1);if(n<+e.tsets){e.tsets=n;e.sets=Array(n).fill('')}});
   if(c){dr.cb={k:fb?'fb':'lt',p:c.step.p,g:c.g,i:c.i,n:c.n};if(!fb)dr.dayName+=' · Light';ex.forEach(e=>cbApply(e,dr.cb))}
   return dr;
 }
@@ -1049,6 +1053,30 @@ function ruleModal(){modal(`<h3>${tr('إزاي التطبيق بيحسب الز�
 function onbModal(step){const st=step||1;
   if(st===1)modal(`<h3>${tr('أهلًا بيك في چيم لوج','Welcome to Gym Log')}</h3><div class="mu" style="margin-bottom:12px">${tr('بتتمرن كام يوم في الأسبوع؟','How many days a week do you train?')}</div>${[['ul2',2],['fb3',3],['ul4',4],['ulppl5',5]].map(([id,n])=>`<button class="btn w mt" data-a="onbSys" data-id="${id}">${esc(sysName(SYSTEMS.find(x=>x.id===id)))}</button>`).join('')}<button class="btn w ghost mt" data-a="onbSkip">${tr('بعدين','Later')}</button>`);
   else modal(`<h3>${tr('حاجتين مهمين','Two things that matter')}</h3><div class="dsec" style="line-height:1.9">${RULE()}</div><div class="dsec" style="line-height:1.9">${tr('أول أسبوع: الأوزان اللي ظاهرة مجرد بداية. اختار وزن تقدر تلعب بيه الهدف بأداء نضيف، والتطبيق هيفتكره ويبني عليه.','First week: the weights shown are only a starting point. Pick a weight you can hit the target with in clean form; the app remembers it and builds from there.')}</div><div class="dsec" style="line-height:1.9">${tr('بياناتك متخزنة على الموبايل ده بس. خد نسخة احتياطية من «الملف» كل فترة.','Your data lives only on this phone. Save a backup from «File» now and then.')}</div><button class="btn pri w mt" data-a="onbDone">${tr('يلا نبدأ','Let\'s start')}</button>`)}
+/* v121: كارت صورة للجلسة بنفس الثيم وبيت شعر */
+async function cardImg(s){
+  await (document.fonts&&document.fonts.ready);const cs=getComputedStyle(document.documentElement),v=k=>cs.getPropertyValue(k).trim()||'#888';
+  const W=1080,ex=s.ex.slice(0,9),H=Math.max(1080,520+ex.length*120),c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  g.fillStyle=v('--bg');g.fillRect(0,0,W,H);g.strokeStyle=v('--ac');g.lineWidth=6;g.globalAlpha=.6;g.beginPath();g.arc(W-150,150,90,-Math.PI/2,Math.PI*1.1);g.stroke();g.globalAlpha=1;
+  const F='"Figtree","ArUI",sans-serif';g.textBaseline='alphabetic';
+  g.fillStyle=v('--tx2');g.font='700 72px '+F;g.textAlign='left';g.direction='ltr';g.fillText(String(s.dayName).replace(/ · Light$/,''),80,170);
+  g.fillStyle=v('--mu');g.font='400 36px '+F;g.fillText(`${s.date} · Cycle ${s.cycle}`,80,225);
+  let y=330;for(const e of ex){g.fillStyle=v('--tx2');g.font='600 44px '+F;g.fillText(e.name.length>30?e.name.slice(0,29)+'…':e.name,80,y);
+    g.fillStyle=v('--ac2');g.font='500 38px '+F;g.fillText(`${noW(e.w)?'—':(+e.w)+' kg'}   ${setsStr(e)}`,80,y+52);y+=120}
+  const q=(QSEL&&QSEL.q)||'';if(q){g.fillStyle=v('--mu');g.textAlign='center';g.direction='rtl';g.font='700 44px "BasQ",'+F;q.split('|').slice(0,2).forEach((l,k)=>g.fillText(l.trim(),W/2,H-150+k*62))}
+  g.direction='rtl';g.textAlign='right';g.fillStyle=v('--mu');g.font='500 32px '+F;g.fillText('چيم لوج',W-80,H-50);
+  return new Promise(r=>c.toBlob(b=>r(b),'image/png'))}
+async function shareImg(s){const b=await cardImg(s);if(!b)return;const f=new File([b],`gym-${s.date}.png`,{type:'image/png'});
+  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e.name==='AbortError')return}
+  const u=URL.createObjectURL(b);modal(`<h3>${tr('صورة الجلسة','Session image')}</h3><img class="cimg" src="${u}" alt=""><div class="mu mt">${tr('دوسة مطوّلة على الصورة علشان تحفظها أو تبعتها.','Long-press the image to save or share it.')}</div><div class="row mt"><a class="btn pri sp" href="${u}" download="gym-${s.date}.png">${tr('نزّل الصورة','Download')}</a><button class="btn ghost" data-a="closeM">${T().close}</button></div>`)}
+/* v121: مشاركة برنامج بكود: نسخ ولصق */
+function progCode(){const days=S.program.days.map(d=>({n:d.name,e:d.ex.map(t=>[t.name,t.sets,t.reps,t.goal,t.unit||'',t.core?1:0])}));return 'GL1:'+btoa(unescape(encodeURIComponent(JSON.stringify(days))))}
+function progFromCode(t){const m=String(t||'').trim().match(/GL1:([A-Za-z0-9+/=]+)/);if(!m)throw 0;const a=JSON.parse(decodeURIComponent(escape(atob(m[1]))));if(!Array.isArray(a)||!a.length)throw 0;
+  return a.slice(0,10).map((d,k)=>({id:'D'+uid()+k,name:String(d.n||'Day').slice(0,40),ex:(Array.isArray(d.e)?d.e:[]).slice(0,20).map(x=>cleanT({id:uid(),name:String(x[0]||'').slice(0,80),w:lastW(String(x[0]))||((libGet(String(x[0]))||[])[2])||0,sets:x[1],reps:x[2],goal:x[3],unit:x[4],core:!!x[5]})).filter(t=>t.name)}))}
+function progShareModal(){modal(`<h3>${tr('مشاركة البرنامج','Share a program')}</h3><div class="mu" style="margin-bottom:8px">${tr('انسخ الكود وابعته لأي حد عنده التطبيق. الكود فيه التمارين والمجموعات بس، مش أوزانك ولا سجلك.','Copy the code and send it to anyone with the app. It holds exercises and sets only, not your weights or log.')}</div>
+  <button class="btn pri w" data-a="progCopy">${tr('انسخ كود برنامجي','Copy my program code')}</button>
+  <div class="mu" style="margin:16px 0 8px">${tr('أو الصق كود برنامج وصلك:','Or paste a program code you received:')}</div><textarea class="inp" id="pgIn" rows="3" dir="ltr" style="width:100%"></textarea>
+  <button class="btn w mt" data-a="progImp">${tr('استورد البرنامج','Import the program')}</button><button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
 function offerUndo(msg,snap){const el=$('#undo');if(!el)return;UND=snap;el.querySelector('span').textContent=msg;const b=el.querySelector('button');b.textContent=tr('تراجع','Undo');
   b.onclick=()=>{if(!UND)return;const o=JSON.parse(UND);UND=null;Object.assign(S,o);if(!o.fbDay)delete S.fbDay;save();queueBackup();el.classList.remove('on');if(!$('#sess').hidden&&!S.draft)closeSession();else if(S.draft&&$('#sess').hidden&&o.draft&&tab==='home')renderHome();go(tab);toast(tr('رجعت ✓','Restored ✓'))};
   el.classList.add('on');clearTimeout(offerUndo.t);offerUndo.t=setTimeout(()=>{el.classList.remove('on');UND=null},7000)}
@@ -1245,7 +1273,7 @@ let curEx=0,pk=null,swIv=null,wAnim=false,finishing=false;
 const mmss=s=>{s=Math.max(0,Math.round(+s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 const swNext=e=>{const du=e.dur||[];for(let j=0;j<e.sets.length;j++)if(!(du[j]>0))return j;return e.sets.length};
 /* v115: عدّاد الراحة: بيبدأ لوحده بعد كل مجموعة. مركّب 2:30، عزل 1:30، ثبات 1:00 */
-const restFor=e=>e.unit?60:(typeof META!=='undefined'&&META[e.name]&&META[e.name].kind==='comp')?150:90;
+const restFor=e=>(S.settings.ram?30:0)+(e.unit?60:(typeof META!=='undefined'&&META[e.name]&&META[e.name].kind==='comp')?150:90);
 let rsIv=null,AC=null;
 function beep(n){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();for(let k=0;k<(n||1);k++){const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=880;o.connect(g);g.connect(AC.destination);const t=AC.currentTime+k*.25;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.18);o.start(t);o.stop(t+.2)}}catch(e){}}
 function restStart(e){const d=S.draft;if(!d||!e)return;d.rest={t0:Date.now(),dur:restFor(e)};saveSoon();if(!rsIv)rsIv=setInterval(restTick,250);restTick()}
@@ -1382,7 +1410,7 @@ function finishSession(){
     else if(w===mw&&Math.max(...e.sets)>bestR&&bestR>0)sm.push(`★ <bdi class="en">${esc(e.name)}</bdi>: ${tr('أكتر عدّات على','most reps at')} <b class="en">${w} k</b>`);
     const ps=progState({sets:e.tsets,goal:e.goal},exHist(e.exId));if(ps&&ps.k==='up')sm.push(`↑ <bdi class="en">${esc(e.name)}</bdi>: ${tr('استحقيت الزيادة','increase earned')}`)}
   $('#sess').innerHTML=`<div class="wdone"><div class="wchk">✓</div><div class="wdt"><bdi>${esc(nm)}</bdi></div><div class="wds">${s.status==='full'?L.savedFull:s.status==='core'?L.savedCore:L.saved}</div>${sm.length?`<div class="wsum">${sm.map(x=>`<div>${x}</div>`).join('')}</div>`:''}</div>
-  <div class="wnav"><button class="btn wb wt" data-a="copyDone">${tr('كوبي','Copy')}</button><button class="btn pri wb wt" data-a="doneClose">${tr('تمام','Done')}</button></div>`;
+  <div class="wnav"><button class="btn wb wt" data-a="copyDone">${tr('كوبي','Copy')}</button><button class="btn wb wt" data-a="imgDone">${tr('صورة','Image')}</button><button class="btn pri wb wt" data-a="doneClose">${tr('تمام','Done')}</button></div>`;
 }
 const logged=e=>e.sets.some(r=>num(r)>0);
 /* حالة التمرين: none | part (ناقص خانات) | low (كل الخانات مليانة بس أقل من الهدف) | ok */
@@ -1471,7 +1499,7 @@ function dayHistModal(k){
 function sessModal(id){
   const L=T(),s=S.sessions.find(x=>x.id===id);if(!s)return;
   modal(`<h3><bdi>${esc(s.dayName)}</bdi> · ${fmtD(s.date)}</h3><pre class="cardtxt">${esc(cardText(s))}</pre>
-  <div class="row"><button class="btn pri sp" data-a="copyS" data-id="${s.id}">${L.copyCard}</button><button class="btn sp" data-a="aiS" data-id="${s.id}">${L.shareAI}</button></div>
+  <div class="row"><button class="btn pri sp" data-a="copyS" data-id="${s.id}">${L.copyCard}</button><button class="btn sp" data-a="aiS" data-id="${s.id}">${L.shareAI}</button></div><button class="btn w mt" data-a="imgS" data-id="${s.id}">${tr('صورة للجلسة','Session image')}</button>
   <div class="row mt"><button class="btn sp" data-a="editS" data-id="${s.id}">${L.edit}</button><button class="btn dan sp" data-a="delS" data-id="${s.id}">${L.del}</button></div>
   <button class="btn w ghost mt" data-a="closeM">${L.close}</button>`);
 }
@@ -1678,6 +1706,7 @@ function sysModal(){
   <div class="mu" style="margin-bottom:10px">${tr('تمارينك في النظام الحالي بتتحفظ وترجعلها لو رجعت له. الأوزان بتتاخد من آخر مرة لعبت فيها نفس التمرين.','Your exercises in the current system are kept if you return. Weights come from the last time you did the same exercise.')}</div>
   ${SYSTEMS.map(s=>{const cur=S.sys.cur===s.id;const dn=s.mine?(cur?S.program.days:(S.sys.saved[s.id]?S.sys.saved[s.id].days.map(x=>x.name):['Upper 1','Lower 1','Upper 2','Lower 2'])).map?.(x=>x.name||x):[];const names=s.days?s.days.map(x=>x[0]):dn;
    return `<div class="sysopt${cur?' on':''}"><div class="sp"><div class="nm">${esc(sysName(s))}${cur?` <span class="tag">${tr('الحالي','Current')}</span>`:''}</div><div class="mu">${esc(sysDesc(s))}</div><div class="mu en" style="margin-top:3px">${names.map(esc).join(' · ')}</div></div>${cur?'':`<button class="btn sm pri" data-a="sysPick" data-id="${s.id}">${tr('استخدم','Use')}</button>`}</div>`}).join('')}
+  <button class="btn w mt" data-a="progShare">${tr('مشاركة أو استيراد برنامج بكود','Share or import a program code')}</button>
   <div class="row mt"><button class="btn ghost sp" data-a="closeM">${T().close}</button></div>`);
 }
 function dayModal(){
@@ -2033,6 +2062,7 @@ function renderData(){
     ${persisted===true?`<div class="mu">✓ ${L.persisted}</div>`:''}</div>
   <div class="thseg" role="group" aria-label="${L.themeT}"><button class="${(S.settings.theme||'iron')==='iron'?'on':''}" data-a="theme" data-k="iron">${THEMES.iron[LANG]}</button><button class="${S.settings.theme==='morning'?'on':''}" data-a="theme" data-k="morning">${THEMES.morning[LANG]}</button></div>
   <div class="qrow"><div class="mu">${tr('حجم الخط','Text size')}</div><div class="thseg">${[1,2,3].map(k=>`<button class="${(+S.settings.fs||1)===k?'on':''}" data-a="fs" data-k="${k}" style="font-size:${[14,16,18][k-1]}px">${[tr('عادي','Normal'),tr('أكبر','Larger'),tr('كبير','Large')][k-1]}</button>`).join('')}</div></div>
+  <div class="qrow"><div class="mu">${tr('وضع رمضان: مجموعة أقل في كل تمرين، وراحة أطول 30 ثانية. أحسن وقت للتمرين بعد الفطار بساعة ونص لساعتين.','Ramadan mode: one set less per exercise and 30 s longer rests. Best time to train is 1.5–2 hours after iftar.')}</div><div class="thseg"><button class="${S.settings.ram?'on':''}" data-a="ram" data-k="on">${tr('شغّال','On')}</button><button class="${S.settings.ram?'':'on'}" data-a="ram" data-k="off">${tr('مقفول','Off')}</button></div></div>
   <div class="qrow"><div class="mu">${tr('بيت الشعر: دوسة = نسخ · سحب = تنقل','Verse: tap = copy · swipe = browse')}</div><div class="thseg"><button class="${qGestOn()?'on':''}" data-a="qGest" data-k="on">${tr('شغّال','On')}</button><button class="${qGestOn()?'':'on'}" data-a="qGest" data-k="off">${tr('مقفول','Off')}</button></div></div>
   ${bodySec()}
   <details class="fsec" data-fk="sync"${fOpen.has('sync')?' open':''}><summary>${L.syncT}${SYNC.on?`<span class="pdot${SYNC.err?' er':''}" style="margin-inline-start:6px"></span>`:''}<span class="pchev">⌄</span></summary><div class="fbody">
@@ -2137,6 +2167,11 @@ document.addEventListener('click',ev=>{
     case 'onbSys':{const id=b.dataset.id;if(id!==(S.sys&&S.sys.cur||'ul4'))switchSys(id);save();onbModal(2);break}
     case 'onbSkip':case 'onbDone':delete S.onb;save();closeModal();go('home');break;
     case 'rule':ruleModal();break;
+    case 'progShare':progShareModal();break;
+    case 'progCopy':copy(progCode());break;
+    case 'progImp':{let days;try{days=progFromCode($('#pgIn').value)}catch(e){toast(tr('الكود ده مش سليم','That code is not valid'));break}
+      ask(tr(`البرنامج فيه ${days.length} أيام. يحل محل برنامجك الحالي؟ (سجلك مش هيتأثر، وتقدر تتراجع)`,`This program has ${days.length} days. Replace your current program? (Your log is untouched, and you can undo)`)).then(ok=>{if(!ok)return;const _u=undoSnap();sysInit();S.sys.saved[S.sys.cur]={days:S.program.days};S.program.days=days;pDay=days[0].id;save();queueBackup();closeModal();go('prog');offerUndo(tr('البرنامج اتغيّر','Program replaced'),_u)});break}
+    case 'ram':S.settings.ram=b.dataset.k==='on'?1:0;save();renderData();break;
     case 'clean':{const e=d.ex[curEx];e.clean=!e.clean;saveSoon();renderSession();break}
     case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
     case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value),mx={};for(const [k] of BMX){const v=num(($('#b_'+k)||{}).value);if(v>0&&v<400)mx[k]=v}if(!(w>0)&&!(c>0)&&!Object.keys(mx).length){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}
@@ -2149,6 +2184,8 @@ document.addEventListener('click',ev=>{
     case 'sw':swTap();break;
     case 'finish':finishSession();break;
     case 'copyDone':if(lastDone)copy(cardText(lastDone));break;
+    case 'imgDone':if(lastDone)shareImg(lastDone);break;
+    case 'imgS':{const x=S.sessions.find(q=>q.id===b.dataset.id);if(x)shareImg(x);break}
     case 'doneClose':closeSession();go('home');break;
     case 'tgl':{const k=b.dataset.k;openTips.has(k)?openTips.delete(k):openTips.add(k);renderSession();break}
     case 'hist':closeSheet();exHistModal(b.dataset.id);break;

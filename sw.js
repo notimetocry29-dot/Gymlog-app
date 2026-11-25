@@ -1,8 +1,8 @@
 // رقم النسخة: لازم يتغير هنا وفي index.html (const VER) مع كل إصدار — تغييره هنا هو اللي بيخلّي المتصفح يلاقي النسخة الجديدة
-const BUILD='120';
+const BUILD='121';
 const C='gym-v'+BUILD;
 // كل ملف التطبيق محتاجه بيتحمّل وقت التثبيت؛ لو أي ملف ناقص التثبيت بيفشل (addAll بيرفض) بدل ما يشتغل نص نص
-const FILES=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-192.png','./icon-maskable-512.png','./apple-touch-icon.png','./favicon-48.png','./quotes.js','./exlib.js','./fonts/ruqaa.woff2','./fonts/figtree.woff2'];
+const FILES=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-192.png','./icon-maskable-512.png','./apple-touch-icon.png','./favicon-48.png','./quotes.js','./exlib.js','./fonts/ruqaa.woff2','./fonts/figtree.woff2','./fonts/readex-400.woff2','./fonts/readex-600.woff2'];
 // النسخة الجديدة بتستنى: التطبيق بيظهر زرار «تحديث جديد جاهز» وانت اللي تدوس (مفيش إعادة تحميل في نص التمرين)
 self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(FILES.map(f=>new Request(f,{cache:'reload'}))))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('gym-')&&k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
