@@ -415,6 +415,8 @@ html[data-fs="3"] #view>:not(.homew),html[data-fs="3"] .mbox,html[data-fs="3"] .
 .cimg{width:100%;border-radius:12px;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
 .sts{margin:4px 0 10px}.wkb{display:flex;align-items:flex-end;gap:4px;height:48px;margin-top:8px}.wkb i{flex:1;background:var(--s2);border-radius:3px}.wkb i.lo{background:var(--acbd)}.wkb i.ok{background:var(--ac)}
 .mgs{display:flex;flex-direction:column;gap:7px;margin-top:8px}.mgr{display:grid;grid-template-columns:110px 1fr 28px;align-items:center;gap:8px;font-size:13px}.mgr i{height:6px;border-radius:99px;background:var(--ac);display:block}.mgr b{text-align:end;font-weight:600}
+.pws{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 10px;font-size:13.5px;color:var(--mu)}.pws b{font-size:20px;color:var(--tx2);min-width:48px;text-align:center}.pws button{width:40px;height:40px;border-radius:50%;border:1px solid var(--bd);background:none;color:var(--tx2);font-size:20px}
+.sstag{text-align:center;font-size:12.5px;color:var(--ac2);margin-bottom:4px}
 .pfbn{font-size:13px;line-height:1.7;color:var(--mu);margin:0 2px 10px}
 .cbdh{margin:16px 0 6px;font-size:13px;color:var(--mu);text-align:start}
 .sxs{margin:0 0 10px}
@@ -598,7 +600,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='122';
+const VER='123';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -845,7 +847,7 @@ function exHist(exId,skip){const out=[];
   const me=S.program.days.concat(S.fbDay?[S.fbDay]:[]).flatMap(d=>d.ex).find(x=>x.id===exId),nm=me?nk(me.name):null;
   for(const s of done()){if(s.id===skip)continue;const e=s.ex.find(x=>x.exId===exId)||(nm&&s.ex.find(x=>nk(x.name)===nm));if(e)out.push(Object.assign({date:s.date,cycle:s.cycle,cb:s.cb?1:0},e))}return out}
 function histMap(){const m={};for(const s of done())for(const e of s.ex){const k=nk(e.name);(m[k]||(m[k]=[])).push(Object.assign({date:s.date,cycle:s.cycle,cb:s.cb?1:0},e))}return m}
-function setsStr(e){const a=e.sets;const u=e.unit?' '+unitTxt(e.unit):'';if(!a.length)return '';return a.every(r=>r===a[0])?`${a.length}×${a[0]}${u}`:a.join('/')+u}
+function setsStr(e){const a=e.sets;const u=e.unit?' '+unitTxt(e.unit):'';if(!a.length)return '';if(Array.isArray(e.ws)&&e.ws.length===a.length&&e.ws.some(x=>+x!==+e.w))return a.map((r,j)=>`${+e.ws[j]}×${r}`).join(' / ');return a.every(r=>r===a[0])?`${a.length}×${a[0]}${u}`:a.join('/')+u}
 
 /* ================= v108: الرجوع بعد الغياب (تلقائي بعد أي فترة غياب) =================
    القوة بتفضل تقريبًا ٢–٣ أسابيع. اللي بيقع الأول: حماية العضلة من الشد العنيف بعد التمرين، والنَفَس، والأوتار.
@@ -1247,7 +1249,7 @@ function renderHome(){
 }
 
 /* ================= الجلسة ================= */
-function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),h=hh.find(x=>!x.cb)||hh[0];return{exId:t.id,name:t.name,unit:t.unit||'',core:!!t.core,goal:t.goal,tsets:t.sets,treps:t.reps,note0:t.note||libHow(t.name),w:src?src.w:(h?h.w:t.w),sets:src?src.sets.map(String):Array(t.sets).fill(''),rir:src&&src.rir!=null?src.rir:null,dur:src&&src.dur?src.dur.slice():[],clean:src?!!src.clean:true,note:src?src.note||'':''}}
+function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),h=hh.find(x=>!x.cb)||hh[0];return{exId:t.id,name:t.name,unit:t.unit||'',core:!!t.core,goal:t.goal,tsets:t.sets,treps:t.reps,note0:t.note||libHow(t.name),w:src?src.w:(h?h.w:t.w),sets:src?src.sets.map(String):Array(t.sets).fill(''),ss:!!(src?src.ss:t.ss),ws:src&&src.ws?src.ws.map(String):[],rir:src&&src.rir!=null?src.rir:null,dur:src&&src.dur?src.dur.slice():[],clean:src?!!src.clean:true,note:src?src.note||'':''}}
 async function startSession(id){
   if(S.draft&&!dEmpty(S.draft)&&!await ask(T().confNew))return;
   const pd=planDraft(id,id==='FB'?cbNow():null);
@@ -1341,10 +1343,10 @@ function openPick(kind,j){
   else{cur=num(e.sets[j]);if(!(cur>0))cur=+e.treps||10;const un=!!e.unit,mn=e.unit==='د';step=mn?1:un?5:1;min=mn?1:un?5:1;max=Math.max(mn?120:un?300:60,cur)}
   const vals=[];for(let v=min;v<=max+1e-9;v+=step)vals.push(Math.round(v*100)/100);
   if(!vals.includes(cur)){vals.push(cur);vals.sort((a,b)=>a-b)}
-  pk={kind,j,vals};
+  pk={kind,j,vals};if(kind==='s'&&!e.unit){const a=num((e.ws||[])[j]);pk.wv=a>0?a:(num(e.w)||0)}
   const ttl=kind==='w'?`<span class="en">${esc(e.name)}</span> · ${L.wt}`:`${tr('المجموعة','Set')} ${j+1}`;
   const sh=$('#sheet');sh.hidden=false;
-  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="pkt">${ttl}</div>${kind==='w'&&!e.unit?`<div class="stp"><span>${tr('خطوة الزيادة','Step')}</span>${[1,2,2.5,4,5].map(v=>`<button class="en${stepOf(e.name)===v?' on':''}" data-a="stepSet" data-v="${v}">${v}</button>`).join('')}</div>`:''}${kind==='w'&&!e.unit&&typeof META!=='undefined'&&META[e.name]&&(META[e.name].eq==='bb'||META[e.name].eq==='mach')?`<div class="plc" id="plc"></div>`:''}<div class="pk"><div class="pkl" id="pkl">${vals.map(v=>`<div class="pki en">${v}</div>`).join('')}</div><div class="pkb"></div></div><button class="btn pri w" data-a="pickOk">${tr('تم','Done')}</button>${kind==='s'?`<div class="pkx"><button data-a="pickClr">${tr('امسح','Clear')}</button>${e.sets.length>1?`<button data-a="pickRm">${tr('شيل المجموعة','Remove set')}</button>`:''}</div>`:''}</div>`;
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="pkt">${ttl}</div>${kind==='w'&&!e.unit?`<div class="stp"><span>${tr('خطوة الزيادة','Step')}</span>${[1,2,2.5,4,5].map(v=>`<button class="en${stepOf(e.name)===v?' on':''}" data-a="stepSet" data-v="${v}">${v}</button>`).join('')}</div>`:''}${kind==='w'&&!e.unit&&typeof META!=='undefined'&&META[e.name]&&(META[e.name].eq==='bb'||META[e.name].eq==='mach')?`<div class="plc" id="plc"></div>`:''}${kind==='s'&&!e.unit?`<div class="pws"><span>${tr('وزن المجموعة دي','This set\'s weight')}</span><button data-a="pwm" aria-label="−">−</button><b class="en" id="pwv">${pk.wv}</b><small>k</small><button data-a="pwp" aria-label="+">+</button></div>`:''}<div class="pk"><div class="pkl" id="pkl">${vals.map(v=>`<div class="pki en">${v}</div>`).join('')}</div><div class="pkb"></div></div><button class="btn pri w" data-a="pickOk">${tr('تم','Done')}</button>${kind==='s'?`<div class="pkx"><button data-a="pickClr">${tr('امسح','Clear')}</button>${e.sets.length>1?`<button data-a="pickRm">${tr('شيل المجموعة','Remove set')}</button>`:''}</div>`:''}</div>`;
   const plc=$('#plc'),plates=v=>{let r=v;const o=[];for(const p of [20,10,5,2.5,1.25]){let c=0;while(r>=p-1e-9){c++;r=Math.round((r-p)*100)/100}if(c)o.push(c>1?`${c}×${p}`:`${p}`)}return r>0.01?'':o.join(' + ')};
   const l=$('#pkl'),mark=()=>{const k=Math.round(l.scrollTop/44);[...l.children].forEach((c,x)=>c.classList.toggle('sel',x===k));if(plc){const v=vals[Math.max(0,Math.min(vals.length-1,k))],t=plates(v);plc.innerHTML=t?`${tr('الأقراص على كل جنب','Plates per side')}: <b class="en">${t}</b>`:''}};
   l.scrollTop=vals.indexOf(cur)*44;mark();
@@ -1352,7 +1354,7 @@ function openPick(kind,j){
 }
 function openMenu(){
   const d=S.draft,L=T(),sh=$('#sheet');sh.hidden=false;
-  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><button class="btn w pri" data-a="sxOpen">+ ${tr('ضيف تمرين للجلسة','Add an exercise')}</button><button class="btn w mt" data-a="swOpen">⇄ ${tr('بدّل التمرين ده (الجهاز مشغول)','Swap this exercise (machine busy)')}</button><button class="btn w ghost mt" data-a="tShort">${tr('معايا وقت قليل (مجموعتين لكل تمرين)','Short on time (2 sets each)')}</button><button class="btn w ghost mt" data-a="pain">${tr('حاسس بوجع في التمرين ده','This exercise hurts')}</button><button class="btn w ghost mt" data-a="rtOpen">${tr('تايمر جولات','Round timer')}</button><div class="meta2 mt"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div>${d.editing||!d.ex.some(x=>x.core)||d.ex.every(x=>x.core)?'':`<button class="btn w ghost mt" data-a="coreOnly">${tr('الأساسي بس','Essentials only')}</button>`}<button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><button class="btn w pri" data-a="sxOpen">+ ${tr('ضيف تمرين للجلسة','Add an exercise')}</button><button class="btn w mt" data-a="swOpen">⇄ ${tr('بدّل التمرين ده (الجهاز مشغول)','Swap this exercise (machine busy)')}</button>${curEx<d.ex.length-1?`<button class="btn w ghost mt" data-a="ssTgl">${d.ex[curEx].ss?tr('فك السوبرسيت','Unlink superset'):tr('سوبرسيت مع التمرين اللي بعده','Superset with the next exercise')}</button>`:''}<button class="btn w ghost mt" data-a="tShort">${tr('معايا وقت قليل (مجموعتين لكل تمرين)','Short on time (2 sets each)')}</button><button class="btn w ghost mt" data-a="pain">${tr('حاسس بوجع في التمرين ده','This exercise hurts')}</button><button class="btn w ghost mt" data-a="rtOpen">${tr('تايمر جولات','Round timer')}</button><div class="meta2 mt"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div>${d.editing||!d.ex.some(x=>x.core)||d.ex.every(x=>x.core)?'':`<button class="btn w ghost mt" data-a="coreOnly">${tr('الأساسي بس','Essentials only')}</button>`}<button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
 }
 function openGuide(){
   const d=S.draft;if(!d)return;const e=d.ex[curEx];if(!e)return;const x=libGet(e.name),sh=$('#sheet');
@@ -1367,7 +1369,7 @@ function renderSession(){
   const u=e.unit?' '+esc(unitTxt(e.unit)):'',showW=!(noW(e.w)&&e.unit);
   const showL=openTips.has('l'+i),showH=openTips.has('h'+i),showN=openTips.has('n'+i)||!!e.note;
   const seg=d.ex.map((x,k)=>{const s=exSt(x);return `<button class="sg${k===i?' cur':''}${fullyIn(x)?' dn':s==='part'?' wn':''}" data-a="exGo" data-i="${k}" aria-label="${k+1}"><i></i></button>`}).join('');
-  const du=e.dur||[],cir=e.sets.map((r,j)=>{const v=num(r)>0;return `<div class="cw"><button class="cir${v?' on':''}" data-a="setTap" data-j="${j}" aria-label="${tr('مجموعة','Set')} ${j+1}"><span class="en">${v?esc(r):esc(String(+e.treps||0))}</span></button><small class="ct en">${du[j]>0?mmss(du[j]):''}</small></div>`}).join('');
+  const du=e.dur||[],cir=e.sets.map((r,j)=>{const v=num(r)>0;return `<div class="cw"><button class="cir${v?' on':''}" data-a="setTap" data-j="${j}" aria-label="${tr('مجموعة','Set')} ${j+1}"><span class="en">${v?esc(r):esc(String(+e.treps||0))}</span></button><small class="ct en">${num((e.ws||[])[j])>0&&num(e.ws[j])!==num(e.w)?esc(String(num(e.ws[j])))+' k':''}${du[j]>0?(num((e.ws||[])[j])>0&&num(e.ws[j])!==num(e.w)?' · ':'')+mmss(du[j]):''}</small></div>`}).join('');
   const lastP=h.length?h.slice(0,3).map(x=>`<div><bdi>${fmtD(x.date)}</bdi> · <bdi class="en">${fw(x.w)} | ${esc(setsStr(x))}</bdi></div>`).join(''):`<div>${L.first}</div>`;
   const ar=LANG==='ar';
   $('#sess').innerHTML=`<div class="wtop"><button class="wx" data-a="closeS" aria-label="${L.back}">✕</button><div class="wseg">${seg}</div><button class="wx" data-a="menu" aria-label="${tr('خيارات','Options')}">⋯</button></div>
@@ -1375,6 +1377,7 @@ function renderSession(){
   ${!d.editing&&d.rdy==null&&!d.ex.some(x=>x.sets.some(v=>num(v)>0))?`<div class="rdy"><span>${tr('نومك وطاقتك النهارده؟','Sleep and energy today?')}</span>${[[2,tr('كويس','Good')],[1,tr('متوسط','OK')],[0,tr('وحش','Poor')]].map(([v,t])=>`<button data-a="rdy" data-v="${v}">${t}</button>`).join('')}</div>`:''}
   ${d.cb?`<div class="cbn">${cbLine(d.cb)}</div>`:''}
   <div class="wmain${wAnim?' wa':''}" data-i="${i}">
+    ${e.ss&&d.ex[i+1]?`<div class="sstag">⇄ ${tr('سوبرسيت مع','Superset with')} <bdi class="en">${esc(d.ex[i+1].name)}</bdi></div>`:i>0&&d.ex[i-1].ss?`<div class="sstag">⇄ ${tr('سوبرسيت مع','Superset with')} <bdi class="en">${esc(d.ex[i-1].name)}</bdi></div>`:''}
     <button class="wname en${e.core?' core':''}" data-a="guide" aria-label="${tr('طريقة الأداء','How to perform')}">${esc(e.name)}<span class="wgh">${tr('اضغط لطريقة الأداء','Tap to see how to perform')}</span></button>
     <div class="wtg">${showW?`<button class="wwt en${earn?' earn':''}" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>`:''}<span class="wsr en">${esc(String(+e.tsets||0))}×${tgt(e.treps,e.goal,e.unit)}${u}</span></div>
     ${LANG==='ar'&&typeof META!=='undefined'&&META[e.name]&&META[e.name].ar?`<div class="war">${esc(META[e.name].ar)}</div>`:''}
@@ -1430,8 +1433,8 @@ function updCore(){
 /* تحويل المسودة لجلسة (من غير حفظ) */
 function buildFromDraft(){
   const d=S.draft,ex=[];
-  for(const e of d.ex){const sets=[],dur=[];e.sets.forEach((r,j)=>{const v=num(r);if(!isNaN(v)&&v>0){sets.push(v);dur.push(+((e.dur||[])[j])||0)}});if(!sets.length)continue;const w=num(e.w);
-    const o={exId:e.exId,name:e.name,unit:e.unit,core:e.core,goal:e.goal,tsets:e.tsets,treps:e.treps,w:isNaN(w)?'':w,sets,clean:!!e.clean,note:(e.note||'').trim()};if(dur.some(x=>x>0))o.dur=dur;if(e.rir!=null)o.rir=e.rir;ex.push(o)}
+  for(const e of d.ex){const sets=[],dur=[],wsx=[];e.sets.forEach((r,j)=>{const v=num(r);if(!isNaN(v)&&v>0){sets.push(v);dur.push(+((e.dur||[])[j])||0);const x=num((e.ws||[])[j]);wsx.push(x>0?x:num(e.w))}});if(!sets.length)continue;const w=num(e.w);
+    const o={exId:e.exId,name:e.name,unit:e.unit,core:e.core,goal:e.goal,tsets:e.tsets,treps:e.treps,w:isNaN(w)?'':w,sets,clean:!!e.clean,note:(e.note||'').trim()};if(dur.some(x=>x>0))o.dur=dur;if(e.rir!=null)o.rir=e.rir;if(e.ss)o.ss=1;if(!e.unit&&wsx.some(x=>x!==num(e.w)))o.ws=wsx;ex.push(o)}
   if(!ex.length)return null;
   const core=d.ex.filter(e=>e.core).every(e=>ex.some(x=>x.exId===e.exId));
   const all=d.ex.every(e=>ex.some(x=>x.exId===e.exId));
@@ -1878,8 +1881,8 @@ const HIST_MIG=5;/* آخر ترحيل بيستورد السجل القديم: ب
 /* v114: أي رقم جاي من ملف بيتحوّل رقم فعلًا، والوحدة من قايمة ثابتة (ملف متلغّم مايقدرش يحط كود) */
 const nn=(v,a,b,d)=>{const x=Number(v);return isFinite(x)?Math.min(b,Math.max(a,x)):d};
 const UNITS=['','ث','خطوة','د'],okU=u=>UNITS.includes(u)?u:'';
-const cleanEx=e=>({exId:String(e.exId||'h:'+e.name),name:String(e.name).slice(0,80),unit:okU(e.unit),core:!!e.core,goal:nn(e.goal,0,999,12),tsets:nn(e.tsets,1,20,3),treps:nn(e.treps,0,999,10),w:e.w===''||e.w==null?'':nn(e.w,0,2000,0),sets:e.sets.map(Number).filter(v=>isFinite(v)&&v>0).map(v=>Math.min(v,999)),dur:Array.isArray(e.dur)?e.dur.map(x=>nn(x,0,36000,0)):undefined,rir:e.rir==null?undefined:nn(e.rir,0,3,2),clean:!!e.clean,note:String(e.note||'').slice(0,500)});
-const cleanT=t=>({id:String(t.id),name:String(t.name).slice(0,80),w:nn(t.w,0,2000,0),sets:nn(t.sets,1,20,3),reps:nn(t.reps,1,999,10),goal:nn(t.goal,1,999,12),unit:okU(t.unit),core:!!t.core,note:String(t.note||'').slice(0,1000)});
+const cleanEx=e=>({exId:String(e.exId||'h:'+e.name),name:String(e.name).slice(0,80),unit:okU(e.unit),core:!!e.core,goal:nn(e.goal,0,999,12),tsets:nn(e.tsets,1,20,3),treps:nn(e.treps,0,999,10),w:e.w===''||e.w==null?'':nn(e.w,0,2000,0),sets:e.sets.map(Number).filter(v=>isFinite(v)&&v>0).map(v=>Math.min(v,999)),dur:Array.isArray(e.dur)?e.dur.map(x=>nn(x,0,36000,0)):undefined,rir:e.rir==null?undefined:nn(e.rir,0,3,2),ss:e.ss?1:undefined,ws:Array.isArray(e.ws)?e.ws.map(x=>nn(x,0,2000,0)):undefined,clean:!!e.clean,note:String(e.note||'').slice(0,500)});
+const cleanT=t=>({ss:!!t.ss,id:String(t.id),name:String(t.name).slice(0,80),w:nn(t.w,0,2000,0),sets:nn(t.sets,1,20,3),reps:nn(t.reps,1,999,10),goal:nn(t.goal,1,999,12),unit:okU(t.unit),core:!!t.core,note:String(t.note||'').slice(0,1000)});
 function cleanSession(s){
   if(!s||typeof s!=='object'||typeof s.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s.date)||!Array.isArray(s.ex))return null;
   const ex=s.ex.filter(e=>e&&typeof e.name==='string'&&Array.isArray(e.sets)).map(cleanEx);
@@ -2158,12 +2161,17 @@ document.addEventListener('click',ev=>{
     case 'addset':d.ex[i].sets.push('');save();renderSession();break;
     case 'exGo':goEx(i);break;
     case 'setTap':{const j=+b.dataset.j,e=d.ex[curEx];if(num(e.sets[j])>0){openPick('s',j);break}
-      e.sets[j]=String(e.treps);saveSoon();renderSession();restStart(e);break}
+      e.sets[j]=String(e.treps);saveSoon();
+      /* سوبرسيت: من A لـ B من غير راحة، ومن B راحة وترجع لـ A */
+      if(e.ss&&curEx<d.ex.length-1){goEx(curEx+1);break}
+      if(curEx>0&&d.ex[curEx-1].ss){const a=d.ex[curEx-1];restStart(e);if(a.sets.some(v=>!(num(v)>0)))goEx(curEx-1);else renderSession();break}
+      renderSession();restStart(e);break}
     case 'pickW':openPick('w');break;
     case 'pickOk':{const l=$('#pkl');if(!l||!pk)break;const v=pk.vals[Math.max(0,Math.min(pk.vals.length-1,Math.round(l.scrollTop/44)))],e=d.ex[curEx];
       if(pk.kind==='w'){const old=num(e.w),ps=d.cb?null:progState({sets:e.tsets,goal:e.goal},exHist(e.exId,d.editing));
         if(ps&&ps.k==='up'&&!e.unit&&v>(isNaN(old)?0:old)&&+e.goal>8){e.goal=8;e.treps=8;toast(tr('وزن جديد: الهدف النهارده ٨ عدّات','New weight: today\'s target is 8 reps'))}
-        e.w=String(v)}else e.sets[pk.j]=String(v);saveSoon();closeSheet();renderSession();break}
+        e.w=String(v)}else{e.sets[pk.j]=String(v);if(!e.unit&&pk.wv!=null){e.ws=(e.ws||[]).slice();while(e.ws.length<e.sets.length)e.ws.push('');e.ws[pk.j]=pk.wv!==num(e.w)?String(pk.wv):''}}saveSoon();closeSheet();renderSession();break}
+    case 'pwm':case 'pwp':{if(!pk||pk.wv==null)break;const e=d.ex[curEx],st=stepOf(e.name);pk.wv=Math.max(0,Math.round((pk.wv+(b.dataset.a==='pwp'?st:-st))*100)/100);$('#pwv').textContent=pk.wv;break}
     case 'stepSet':{const e=d.ex[curEx];S.steps=S.steps||{};S.steps[nk(e.name)]=+b.dataset.v;save();b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderSession();break}
     case 'rsAdd':if(d&&d.rest){d.rest.dur+=30;d.rest.done=0;saveSoon();restTick()}break;
     case 'rsSkip':if(d){d.rest=null;saveSoon();restTick()}break;
@@ -2184,6 +2192,7 @@ document.addEventListener('click',ev=>{
     case 'progImp':{let days;try{days=progFromCode($('#pgIn').value)}catch(e){toast(tr('الكود ده مش سليم','That code is not valid'));break}
       ask(tr(`البرنامج فيه ${days.length} أيام. يحل محل برنامجك الحالي؟ (سجلك مش هيتأثر، وتقدر تتراجع)`,`This program has ${days.length} days. Replace your current program? (Your log is untouched, and you can undo)`)).then(ok=>{if(!ok)return;const _u=undoSnap();sysInit();S.sys.saved[S.sys.cur]={days:S.program.days};S.program.days=days;pDay=days[0].id;save();queueBackup();closeModal();go('prog');offerUndo(tr('البرنامج اتغيّر','Program replaced'),_u)});break}
     case 'ram':S.settings.ram=b.dataset.k==='on'?1:0;save();renderData();break;
+    case 'ssTgl':{const e=d.ex[curEx];e.ss=!e.ss;const pd=S.program.days.find(x=>x.id===d.day),t=pd&&pd.ex.find(x=>x.id===e.exId);if(t)t.ss=e.ss;save();closeSheet();renderSession();toast(e.ss?tr('اتربط: بعد كل مجموعة هتروح للتمرين اللي بعده، والراحة بعد الاتنين','Linked: after each set you go to the next exercise; rest comes after both'):tr('السوبرسيت اتفك','Superset removed'));break}
     case 'clean':{const e=d.ex[curEx];e.clean=!e.clean;saveSoon();renderSession();break}
     case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
     case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value),mx={};for(const [k] of BMX){const v=num(($('#b_'+k)||{}).value);if(v>0&&v<400)mx[k]=v}if(!(w>0)&&!(c>0)&&!Object.keys(mx).length){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}
