@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='128';
+const VER='129';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -222,7 +222,7 @@ function dlNow(){const ds=done();if(ds.length<8||daysAgo(ds[0].date)>=CBD)return
   const ref=S.dl&&S.dl>st?S.dl:st,wk=Math.floor(dGap(today(),ref)/7);return wk>=6?{wk}:null}
 function dlCard(x){const ar=LANG==='ar';
   return `<div class="cbh dlc"><b>${x.act?tr(`أسبوع خفيف · فاضل ${x.left} يوم`,`Light week · ${x.left} day(s) left`):tr(`بقالك ${x.wk} أسابيع تمرين متواصل`,`${x.wk} weeks of training in a row`)}</b><span class="cbt">${tr('مجموعة أقل في كل تمرين والأوزان 90%، علشان جسمك يتخلص من التعب المتراكم ويرجع أقوى.','A light week: one set less per exercise at 90% weights. Your body clears built-up fatigue and comes back stronger; it does not count toward the progression rule.')}</span><span class="dlb"><button class="cbgo" data-a="dlGo">${tr('ابدأ يوم خفيف','Start a light day')} ${ar?'‹':'›'}</button>${x.act?'':`<button class="dls" data-a="dlSkip">${tr('مش دلوقتي','Not now')}</button>`}</span></div>`}
-async function startDeload(){if(S.draft&&!dEmpty(S.draft)&&!await ask(T().confNew))return;
+async function startDeload(){if(S.draft&&S.draft.cb&&S.draft.cb.dl&&!S.draft.editing){openSession();return}if(S.draft&&!dEmpty(S.draft)&&!await ask(T().confNew))return;
   if(!(S.dl&&dGap(today(),S.dl)<7))S.dl=today();
   S.draft=null;const pd=planDraft(nextDayId(),{g:0,i:0,n:1,step:{k:'lt',p:.9}});pd.cb.dl=1;if(!pd.ex.length){toast(tr('اليوم ده فاضي','This day is empty'));return}S.draft=pd;openTips.clear();save();openSession()}
 /* اقتراح بس: بيتفتح لما تدوس على الكارت. الدايرة و«ابدأ يوم تاني» والبرنامج بيفتحوا يومك العادي بأوزانك */
@@ -344,8 +344,8 @@ function rtTick(){if(!RT)return;const el=$('#rtv');const t=(Date.now()-RT.t0)/10
 function rtEnd(done){clearInterval(RT&&RT.iv);RT=null;wakeOff();const el=$('#rtv');if(el&&done){el.innerHTML=`<div class="rtp w">${tr('خلصت ✓','Done ✓')}</div>`;try{navigator.vibrate&&navigator.vibrate([400,150,400])}catch(e){}beep(3)}}
 /* v119: عدّاد البروتين اليومي: أزرار سريعة، من غير حساب سعرات */
 const protToday=()=>{const p=S.prot;return p&&p.d===today()?+p.g||0:0};
-function protHtml(){const g=protToday(),G=+S.settings.protG||150,pc=Math.min(100,g/G*100);
-  return `<div class="prt"><div class="prh"><span>${tr('بروتين النهارده','Protein today')}</span><b class="en">${g} / <button class="prg" data-a="protG">${G}</button> g</b></div><div class="rsb"><i style="width:${pc.toFixed(0)}%"></i></div><div class="prb">${[20,30,40].map(v=>`<button data-a="protAdd" data-v="${v}">+${v}</button>`).join('')}${g?`<button data-a="protAdd" data-v="-10">−10</button>`:''}</div></div>`}
+function protHtml(){const g=protToday(),G=+S.settings.protG||150;
+  return `<div class="prt"><span>${tr('بروتين النهارده','Protein today')} <b class="en">${g}/<button class="prg" data-a="protG">${G}</button>g</b></span><span class="prb">${[20,30,40].map(v=>`<button data-a="protAdd" data-v="${v}">+${v}</button>`).join('')}</span></div>`}
 /* v120: الأسابيع ورا بعض اللي حققت فيها هدف الـ 3 جلسات (الأسبوع بيبدأ السبت) */
 function wkStreak(){const ds=done();if(!ds.length)return 0;const wk=iso=>Math.floor((new Date(iso+'T12:00:00')-new Date('2000-01-01T12:00:00'))/(7*864e5));
   const c={};for(const x of ds){const k=wk(x.date);c[k]=(c[k]||0)+1}const now=wk(today());let n=0,k=now;if((c[k]||0)<3)k--;while((c[k]||0)>=3){n++;k--}return n}
@@ -395,6 +395,18 @@ async function phOpen(id,cmp){const a=(S.photos||[]).slice().sort((x,y)=>x.d<y.d
   <div class="row mt">${first&&first.id!==id&&!cmp?`<button class="btn sp" data-a="phCmp" data-id="${esc(id)}">${tr('قارن بأول صورة','Compare with the first')}</button>`:''}<button class="btn dan" data-a="phDel" data-id="${esc(id)}">${T().del}</button><button class="btn ghost" data-a="closeM">${T().close}</button></div>`)}
 function gymHtml(){const G=[{id:'main',name:tr('جيمي','My gym')}].concat(S.gyms||[]),cur=gymId();
   return `<div class="gyr"><span>${tr('الجيم','Gym')}:</span>${G.map(g=>`<button class="${g.id===cur?'on':''}" data-a="gymSet" data-id="${esc(g.id)}">${esc(g.name)}</button>`).join('')}<button data-a="gymAdd" aria-label="${tr('جيم جديد','New gym')}">+</button></div>`}
+function toolsModal(){const n=wkStreak();modal(`<h3>${tr('أدوات','Tools')}</h3>
+  <div class="mu" style="margin-bottom:10px">${T().weekOf(done().filter(s=>daysAgo(s.date)>=0&&daysAgo(s.date)<7).length)}${n>=2?` · <span class="stk">${tr(`${n} أسابيع ورا بعض حققت الهدف`,`${n} weeks in a row on target`)}</span>`:''}</div>
+  <button class="mrow" data-a="rtOpen"><i>◴</i>${tr('تايمر جولات (كارديو ولياقة)','Round timer (cardio & conditioning)')}</button>
+  <button class="mrow" data-a="rule"><i>?</i>${tr('إزاي التطبيق بيحسب الزيادة؟','How is progression decided?')}</button>
+  <button class="mrow" data-a="rep" data-d="7"><i>▤</i>${tr('تقرير الأسبوع','Weekly report')}</button>
+  <button class="mrow" data-a="gymAdd"><i>⌂</i>${(S.gyms||[]).length?tr('ضيف جيم تاني','Add another gym'):tr('بتتمرن في أكتر من جيم؟','Train at more than one gym?')}</button>
+  <button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
+function cbWhy(){const c=cbNow();if(!c)return;const nm=s=>s.k==='fb'?tr('جسم كامل','Full body'):tr('يوم مخفف','Light day');
+  modal(`<h3>${tr(`رجوع بعد ${c.g} يوم`,`Back after ${c.g} days`)}</h3><div class="dsec" style="line-height:1.9">${tr('بعد الغياب قوتك لسه موجودة، لكن عضلاتك وأوتارك مش متعودة على الشد. فبترجع على خطوات: مجموعات أقل وأوزان أخف، ووقّف وانت لسه قادر على 2–3 عدّات. الجلسات دي مابتتحسبش في قاعدة الزيادة، وبعدها أوزانك بترجع لوحدها.','After a break your strength is still there, but muscles and tendons are no longer used to the load. So you come back in steps: fewer sets, lighter weights, stopping with 2–3 reps left. These sessions do not count toward the rule, and your weights return on their own afterwards.')}</div>
+  <div class="cbs" dir="${LANG==='ar'?'rtl':'ltr'}">${c.st.map((s,k)=>`<span class="${k<c.i?'ok':k===c.i?'on':''}">${k<c.i?'✓ ':''}${nm(s)} <bdi class="en">${cbPct(s)}</bdi></span>`).join('<i>›</i>')}<i>›</i><span>${tr('جدولك','Your plan')}</span></div>
+  <button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
+function dlWhy(){modal(`<h3>${tr('أسبوع خفيف','Light week')}</h3><div class="dsec" style="line-height:1.9">${tr('بعد 6 أسابيع تمرين ورا بعض، التعب بيتراكم حتى لو مش حاسس بيه. أسبوع خفيف (مجموعة أقل في كل تمرين، والأوزان 90%) بيخلّي جسمك يتخلص منه ويرجع أقوى. ومابيتحسبش في قاعدة الزيادة.','After 6 straight weeks fatigue builds up even if you do not feel it. A light week (one set less, 90% weights) lets your body clear it and come back stronger. It does not count toward the rule.')}</div><button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
 function offerUndo(msg,snap){const el=$('#undo');if(!el)return;UND=snap;el.querySelector('span').textContent=msg;const b=el.querySelector('button');b.textContent=tr('تراجع','Undo');
   b.onclick=()=>{if(!UND)return;const o=JSON.parse(UND);UND=null;Object.assign(S,o);if(!o.fbDay)delete S.fbDay;save();queueBackup();el.classList.remove('on');if(!$('#sess').hidden&&!S.draft)closeSession();else if(S.draft&&$('#sess').hidden&&o.draft&&tab==='home')renderHome();go(tab);toast(tr('رجعت ✓','Restored ✓'))};
   el.classList.add('on');clearTimeout(offerUndo.t);offerUndo.t=setTimeout(()=>{el.classList.remove('on');UND=null},7000)}
@@ -517,47 +529,50 @@ let qx=0,qy=0,qOn=false,qSw=0;
 document.addEventListener('touchstart',e=>{qOn=qGestOn()&&tab==='home'&&e.touches.length===1&&!!e.target.closest('.qt');if(qOn){qx=e.touches[0].clientX;qy=e.touches[0].clientY}},{passive:true});
 document.addEventListener('touchend',e=>{if(!qOn)return;qOn=false;const t=e.changedTouches[0],dx=t.clientX-qx,dy=t.clientY-qy;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){qSw=Date.now();quoteNav(dx<0?-1:1)}},{passive:true});
 function renderHome(){
-  const L=T(),ds=done(),c=cbNow(),dlx=c?null:dlNow(),dcb=!!(S.draft&&S.draft.cb&&!S.draft.editing),dr=dcb?null:S.draft;
-  /* v110: المستطيل بيظهر طول ما شروط الرجوع قايمة، حتى لو فيه جلسة مفتوحة. الدايرة = يومك العادي، والمستطيل = الرجوع */
-  const nd=dr?(dr.day||nextDayId()):nextDayId(),fb=nd==='FB';
-  const pl=dr||planDraft(nd,null),dName=String(pl.dayName||'').replace(/ · Light$/,''),cp=c?planDraft(c.step.k==='fb'?'FB':nextDayId(),c):null;
+  /* v129: الدايرة هي مركز كل حاجة. لو فيه رجوع أو أسبوع خفيف، الدايرة نفسها بتبقى الجلسة دي، وتحتها سطر هادي بالشرح ولينك «يومك العادي» */
+  const L=T(),ds=done(),c=cbNow(),dlx=c?null:dlNow(),dcb=!!(S.draft&&S.draft.cb&&!S.draft.editing),dr=S.draft;
+  const mode=dr?'draft':c?'cb':(dlx&&!dlx.act)||(dlx&&dlx.act)?'dl':'norm';
+  const nd=dr?(dr.day||nextDayId()):mode==='cb'&&c.step.k==='fb'?'FB':nextDayId(),fb=nd==='FB';
+  const pl=dr||(mode==='cb'?planDraft(nd,c):mode==='dl'?(()=>{const x=planDraft(nd,{g:0,i:0,n:1,step:{k:'lt',p:.9}});x.cb.dl=1;return x})():planDraft(nd,null));
+  const dName=fb?tr('جسم كامل','Full body'):String(pl.dayName||'').replace(/ · Light$/,'');
   const wk=ds.filter(s=>daysAgo(s.date)>=0&&daysAgo(s.date)<7).length,days=S.program.days,cc=+pl.cycle||pl.cycle;
   const n=days.length,g=n>1?9:0;
-  /* الدايرة: كل قوس يوم من الدورة. مليان = خلص، منوّر = النهارده، باهت = لسه */
-  /* فول بادي = الدايرة كلها منوّرة */
   const arcs=n>1&&!fb?days.map((x,k)=>{const dn=x.id!==nd&&ds.some(q=>q.cycle===cc&&(q.day===x.id||(!q.day&&q.dayName===x.name)));
     return `<path class="ar${x.id===nd?' cur':dn?' dn':''}" d="${arcP(136,k*360/n+g/2,(k+1)*360/n-g/2)}"/>`}).join(''):`<circle class="ar cur" cx="150" cy="150" r="136"/>`;
   let last='';
   if(ds[0]){const k=Math.max(0,daysAgo(ds[0].date));last=' · '+tr('آخر جلسة: ','Last: ')+(k===0?tr('النهارده','today'):k===1?tr('امبارح','yesterday'):tr(`من ${k} يوم`,`${k} days ago`))}
-  const rowsOf=ex=>ex.map(e=>`<div class="dr${e.core?' c':''}"><span class="dn2 en">${esc(e.name)}</span><span class="dw en">${e.unit?'':fw(e.w)+' · '}${esc(String(+e.tsets||0))}×${tgt(e.treps,e.goal,e.unit)}${e.unit?' '+esc(unitTxt(e.unit)):''}</span></div>`).join(''),rows=rowsOf(pl.ex);
+  const rowsOf=ex=>ex.map(e=>`<div class="dr${e.core?' c':''}"><span class="dn2 en">${esc(e.name)}</span><span class="dw en">${e.unit?'':fw(e.w)+' · '}${esc(String(+e.tsets||0))}×${tgt(e.treps,e.goal,e.unit)}${e.unit?' '+esc(unitTxt(e.unit)):''}</span></div>`).join('');
   const coreOf=ex=>`<div class="coreline">${L.coreL}: <span class="en">${esc(ex.filter(e=>e.core).map(e=>e.name).join(' + '))}</span></div>`;
-  const tag=dr?L.resume:L.exN(pl.ex.length);
-  /* تنبيهات: جوّه التفاصيل، ونقطة صغيرة على الزرار لو فيه حاجة */
+  const cbk=pl.cb?(pl.cb.dl?tr('أسبوع خفيف','Light week'):tr('رجوع','Comeback'))+' · <bdi class="en">'+cbPct(pl.cb)+'</bdi> · ':'';
+  const tag=dr?cbk+L.resume:cbk+L.exN(pl.ex.length)+`</span><span class="on3">${tr('دوس للبدء','tap to start')}`;
+  const act=dr?'resume':mode==='cb'?'cbGo':mode==='dl'?'dlGo':'start';
+  /* سطر هادي تحت الدايرة */
+  let q='';
+  if(mode==='cb'||(dcb&&!dr.cb.dl&&c))q=`<div class="cbq">${tr(`رجعت بعد ${c.g} يوم`,`Back after ${c.g} days`)} · <button data-a="cbWhy">${tr('إيه ده؟','What is this?')}</button>${dr?'':` · <button data-a="start" data-d="${esc(nextDayId())}">${tr('العب يومك العادي','Play your usual day')}</button>`}</div>`;
+  else if(mode==='dl'||(dcb&&dr.cb.dl))q=`<div class="cbq">${dlx&&dlx.act?tr(`أسبوع خفيف · فاضل ${dlx.left} يوم`,`Light week · ${dlx.left} day(s) left`):dlx?tr(`${dlx.wk} أسابيع تمرين متواصل`,`${dlx.wk} weeks in a row`):tr('أسبوع خفيف','Light week')} · <button data-a="dlWhy">${tr('إيه ده؟','What is this?')}</button>${dr||(dlx&&dlx.act)?'':` · <button data-a="dlSkip">${tr('مش دلوقتي','Not now')}</button>`}</div>`;
+  else if(!dr&&new Date().getDay()===6&&ds.some(x=>daysAgo(x.date)>=1&&daysAgo(x.date)<=7))q=`<div class="cbq">${tr('أسبوعك اللي فات','Your last week')}: ${ds.filter(x=>daysAgo(x.date)>=1&&daysAgo(x.date)<=7).length}/3 · <button data-a="rep" data-d="7">${tr('التقرير','Report')} ›</button></div>`;
   let al='';
   if(syncPublic())al+=`<div class="warn">${L.syncPub}</div>`;
   if(SYNC.on&&SYNC.missed>=3)al+=`<div class="warn">${L.syncMiss}</div>`;
   const lb=S.settings.lastBackup;
   if(ds.length&&!SYNC.on&&(!lb||Date.now()-lb>7*864e5))al+=`<div class="bkn"><div>${lb?L.bkAgo(Math.floor((Date.now()-lb)/864e5)):L.bkNone}</div><button class="btn sm" data-a="backup">${L.bkNowBtn}</button></div>`;
-  const h=`<div class="homew"><div class="hs${c||dcb?' cbm':dlx?' cbm dlm':''}">
-    <button class="orb" data-a="${dr?'resume':'start'}"${dr?'':` data-d="${esc(nd)}"`}>
+  const h=`<div class="homew"><div class="hs">
+    <button class="orb" data-a="${act}"${act==='start'?` data-d="${esc(nd)}"`:''}>
       <svg viewBox="0 0 300 300" aria-hidden="true">${arcs}</svg>
       <span class="oc"><span class="on1${dName.length>11?' lg':''}"><bdi>${esc(dName)}</bdi></span><span class="on2">${tag}</span></span>
     </button>
     <div class="oline"><span>${tr('الدورة','Cycle')} <bdi class="en">${cc}</bdi></span>${last}</div>
-    ${c?cbCard(c,dcb):dcb?cbCard(null,true):dlx?dlCard(dlx):''}
+    ${q}
     ${homeQuote(ds,wk,dr)}
     </div>
     <details class="dtl"><summary>${tr('التفاصيل','Details')}${al?'<i class="aldot"></i>':''}</summary>
-      <div class="dl">${rows}</div>
+      <div class="dl">${rowsOf(pl.ex)}</div>
       ${coreOf(pl.ex)}
-      ${cp?`<div class="cbdh">${tr('جلسة الرجوع المقترحة','Suggested comeback session')} · <bdi class="en">${esc(cp.dayName)}</bdi></div><div class="dl">${rowsOf(cp.ex)}</div>${coreOf(cp.ex)}`:''}
-      <div class="dwk">${L.weekOf(wk)}${(()=>{const n=wkStreak();return n>=2?` · <span class="stk">${tr(`${n} أسابيع ورا بعض حققت الهدف`,`${n} weeks in a row on target`)}</span>`:''})()}</div>
-      ${gymHtml()}
       ${protHtml()}
-      <div class="dlk"><button class="plink" data-a="rule">${tr('إزاي التطبيق بيحسب الزيادة؟','How is progression decided?')}</button></div>
-      <div class="dlk"><button class="plink" data-a="rtOpen">${tr('تايمر جولات (كارديو ولياقة)','Round timer (cardio & conditioning)')}</button></div>
+      ${(S.gyms||[]).length?gymHtml():''}
       ${al}
-      <details class="alt"><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd).map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
+      <div class="dlk2"><details class="alt"><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd||mode!=='norm').map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
+      <button class="plink" data-a="tools">${tr('أدوات','Tools')} ›</button></div>
     </details>
   </div>`;
   $('#view').innerHTML=h;
@@ -1533,7 +1548,7 @@ document.addEventListener('click',ev=>{
       e.note=((e.note||'')+' ⚠ '+tr('وجع','pain')).trim();
       if(go){const L0=libGet(e.name);libQ='';libG=L0?L0[1]:'all';libFor='swap';libModal()}else{const w=num(e.w);if(!e.unit&&w>0){const st=stepOf(e.name);e.w=String(Math.max(st,Math.round(w*.8/st)*st))}}
       save();renderSession()})();break}
-    case 'protAdd':{const v=+b.dataset.v;S.prot={d:today(),g:Math.max(0,protToday()+v)};save();queueBackup();const pe=document.querySelector('.prt');if(pe)pe.outerHTML=protHtml();break}
+    case 'protAdd':{const v=+b.dataset.v;const old=JSON.stringify({prot:S.prot||null});S.prot={d:today(),g:Math.max(0,protToday()+v)};save();queueBackup();const pe=document.querySelector('.prt');if(pe)pe.outerHTML=protHtml();offerUndo(`${v>0?'+':''}${v} ${tr('جم بروتين','g protein')} ✓`,old);break}
     case 'protG':{const cur=+S.settings.protG||150,nx=cur>=200?100:cur+10;S.settings.protG=nx;save();const pe=document.querySelector('.prt');if(pe)pe.outerHTML=protHtml();toast(tr(`هدف البروتين ${nx} جم (دوس تاني للتغيير)`,`Protein goal ${nx} g (tap again to change)`));break}
     case 'rdy':{const v=+b.dataset.v;d.rdy=v;save();renderSession();if(v===0)toast(tr('يوم تقيل: خليك على الأساسي، أو «معايا وقت قليل» من ⋯. الالتزام أهم من الرقم النهارده.','Rough day: stick to the essentials or use «short on time» from ⋯. Showing up beats the number today.'));break}
     case 'onbSys':{const id=b.dataset.id;if(id!==(S.sys&&S.sys.cur||'ul4'))switchSys(id);save();onbModal(2);break}
@@ -1561,6 +1576,9 @@ document.addEventListener('click',ev=>{
     case 'timeShort':{const sh=$('#sheet');sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="mgh">${tr('وقتك ضيق النهارده','Short on time today')}</div>${d.ex.some(x=>x.core)&&!d.ex.every(x=>x.core)?`<button class="mrow" data-a="coreOnly">${tr('الأساسي بس','Essentials only')}<small>${tr('التمارين الأساسية بكل مجموعاتها','Essential exercises, all sets')}</small></button>`:''}<button class="mrow" data-a="tShort">${tr('مجموعتين لكل تمرين','Two sets each')}<small>${tr('كل التمارين، والأساسي الأول','Every exercise, essentials first')}</small></button></div>`;break}
     case 'swTgl':S.settings.swOn=S.settings.swOn?0:1;save();closeSheet();renderSession();toast(S.settings.swOn?tr('ساعة الإيقاف ظاهرة لكل التمارين','Stopwatch shown for every exercise'):tr('ساعة الإيقاف للتمارين اللي بالوقت بس','Stopwatch only for timed exercises'));break;
     case 'dateEd':{const x=$('#mdt');if(x)x.hidden=!x.hidden;break}
+    case 'tools':toolsModal();break;
+    case 'cbWhy':cbWhy();break;
+    case 'dlWhy':dlWhy();break;
     case 'clean':{const e=d.ex[curEx];e.clean=!e.clean;saveSoon();renderSession();break}
     case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
     case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value),mx={};for(const [k] of BMX){const v=num(($('#b_'+k)||{}).value);if(v>0&&v<400)mx[k]=v}if(!(w>0)&&!(c>0)&&!Object.keys(mx).length){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}

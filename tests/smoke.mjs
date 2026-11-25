@@ -36,8 +36,8 @@ async function page(st) {
 // 2) الرجوع بعد الغياب
 { const { pg, errs, ctx } = await page(state(20));
   ok(await pg.evaluate(() => { const c = cbNow(); return c && c.step.k === 'fb' && c.step.p === .8; }), '20-day gap suggests full body at 80%');
-  ok(await pg.evaluate(() => !!document.querySelector('.cbh')), 'comeback card is shown on home');
-  ok(await pg.evaluate(() => planDraft(nextDayId(), null).cb === undefined), 'the circle stays a normal session');
+  ok(await pg.evaluate(() => document.querySelector('.orb').dataset.a === 'cbGo'), 'the circle becomes the comeback session');
+  ok(await pg.evaluate(() => !!document.querySelector('.cbq [data-a="start"]')), 'a quiet link offers the usual day instead');
   ok(errs.length === 0, 'no page errors (comeback) ' + errs.join(';')); await ctx.close(); }
 // 3) الاسترجاع بينضّف القيم ومابيشغلش كود
 { const { pg, errs, ctx } = await page(state(2));
