@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='142';
+const VER='143';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -454,8 +454,10 @@ function progShareModal(){modal(`<h3>${tr('مشاركة البرنامج','Share
 /* v124: صور التقدم: على الموبايل بس (IndexedDB)، مش بتترفع ولا بتدخل النسخة الاحتياطية */
 function photoSec(){const a=(S.photos||[]).slice().sort((x,y)=>x.d<y.d?1:-1);
   return `<details class="fsec" data-fk="ph"${fOpen.has('ph')?' open':''}><summary>${tr('صور التقدم','Progress photos')}<span class="pchev">⌄</span></summary><div class="fbody">
-  <div class="mu" style="margin-bottom:10px">${tr('الصور على الموبايل ده بس: مش بتترفع لأي مكان، ومش بتدخل في النسخة الاحتياطية. صوّر نفس المكان ونفس الإضاءة كل شهر.','Photos stay on this phone only: never uploaded and not part of backups. Same spot and light every month.')}</div>
+  <div class="mu" style="margin-bottom:10px">${tr('الصور على الموبايل ده. تقدر تحفظ نسخة منها في ملف، أو ترفعها متشفّرة مع نسخة GitHub لو شغّالة. صوّر نفس المكان ونفس الإضاءة كل شهر.','Photos live on this phone. You can save a copy to a file, or upload them encrypted with your GitHub backup if it is on. Same spot and light every month.')}</div>
   <label class="btn pri w" style="cursor:pointer">${tr('ضيف صورة','Add a photo')}<input type="file" id="phIn" accept="image/*" hidden></label>
+  ${a.length?`<button class="btn w mt" data-a="phExport">${tr('احفظ نسخة من الصور في ملف','Save a copy of the photos to a file')}</button>`:''}
+  ${swRow('phSync',!!S.settings.phSync,tr('ارفع الصور مع نسخة GitHub','Upload photos with the GitHub backup'),SYNC.on?tr('متشفّرة بنفس العبارة السرية، وبتنزل لوحدها على أي جهاز تاني بنفس النسخة','Encrypted with the same passphrase, and restored on any other device using the same backup'):tr('شغّل النسخ الأوتوماتيك المشفّر الأول (من «حماية بياناتك» ← متقدم)','Turn on the encrypted auto-backup first (Protect your data → Advanced)'))}
   ${a.length?`<div class="phg">${a.map(x=>`<button class="pht" data-a="phOpen" data-id="${esc(x.id)}"><img data-ph="${esc(x.id)}" alt=""><span>${fmtD(x.d)}</span></button>`).join('')}</div>`:''}</div></details>`}
 async function phLoad(){for(const im of document.querySelectorAll('img[data-ph]')){if(im.src)continue;try{const b=await idb.get('ph:'+im.dataset.ph);if(b)im.src=URL.createObjectURL(b)}catch(e){}}}
 async function phAdd(f){try{const bm=await createImageBitmap(f);const k=Math.min(1,1280/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);
@@ -465,6 +467,28 @@ async function phOpen(id,cmp){const a=(S.photos||[]).slice().sort((x,y)=>x.d<y.d
   const one=await u(id),two=cmp&&first&&first.id!==id?await u(first.id):'';
   modal(`<h3>${fmtD(x.d)}</h3>${two?`<div class="phc"><figure><img src="${two}" alt=""><figcaption>${fmtD(first.d)}</figcaption></figure><figure><img src="${one}" alt=""><figcaption>${fmtD(x.d)}</figcaption></figure></div>`:`<img class="cimg" src="${one}" alt="">`}
   <div class="row mt">${first&&first.id!==id&&!cmp?`<button class="btn sp" data-a="phCmp" data-id="${esc(id)}">${tr('قارن بأول صورة','Compare with the first')}</button>`:''}<button class="btn dan" data-a="phDel" data-id="${esc(id)}">${T().del}</button><button class="btn ghost" data-a="closeM">${T().close}</button></div>`)}
+/* v143: نسخة من صور التقدم: ملف لوحده (الصور تقيلة على ملف السجل)، ورفع متشفّر اختياري مع نسخة GitHub */
+async function phExport(){const a=S.photos||[];if(!a.length)return;toast(tr('بجهّز الصور…','Preparing photos…'));const out=[];
+  for(const p of a){try{const b=await idb.get('ph:'+p.id);if(b)out.push({id:p.id,d:p.d,mime:b.type||'image/jpeg',b64:b64(new Uint8Array(await b.arrayBuffer()))})}catch(e){}}
+  const blob=new Blob([JSON.stringify({app:'gymlog-photos',v:1,at:Date.now(),photos:out})],{type:'application/json'});
+  const r=await saveBlob(blob,`gym-photos-${today()}.json`,'application/json');if(r===true)toast(tr(`اتحفظت ${arN(out.length,'صورة','صورتين','صور')} ✓`,`Saved ${enN(out.length,'photo')} ✓`));else if(r===false)toast(tr('مقدرتش أحفظ الملف','Could not save the file'))}
+const phMime=m=>/^image\/(jpeg|png|webp)$/.test(m)?m:'image/jpeg';
+async function phImport(o){const a=Array.isArray(o.photos)?o.photos:[];let n=0;S.photos=S.photos||[];
+  for(const p of a.slice(0,500)){if(!p||typeof p.id!=='string'||!isD(p.d)||typeof p.b64!=='string'||p.b64.length>15e6)continue;const id=p.id.slice(0,40);if(S.photos.some(x=>x.id===id))continue;
+    try{await idb.set('ph:'+id,new Blob([unb64(p.b64)],{type:phMime(p.mime)}));S.photos.push({id,d:p.d});if(S.tomb)delete S.tomb['ph:'+id];n++}catch(e){}}
+  save();fOpen.add('ph');if(tab==='data')renderData();toast(n?tr(`اترجع ${arN(n,'صورة','صورتين','صور')} ✓`,`Restored ${enN(n,'photo')} ✓`):tr('الصور دي موجودة عندك أصلًا','These photos are already here'));if(n)queueBackup()}
+const PH_URL=id=>`/repos/${SYNC.repo}/contents/sync/photos/${encodeURIComponent(id)}.bin`;
+async function phSyncRun(){if(!S.settings.phSync||!BKEY||!SYNC.on)return;SYNC.phUp=SYNC.phUp||[];SYNC.phNeed=SYNC.phNeed||[];let n=0,ch=false;
+  for(const p of (S.photos||[])){if(SYNC.phUp.includes(p.id)||n>=6)continue;const b=await idb.get('ph:'+p.id);if(!b)continue;
+    const {iv,ct}=await sealBytes(BKEY,new Uint8Array(await b.arrayBuffer())),body=JSON.stringify({app:'gymlog-ph',v:1,mime:b.type||'image/jpeg',iv:b64(iv),ct:b64(ct)});
+    const r=await gh('PUT',PH_URL(p.id),{message:'photo',content:b64(enc.encode(body)),branch:SYNC.branch});if(r.ok||r.status===422)SYNC.phUp.push(p.id);else throw ghErr(r);n++}
+  for(const q of SYNC.phNeed.slice(0,6)){SYNC.phNeed=SYNC.phNeed.filter(x=>x.id!==q.id);if((S.photos||[]).some(x=>x.id===q.id)||(S.tomb&&S.tomb['ph:'+q.id]))continue;
+    const r=await gh('GET',PH_URL(q.id)+'?ref='+encodeURIComponent(SYNC.branch),null,'application/vnd.github.raw+json');if(r.status===404)continue;if(!r.ok)throw ghErr(r);
+    const o=JSON.parse(await r.text()),bytes=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(o.iv)},BKEY,unb64(o.ct)));
+    await idb.set('ph:'+q.id,new Blob([bytes],{type:phMime(o.mime)}));S.photos=S.photos||[];S.photos.push({id:q.id,d:q.d});if(!SYNC.phUp.includes(q.id))SYNC.phUp.push(q.id);ch=true}
+  for(const id of SYNC.phUp.filter(id=>S.tomb&&S.tomb['ph:'+id])){const g=await gh('GET',PH_URL(id)+'?ref='+encodeURIComponent(SYNC.branch));
+    if(g.ok){const sha=(await g.json()).sha;await gh('DELETE',PH_URL(id),{message:'photo removed',sha,branch:SYNC.branch})}SYNC.phUp=SYNC.phUp.filter(x=>x!==id)}
+  if(ch){save();if(tab==='data')renderData()}}
 function gymHtml(){const G=[{id:'main',name:tr('جيمي','My gym')}].concat((S.gyms||[]).filter(g=>!g.del)),cur=gymId();
   return `<div class="gyr"><span>${tr('الجيم','Gym')}:</span>${G.map(g=>`<button class="${g.id===cur?'on':''}" data-a="gymSet" data-id="${esc(g.id)}">${esc(g.name)}</button>`).join('')}<button data-a="gymAdd">${tr('تعديل','Edit')}</button></div>`}
 function toolsModal(){const n=wkStreak();modal(`<h3>${tr('أدوات','Tools')}</h3>
@@ -1310,7 +1334,7 @@ async function deriveKey(pass,salt,iter){
 }
 async function sealBytes(key,bytes){const iv=crypto.getRandomValues(new Uint8Array(12));return{iv,ct:new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,bytes))}}
 /* كل اللي محتاجينه عشان الاسترجاع يرجّع كل حاجة (نفس الشكل في الملف وGitHub) */
-const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],myProgs:S.myProgs||[],libOv:S.libOv||{},exNotes:S.exNotes||{},exMemo:S.exMemo||{},steps:S.steps||{},body:S.body||[],mig:S.mig||0,fbDay:S.fbDay||null,dl:S.dl||null,dlSkip:S.dlSkip||null,prot:S.prot||null,gyms:S.gyms||[],tomb:S.tomb||{}});
+const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],myProgs:S.myProgs||[],libOv:S.libOv||{},exNotes:S.exNotes||{},exMemo:S.exMemo||{},steps:S.steps||{},body:S.body||[],mig:S.mig||0,fbDay:S.fbDay||null,dl:S.dl||null,dlSkip:S.dlSkip||null,prot:S.prot||null,gyms:S.gyms||[],tomb:S.tomb||{},photos:(S.photos||[]).map(p=>({id:p.id,d:p.d}))});
 async function packBackup(){
   const payload=enc.encode(JSON.stringify({app:'gymlog',v:BK_V,at:Date.now(),data:snapData()}));
   let z=null;try{z=await pipe(payload,new CompressionStream('gzip'))}catch(e){}
@@ -1363,6 +1387,8 @@ function mergeIn(rd){
   const by=new Map(S.sessions.map(x=>[x.id,x]));let n=0;
   for(const r0 of rd.sessions){const r=cleanSession(r0);if(!r||tomb[r.id])continue;const l=by.get(r.id);
     if(!l){S.sessions.push(r);by.set(r.id,r);n++}else if(sTime(r)>sTime(l)){S.sessions[S.sessions.indexOf(l)]=r;by.set(r.id,r);n++}}
+  if(Array.isArray(rd.photos)){SYNC.phNeed=SYNC.phNeed||[];for(const p of rd.photos){if(!p||typeof p.id!=='string'||!isD(p.d)||tomb['ph:'+p.id])continue;if(!(S.photos||[]).some(x=>x.id===p.id)&&!SYNC.phNeed.some(x=>x.id===p.id))SYNC.phNeed.push({id:p.id.slice(0,40),d:p.d})}
+    const pb=(S.photos||[]).length;S.photos=(S.photos||[]).filter(x=>!tomb['ph:'+x.id]);if(S.photos.length<pb)n++}
   const b=S.sessions.length;S.sessions=S.sessions.filter(x=>!tomb[x.id]);return n+b-S.sessions.length}
 async function readRemote(tok){const r=await getRemote(tok);if(!r)throw new Error('nofile');return r.text}
 async function runBackup(verify){
@@ -1379,6 +1405,7 @@ async function runBackup(verify){
       if(p.ok)up=true;else if(p.status!==409&&p.status!==422)throw ghErr(p);
     }
     if(!up)throw new Error('conflict');
+    try{await phSyncRun();SYNC.phErr=''}catch(e){SYNC.phErr=String(e.message||e)}
     if(verify){const back=await openBackup(await readRemote(),BKEY);if(!back.data||!S.sessions.every(x=>back.data.sessions.some(y=>y.id===x.id)))throw new Error('verify')}
     if(chg===my)SYNC.dirty=false;SYNC.missed=0;SYNC.last=Date.now();SYNC.n=S.sessions.length;SYNC.err='';ok=true;markBackup();
   }catch(e){SYNC.err=String(e.message||e);brOK=false}
@@ -1475,7 +1502,7 @@ const cleanDays=a=>(Array.isArray(a)?a:[]).filter(x=>x&&x.id!=null&&Array.isArra
 function cleanSettings(o){o=isObj(o)?o:{};const b=v=>v?1:0,r={cycle:nn(o.cycle,1,9999,1)};
   if(o.lastBackup)r.lastBackup=nn(o.lastBackup,0,9e15,0)||null;
   r.theme=THEMES[o.theme]?o.theme:'iron';if(o.howLang==='en'||o.howLang==='ar')r.howLang=o.howLang;
-  if(o.fs)r.fs=nn(o.fs,1,3,1);for(const k of ['safe','ram','swOn','sxProg','hint1','legend'])if(o[k]!=null)r[k]=b(o[k]);
+  if(o.fs)r.fs=nn(o.fs,1,3,1);for(const k of ['safe','ram','swOn','sxProg','hint1','legend','phSync'])if(o[k]!=null)r[k]=b(o[k]);
   if(o.qGest!=null)r.qGest=b(o.qGest);if(o.protG)r.protG=nn(o.protG,50,400,150);
   if(typeof o.gym==='string')r.gym=o.gym.slice(0,40);if(typeof o.linked==='string')r.linked=o.linked.slice(0,80);
   if(isObj(o.rt))r.rt={w:nn(o.rt.w,5,3600,180),r:nn(o.rt.r,0,3600,60),n:nn(o.rt.n,1,50,5)};return r}
@@ -1687,6 +1714,7 @@ async function csvMerge(txt){
 async function importText(txt){
   if(txt==null){toast(tr('مقدرتش أقرا الملف','Could not read the file'));return}
   let d;
+  {let o=null;try{if(/"app"\s*:\s*"gymlog-photos"/.test(String(txt).slice(0,200)))o=JSON.parse(txt)}catch(e){}if(o&&o.app==='gymlog-photos'){if(+o.v>1){toast(T().bkNewer);return}await phImport(o);return}}
   try{d=parseBackup(txt);cleanRestore(d)}
   catch(e){
     if(e&&e.message==='newer'){toast(T().bkNewer);return}
@@ -1873,7 +1901,7 @@ document.addEventListener('click',ev=>{
     case 'ssTgl':{const e=d.ex[curEx];e.ss=!e.ss;const pd=S.program.days.find(x=>x.id===d.day),t=pd&&pd.ex.find(x=>x.id===e.exId);if(t)t.ss=e.ss;save();closeSheet();renderSession();toast(e.ss?tr('اتربط: بعد كل مجموعة هتروح للتمرين اللي بعده، والراحة بعد الاتنين','Linked: after each set you go to the next exercise; rest comes after both'):tr('السوبرسيت اتفك','Superset removed'));break}
     case 'phOpen':phOpen(b.dataset.id);break;
     case 'phCmp':phOpen(b.dataset.id,true);break;
-    case 'phDel':ask(tr('تمسح الصورة دي نهائيًا؟','Delete this photo permanently?'),{danger:1}).then(async ok=>{if(!ok)return;const id=b.dataset.id;S.photos=(S.photos||[]).filter(x=>x.id!==id);try{await idb.set('ph:'+id,null)}catch(e){}save();closeModal();renderData()});break;
+    case 'phDel':ask(tr('تمسح الصورة دي نهائيًا؟','Delete this photo permanently?'),{danger:1}).then(async ok=>{if(!ok)return;const id=b.dataset.id;S.photos=(S.photos||[]).filter(x=>x.id!==id);S.tomb=Object.assign({},S.tomb,{['ph:'+id]:Date.now()});try{await idb.set('ph:'+id,null)}catch(e){}save();queueBackup();closeModal();renderData()});break;
     case 'rep':reportModal(+b.dataset.d);break;
     case 'repCopy':copy(reportText(+b.dataset.d));break;
     case 'repShare':shareText(reportText(+b.dataset.d));break;
@@ -1911,6 +1939,8 @@ document.addEventListener('click',ev=>{
     case 'shareDone':if(lastDone)shareModal(lastDone);break;
     case 'imgDone':if(lastDone)shareImg(lastDone);break;
     case 'imgSave':imgSave();break;
+    case 'phExport':phExport();break;
+    case 'phSync':S.settings.phSync=b.dataset.k==='on'?1:0;fOpen.add('ph');save();renderData();if(S.settings.phSync&&SYNC.on){chg++;SYNC.dirty=true;runBackup()}break;
     case 'imgS':{const x=S.sessions.find(q=>q.id===b.dataset.id);if(x)shareImg(x);break}
     case 'doneClose':closeSession();go('home');break;
     case 'tgl':{const k=b.dataset.k,op=!openTips.has(k);op?openTips.add(k):openTips.delete(k);renderSession();if(op)requestAnimationFrame(()=>reveal($('#l3box')));else edgeOff();break}

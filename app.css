@@ -367,8 +367,8 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 #ask .abt .ok{background:var(--ac);border-color:var(--ac);color:var(--onac,#111)}
 #ask .abt .ok.dg{background:transparent;border-color:var(--badtx);color:var(--badtx)}
 /* v114: زرار الأداء النضيف، أسماء طويلة، شاشات قصيرة، حجم الخط، تراجع */
-.wcl{display:block;margin:14px auto 0;padding:8px 16px;min-height:40px;border-radius:99px;border:1px solid var(--bd);background:none;color:var(--mu);font:inherit;font-size:13.5px;cursor:pointer}
-.wcl.on{border-color:var(--acbd);color:var(--ac2)}
+
+
 .on1{max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
 .on1.lg{font-size:clamp(24px,7vw,32px)}
 
@@ -380,7 +380,7 @@ html[data-fs="3"] #view>:not(.homew),html[data-fs="3"] .mbox,html[data-fs="3"] .
 #undo.on{opacity:1;pointer-events:auto;transform:translateX(-50%)}
 #undo button{border:1px solid var(--acbd);background:none;color:var(--ac2);border-radius:10px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
 /* v115 */
-.war{margin-top:8px;font-size:13px;color:var(--mu)}
+
 .wlast{margin-top:10px;font-size:13px;line-height:1.7;color:var(--mu);text-align:center}
 .rst{min-height:8px;width:100%;max-width:320px;margin:8px auto 0}
 .rsb{height:4px;border-radius:99px;background:var(--s2);overflow:hidden}.rsb i{display:block;height:100%;background:var(--ac);transition:width .25s linear}
@@ -397,7 +397,7 @@ html[data-fs="3"] #view>:not(.homew),html[data-fs="3"] .mbox,html[data-fs="3"] .
 .wrir button.on{border-color:var(--ac);color:var(--ac2)}
 .plc{text-align:center;font-size:13px;color:var(--mu);margin:-2px 0 8px;min-height:18px}
 .bmx{margin:0 0 10px}.bmx>summary{font-size:13px;color:var(--mu);padding:6px 0;cursor:pointer}.bmr{font-size:11.5px}
-.prt{margin:12px 0;padding:12px 14px;border:1px solid var(--bd);border-radius:14px;background:var(--s1)}
+
 .prg{background:none;border:0;border-bottom:1px dotted var(--mu);color:inherit;font:inherit;padding:0}
 .prb{display:flex;gap:6px;justify-content:center;margin-top:10px}.prb button{flex:1;border:1px solid var(--bd);background:none;color:var(--tx2);border-radius:10px;min-height:40px;font:inherit;font-size:14px}
 .rdy{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;margin:0 16px 8px;font-size:13px;color:var(--mu)}.rdy button{border:1px solid var(--bd);background:none;color:var(--tx2);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;min-height:34px}
@@ -414,10 +414,10 @@ html[data-fs="3"] #view>:not(.homew),html[data-fs="3"] .mbox,html[data-fs="3"] .
 
 .sxs{margin:0 0 10px}
 .cbh b{display:block;color:var(--tx2);font-weight:600;font-size:14px;margin-bottom:3px}
-.cbs{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:4px 5px;margin-top:8px;font-size:12px}
-.cbs span{padding:2px 9px;border-radius:99px;border:1px solid var(--bd);white-space:nowrap}
-.cbs span.on{border-color:var(--ac);color:var(--ac2)}
-.cbs span.ok{opacity:.55}
+
+
+
+
 .cbs i{font-style:normal;opacity:.45}
 /* --- شاشة التمرين --- */
 #sess{display:flex;flex-direction:column;touch-action:pan-y}
@@ -575,13 +575,13 @@ html[dir=rtl] .dr .dn2,html[dir=rtl] .pr2 .pnm,html[dir=rtl] .prow .nm{text-alig
 
 
 
-.war{margin-top:-2px}
+
 .wpm{width:40px;height:40px;border-radius:50%;border:1px solid var(--bd);background:none;color:var(--tx2);font-size:22px;line-height:1;align-self:center;flex:none}
 .wtg{align-items:center;gap:12px}
 .cir .cix{position:absolute;top:18%;font-size:11px;font-weight:600;color:var(--mu);opacity:.8}
 .cir{position:relative}.cir:not(.on) span:not(.cix){font-size:24px}
 .wlast{cursor:pointer}
-.wcl{border:0;padding:6px 10px;min-height:36px;font-size:13px;color:var(--mu);margin-top:8px}
+
 .wcl.un{color:var(--badtx)}
 .rsr button{border:0;padding:4px 8px;color:var(--mu);text-decoration:underline;text-underline-offset:3px;min-height:32px}
 .rsr b{font-size:20px}
@@ -594,17 +594,17 @@ html[dir=rtl] .mrow small{margin:-12px 34px 8px 0}
 .mrow.sk{justify-content:center;color:var(--mu);border:0}
 #mdt{margin:8px 0}
 .rdy2{display:flex;gap:8px;margin:8px 0}.rdy2 button{flex:1;min-height:52px;border-radius:99px;border:1px solid var(--bd);background:var(--s2);color:var(--tx2);font:inherit;font-size:16px}
-.war{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:0}.war span{margin-inline-end:4px}
+.war{margin-top:0;font-size:13px;color:var(--mu);display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}.war span{margin-inline-end:4px}
 .wic{border:0;background:none;color:var(--mu);font:inherit;font-size:12.5px;padding:4px 8px;border-radius:99px;min-height:32px}
 .wtg{direction:ltr}
 
 /* v129: الرئيسية */
 .cbq{margin-top:10px;font-size:13.5px;color:var(--mu);text-align:center;line-height:1.9}
 .cbq button{background:none;border:0;padding:2px 2px;font:inherit;color:var(--ac2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-.prt{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:12px 0;padding:0;border:0;background:none;font-size:14px;color:var(--tx2)}
+.prt{margin:12px 0;padding:0;border:0;border-radius:14px;background:none;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;color:var(--tx2)}
 .prt b{font-weight:600}.prb{display:flex;gap:6px;margin:0}.prb button{flex:none;border:1px solid var(--bd);background:none;color:var(--tx2);border-radius:99px;min-height:36px;padding:0 12px;font:inherit;font-size:13.5px}
 .dlk2{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:6px}.dlk2 .alt{width:100%}
-.cbs{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:4px 5px;margin-top:10px;font-size:12.5px;color:var(--mu)}.cbs span{padding:2px 9px;border-radius:99px;border:1px solid var(--bd)}.cbs span.on{border-color:var(--ac);color:var(--ac2)}.cbs span.ok{opacity:.55}.cbs i{font-style:normal;opacity:.45}
+.cbs{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:4px 5px;margin-top:10px;font-size:12.5px;color:var(--mu)}.cbs span{padding:2px 9px;border-radius:99px;border:1px solid var(--bd);white-space:nowrap}.cbs span.on{border-color:var(--ac);color:var(--ac2)}.cbs i{font-style:normal;opacity:.45}
 .top{border-bottom:0}
 @media (max-height:700px){.hs .qt{display:none}.hs .orb{width:min(80vw,calc(100dvh - 330px))}}
 .on3{font-size:12.5px;color:var(--mu);opacity:.75;margin-top:-4px}
@@ -659,8 +659,8 @@ html[data-th=morning]{--pw:#ab3523;--pwbd:#e2b3a6}
 @keyframes cring{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--ac) 45%,transparent)}to{box-shadow:0 0 0 14px transparent}}
 @media (prefers-reduced-motion:reduce){#sess.in,#view.vin,#modal .mbox,.cir.pop,.cir.pop::after{animation:none!important}}
 /* زرار الأداء النضيف رجع */
-.wcl{display:block;margin:12px auto 0;padding:8px 16px;min-height:40px;border-radius:99px;border:1px solid var(--bd);font-size:13.5px;color:var(--mu)}
-.wcl.on{border-color:var(--acbd);color:var(--ac2)}
+
+.wcl.on{}
 /* ملاحظتك تحت التمرين */
 
 
@@ -762,7 +762,7 @@ body{font-variant-emoji:text}
 
 /* 2) الشيبس/الحبوب: شكل واحد، والمختار ناعم مش مليان */
 .chips button,.wrir button,.gyr button,.stp button,.prb button,.rdy button,.cl,.wcl,#undo button{border-radius:var(--r-p);border:1px solid var(--bd);background:transparent;color:var(--tx2);min-height:36px;padding:0 14px;font:inherit;font-size:var(--t2);font-weight:var(--wm);display:inline-flex;align-items:center;justify-content:center;gap:6px}
-.wcl{display:flex;width:max-content;margin-inline:auto}
+.wcl{display:flex;margin:12px auto 0;cursor:pointer;width:max-content;margin-inline:auto}
 .chips button.on,.wrir button.on,.gyr button.on,.stp button.on,.wcl.on{background:var(--acbg);border-color:var(--acbd);color:var(--ac2);font-weight:var(--ws)}
 .cl.on{background:var(--okbg);border-color:var(--okbd);color:var(--oktx)}
 .wcl.un{border-color:color-mix(in srgb,var(--bad) 40%,var(--bd));color:var(--badtx)}

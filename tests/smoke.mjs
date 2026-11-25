@@ -165,5 +165,31 @@ async function page(st) {
   ok(await pg.evaluate(async () => { closeModal(true); const s = JSON.parse(JSON.stringify(S.sessions[0])); s.ex = Array.from({ length: 12 }, (_, k) => Object.assign({}, s.ex[0], { name: 'Ex ' + k, dur: [30, 30, 30], note: 'n' + k })); const b = await cardImg(s); const im = await createImageBitmap(b); return im.height > 1500; }), 'session image keeps every exercise with times and notes');
   ok(await pg.evaluate(() => { S.sessions[0].ex[0].note = 'ملاحظتي'; S.sessions[0].ex[0].dur = [40, 40, 40]; sessModal(S.sessions[0].id); const t = $('#modal .mbox').textContent; return /ملاحظتي/.test(t) && /2:00/.test(t); }), 'history session detail shows notes and set times');
   ok(errs.length === 0, 'no page errors (v141 UI) ' + errs.join(';')); await ctx.close(); }
+// 12) v143: صور التقدم: نسخة في ملف بترجع، ورفع متشفّر مع GitHub بينزل على جهاز تاني
+{ const store = {}; let main = null, msha = 0;
+  const fake = async route => { const rq = route.request(), u = new URL(rq.url()), p = u.pathname, m = rq.method(), J = (o, st = 200) => route.fulfill({ status: st, contentType: 'application/json', body: JSON.stringify(o) });
+    if (p === '/repos/me/gym' && m === 'GET') return J({ private: true, permissions: { push: true }, default_branch: 'main' });
+    if (p === '/user/repos') return J([{ full_name: 'me/gym' }]); if (p.includes('/git/ref/')) return J({ object: { sha: 'x' } });
+    const raw = /raw/.test(rq.headers()['accept'] || '');
+    if (p.endsWith('/contents/sync/state.bin')) { if (m === 'GET') { if (!main) return J({}, 404); if (raw) return route.fulfill({ status: 200, body: main }); return J({ sha: 'm' + msha, encoding: 'base64', content: Buffer.from(main).toString('base64') }); }
+      const b = JSON.parse(rq.postData()); if (main && b.sha !== 'm' + msha) return J({}, 409); main = Buffer.from(b.content, 'base64').toString(); msha++; return J({ content: { sha: 'm' + msha } }); }
+    const ph = p.match(/\/contents\/sync\/photos\/(.+)\.bin$/);
+    if (ph) { const k = decodeURIComponent(ph[1]); if (m === 'PUT') { store[k] = Buffer.from(JSON.parse(rq.postData()).content, 'base64').toString(); return J({ content: { sha: 'p' } }); }
+      if (m === 'GET') { if (!store[k]) return J({}, 404); return raw ? route.fulfill({ status: 200, body: store[k] }) : J({ sha: 'p' }); } if (m === 'DELETE') { delete store[k]; return J({}); } }
+    return J({}, 404); };
+  const A = await page(state(2)); await A.ctx.route('https://api.github.com/**', fake);
+  await A.pg.evaluate(async () => { const c = document.createElement('canvas'); c.width = 8; c.height = 8; const b = await new Promise(r => c.toBlob(r, 'image/jpeg')); await idb.set('ph:p1', b); S.photos = [{ id: 'p1', d: today() }]; save(); });
+  const json = await A.pg.evaluate(async () => { let blob = null; const o = window.saveBlob; window.saveBlob = async b => { blob = b; return true }; await phExport(); window.saveBlob = o; return blob.text(); });
+  ok(/gymlog-photos/.test(json) && JSON.parse(json).photos.length === 1, 'photos export to their own file');
+  await A.pg.evaluate(async t => { S.photos = []; await idb.set('ph:p1', null); await importText(t); }, json); await A.pg.waitForTimeout(300);
+  ok(await A.pg.evaluate(async () => S.photos.length === 1 && !!(await idb.get('ph:p1'))), 'the photo file restores the photos');
+  await A.pg.evaluate(() => { S.settings.phSync = 1; save(); });
+  ok(await A.pg.evaluate(() => enableSyncWith('github_pat_x', 'passphrase-123', 'me/gym')) && Object.keys(store).length === 1, 'photos upload encrypted with the GitHub backup');
+  ok(!/\xff\xd8/.test(store.p1 || ''), 'the uploaded photo is encrypted');
+  const B = await page(state(2)); await B.ctx.route('https://api.github.com/**', fake);
+  await B.pg.evaluate(() => { S.settings.phSync = 1; save(); });
+  const go = B.pg.evaluate(() => enableSyncWith('github_pat_x', 'passphrase-123', 'me/gym')); await B.pg.waitForTimeout(2500); await B.pg.click('#ask .ok'); await go;
+  ok(await B.pg.evaluate(async () => S.photos.length === 1 && !!(await idb.get('ph:p1'))), 'another device downloads the photos');
+  ok(A.errs.length === 0 && B.errs.length === 0, 'no page errors (photos) ' + A.errs.concat(B.errs).join(';')); await A.ctx.close(); await B.ctx.close(); }
 await br.close();
 console.log(fail ? `\n${fail} test(s) failed` : '\nall tests passed'); process.exit(fail ? 1 : 0);

@@ -30,7 +30,7 @@ ar:[
 دوسة مطوّلة على تمرين = ضيفه ليوم في برنامجك أو اكتب ملاحظتك.`],
 ['السجل',`كل جلسة لعبتها. دوس على جلسة تفتحها وتشوف كل تفاصيلها (الوقت، الأداء، الملاحظات)، ودوسة مطوّلة = انسخ الكارت، صورة، ابعتها للتحليل، عدّل، امسح.`],
 ['الجيمات',`لو بتتمرن في أكتر من مكان، سجّل كل مكان من «التفاصيل» في الرئيسية. كل مكان بيفتكر أوزانه لوحده، لأن نفس الرقم بيختلف من جهاز لجهاز.`],
-['ملفك وبياناتك',`كل حاجة متسجلة على موبايلك. من تاب «الملف»: نسخة احتياطية، Excel فيه كل التفاصيل (وزن كل مجموعة، الوقت، فاضل في الإيد، الجيم، وقت البداية والنهاية…)، واستيراد.
+['ملفك وبياناتك',`كل حاجة متسجلة على موبايلك. من تاب «الملف»: نسخة احتياطية، نسخة من صور التقدم في ملف لوحده، Excel فيه كل التفاصيل (وزن كل مجموعة، الوقت، فاضل في الإيد، الجيم، وقت البداية والنهاية…)، واستيراد.
 الكارت اللي بتنسخه نص عادي وآخر سطر فيه «الأساسي».`],
 ['حركات مفيدة',`• الرسالة الصغيرة تحت: اسحبها يمين أو شمال تختفي.
 • الجملة اللي في الرئيسية: اسحبها تتغيّر، ودوسة تنسخها.
@@ -65,7 +65,7 @@ After 6 straight weeks of training the app suggests a light week (one set less, 
 Long-press an exercise = add it to a day or write your note.`],
 ['History',`Every session you logged. Tap to open; long-press = copy the card, image, send for analysis, edit, delete.`],
 ['Gyms',`If you train in more than one place, add each place from “Details” on Home. Each place keeps its own weights, because the same number differs from machine to machine.`],
-['Your data',`Everything is stored on your phone. From the “File” tab: backup, an Excel file with every detail (per-set weight, set times, reps left, gym, start and end time…), and import.
+['Your data',`Everything is stored on your phone. From the “File” tab: backup, a separate copy of your progress photos, an Excel file with every detail (per-set weight, set times, reps left, gym, start and end time…), and import.
 The card you copy is plain text and ends with the «Essentials» line.`],
 ['Handy gestures',`• The small message at the bottom: swipe left or right to dismiss.
 • The quote on Home: swipe to change it, tap to copy.
