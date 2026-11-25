@@ -419,6 +419,7 @@ html[data-fs="3"] #view>:not(.homew),html[data-fs="3"] .mbox,html[data-fs="3"] .
 .sstag{text-align:center;font-size:12.5px;color:var(--ac2);margin-bottom:4px}
 .phg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.pht{border:1px solid var(--bd);background:var(--s2);border-radius:10px;padding:0;overflow:hidden;display:flex;flex-direction:column}.pht img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}.pht span{font-size:11px;color:var(--mu);padding:4px}
 .phc{display:grid;grid-template-columns:1fr 1fr;gap:8px}.phc figure{margin:0}.phc img{width:100%;border-radius:10px}.phc figcaption{font-size:12px;color:var(--mu);text-align:center;margin-top:4px}
+.gyr{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0;font-size:13px;color:var(--mu)}.gyr button{border:1px solid var(--bd);background:none;color:var(--tx2);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;min-height:34px}.gyr button.on{border-color:var(--ac);color:var(--ac2)}
 .pfbn{font-size:13px;line-height:1.7;color:var(--mu);margin:0 2px 10px}
 .cbdh{margin:16px 0 6px;font-size:13px;color:var(--mu);text-align:start}
 .sxs{margin:0 0 10px}
@@ -602,7 +603,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='124';
+const VER='125';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -840,6 +841,9 @@ const coreNames=d=>d.ex.filter(e=>e.core).map(e=>e.name);
 const done=()=>S.sessions.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);
 function dayIdx(s){const o=S.program.days;let i=o.findIndex(d=>d.id===s.day);if(i<0)i=o.findIndex(d=>d.name===s.dayName);return i}
 /* v108: جلسة «فول بادي» الرجوع مش يوم من الدورة: الدورة بتكمّل من آخر يوم حقيقي */
+/* v125: أكتر من جيم: الوزن بيتاخد من آخر مرة في نفس الجيم */
+const gymId=()=>(S.settings&&S.settings.gym)||'main';
+const gymOf=x=>x.gym||'main';
 const realLast=()=>done().find(s=>s.day!=='FB');
 function nextDayId(){const l=realLast();const o=S.program.days.map(d=>d.id);if(!l)return o[0];const i=dayIdx(l);return i<0?o[0]:o[(i+1)%o.length]}
 function calcCycle(dayId){const l=realLast();if(!l)return S.settings.cycle||1;const o=S.program.days.map(d=>d.id),i=dayIdx(l);return i<0?l.cycle:(o.indexOf(dayId)<=i?l.cycle+1:l.cycle)}
@@ -847,7 +851,7 @@ const nk=n=>String(n||'').trim().toLowerCase();
 /* تاريخ التمرين: بالاسم من كل الجلسات (مش مربوط بيوم معين) */
 function exHist(exId,skip){const out=[];
   const me=S.program.days.concat(S.fbDay?[S.fbDay]:[]).flatMap(d=>d.ex).find(x=>x.id===exId),nm=me?nk(me.name):null;
-  for(const s of done()){if(s.id===skip)continue;const e=s.ex.find(x=>x.exId===exId)||(nm&&s.ex.find(x=>nk(x.name)===nm));if(e)out.push(Object.assign({date:s.date,cycle:s.cycle,cb:s.cb?1:0},e))}return out}
+  for(const s of done()){if(s.id===skip)continue;const e=s.ex.find(x=>x.exId===exId)||(nm&&s.ex.find(x=>nk(x.name)===nm));if(e)out.push(Object.assign({date:s.date,cycle:s.cycle,cb:s.cb?1:0,gym:gymOf(s)},e))}return out}
 function histMap(){const m={};for(const s of done())for(const e of s.ex){const k=nk(e.name);(m[k]||(m[k]=[])).push(Object.assign({date:s.date,cycle:s.cycle,cb:s.cb?1:0},e))}return m}
 function setsStr(e){const a=e.sets;const u=e.unit?' '+unitTxt(e.unit):'';if(!a.length)return '';if(Array.isArray(e.ws)&&e.ws.length===a.length&&e.ws.some(x=>+x!==+e.w))return a.map((r,j)=>`${+e.ws[j]}×${r}`).join(' / ');return a.every(r=>r===a[0])?`${a.length}×${a[0]}${u}`:a.join('/')+u}
 
@@ -882,7 +886,7 @@ function fbPick(){
     const n=t.name,L=libGet(n),m=(typeof META!=='undefined'&&META[n])||{};
     all.push({t,g:(L&&L[1])||fbGuess(n),comp:m.kind?m.kind==='comp':/press|squat|row|pull|deadlift|lunge|thrust|dip/i.test(n),
       safe:m.eq?(m.eq==='mach'||m.eq==='cable'):/machine|leg press|hack|smith|pulldown|cable|leg curl|pec/i.test(n),core:!!t.core,o:o++})}
-  const sc=x=>x.comp*8+x.core*4+x.safe*2;
+  const sc=x=>x.comp*8+x.core*4+x.safe*(S.settings.safe?6:2);
   const SL=[['quads',x=>x.comp,sc],['chest',x=>x.comp,sc],['back',x=>x.comp,sc],['posterior',()=>1,x=>x.safe*8+x.core*2],['core',()=>1,x=>(x.t.unit==='ث')*8+x.core*2]];
   const out=[];
   for(const [g,ok,f] of SL){const c=all.filter(x=>x.g===g&&ok(x)).sort((a,b)=>f(b)-f(a)||a.o-b.o)[0];if(c)out.push({t:c.t,core:g==='quads'||g==='chest'||g==='back'})}
@@ -956,7 +960,7 @@ const baseH=id=>{const hh=exHist(id);return hh.find(x=>!x.cb)||hh[0]};
 
 /* قاعدة الزيادة: الهدف كامل في يومين منفصلين على نفس الوزن */
 function progState(t,h){
-  h=h.filter(x=>!x.cb);/* v108: جلسات الرجوع مخففة عن قصد: مابتتحسبش في قاعدة الزيادة */
+  h=h.filter(x=>!x.cb&&(x.gym||'main')===gymId());/* v108: جلسات الرجوع مخففة عن قصد: مابتتحسبش في قاعدة الزيادة */
   if(!h.length)return null;
   const W=+h[0].w||0;let q=0,n=0;const ds=new Set();
   for(const x of h){if((+x.w||0)!==W)break;n++;if(x.clean&&!ds.has(x.date)&&x.sets.length>=t.sets&&x.sets.every(r=>r>=t.goal)){ds.add(x.date);q++}}
@@ -1097,6 +1101,8 @@ async function phOpen(id,cmp){const a=(S.photos||[]).slice().sort((x,y)=>x.d<y.d
   const one=await u(id),two=cmp&&first&&first.id!==id?await u(first.id):'';
   modal(`<h3>${fmtD(x.d)}</h3>${two?`<div class="phc"><figure><img src="${two}" alt=""><figcaption>${fmtD(first.d)}</figcaption></figure><figure><img src="${one}" alt=""><figcaption>${fmtD(x.d)}</figcaption></figure></div>`:`<img class="cimg" src="${one}" alt="">`}
   <div class="row mt">${first&&first.id!==id&&!cmp?`<button class="btn sp" data-a="phCmp" data-id="${esc(id)}">${tr('قارن بأول صورة','Compare with the first')}</button>`:''}<button class="btn dan" data-a="phDel" data-id="${esc(id)}">${T().del}</button><button class="btn ghost" data-a="closeM">${T().close}</button></div>`)}
+function gymHtml(){const G=[{id:'main',name:tr('الأساسي','Main')}].concat(S.gyms||[]),cur=gymId();
+  return `<div class="gyr"><span>${tr('الجيم','Gym')}:</span>${G.map(g=>`<button class="${g.id===cur?'on':''}" data-a="gymSet" data-id="${esc(g.id)}">${esc(g.name)}</button>`).join('')}<button data-a="gymAdd" aria-label="${tr('جيم جديد','New gym')}">+</button></div>`}
 function offerUndo(msg,snap){const el=$('#undo');if(!el)return;UND=snap;el.querySelector('span').textContent=msg;const b=el.querySelector('button');b.textContent=tr('تراجع','Undo');
   b.onclick=()=>{if(!UND)return;const o=JSON.parse(UND);UND=null;Object.assign(S,o);if(!o.fbDay)delete S.fbDay;save();queueBackup();el.classList.remove('on');if(!$('#sess').hidden&&!S.draft)closeSession();else if(S.draft&&$('#sess').hidden&&o.draft&&tab==='home')renderHome();go(tab);toast(tr('رجعت ✓','Restored ✓'))};
   el.classList.add('on');clearTimeout(offerUndo.t);offerUndo.t=setTimeout(()=>{el.classList.remove('on');UND=null},7000)}
@@ -1254,6 +1260,7 @@ function renderHome(){
       ${coreOf(pl.ex)}
       ${cp?`<div class="cbdh">${tr('جلسة الرجوع المقترحة','Suggested comeback session')} · <bdi class="en">${esc(cp.dayName)}</bdi></div><div class="dl">${rowsOf(cp.ex)}</div>${coreOf(cp.ex)}`:''}
       <div class="dwk">${L.weekOf(wk)}${(()=>{const n=wkStreak();return n>=2?` · <span class="stk">${tr(`${n} أسابيع ورا بعض حققت الهدف`,`${n} weeks in a row on target`)}</span>`:''})()}</div>
+      ${gymHtml()}
       ${protHtml()}
       <div class="dlk"><button class="plink" data-a="rule">${tr('إزاي التطبيق بيحسب الزيادة؟','How is progression decided?')}</button></div>
       <div class="dlk"><button class="plink" data-a="rtOpen">${tr('تايمر جولات (كوندشننج)','Round timer (conditioning)')}</button></div>
@@ -1265,7 +1272,7 @@ function renderHome(){
 }
 
 /* ================= الجلسة ================= */
-function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),h=hh.find(x=>!x.cb)||hh[0];return{exId:t.id,name:t.name,unit:t.unit||'',core:!!t.core,goal:t.goal,tsets:t.sets,treps:t.reps,note0:t.note||libHow(t.name),w:src?src.w:(h?h.w:t.w),sets:src?src.sets.map(String):Array(t.sets).fill(''),ss:!!(src?src.ss:t.ss),ws:src&&src.ws?src.ws.map(String):[],rir:src&&src.rir!=null?src.rir:null,dur:src&&src.dur?src.dur.slice():[],clean:src?!!src.clean:true,note:src?src.note||'':''}}
+function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),g=gymId(),h=hh.find(x=>!x.cb&&x.gym===g)||hh.find(x=>!x.cb)||hh[0];return{exId:t.id,name:t.name,unit:t.unit||'',core:!!t.core,goal:t.goal,tsets:t.sets,treps:t.reps,note0:t.note||libHow(t.name),w:src?src.w:(h?h.w:t.w),sets:src?src.sets.map(String):Array(t.sets).fill(''),ss:!!(src?src.ss:t.ss),ws:src&&src.ws?src.ws.map(String):[],rir:src&&src.rir!=null?src.rir:null,dur:src&&src.dur?src.dur.slice():[],clean:src?!!src.clean:true,note:src?src.note||'':''}}
 async function startSession(id){
   if(S.draft&&!dEmpty(S.draft)&&!await ask(T().confNew))return;
   const pd=planDraft(id,id==='FB'?cbNow():null);
@@ -1277,7 +1284,7 @@ async function editSession(id){
   const s=S.sessions.find(x=>x.id===id);if(!s)return;
   if(S.draft&&!await ask(T().confEditOver))return;
   const d=S.program.days.find(x=>x.id===s.day);
-  S.draft={id:s.id,editing:s.id,date:s.date,day:s.day,dayName:s.dayName,cycle:s.cycle,ex:[]};if(s.cb)S.draft.cb=s.cb;
+  S.draft={gym:s.gym,id:s.id,editing:s.id,date:s.date,day:s.day,dayName:s.dayName,cycle:s.cycle,ex:[]};if(s.cb)S.draft.cb=s.cb;
   const ex=s.ex.map(e=>{const t=d&&d.ex.find(x=>x.id===e.exId)||{id:e.exId,name:e.name,unit:e.unit,core:e.core,goal:e.goal,sets:e.tsets||e.sets.length,reps:e.treps||e.sets[0],note:''};return draftEx(t,e)});
   if(d)for(const t of d.ex)if(!ex.some(e=>e.exId===t.id)){const e=draftEx(t);if(s.cb)cbApply(e,s.cb);ex.push(e)}
   S.draft.ex=ex;openTips.clear();save();closeModal(true);openSession();
@@ -1454,8 +1461,8 @@ function buildFromDraft(){
   if(!ex.length)return null;
   const core=d.ex.filter(e=>e.core).every(e=>ex.some(x=>x.exId===e.exId));
   const all=d.ex.every(e=>ex.some(x=>x.exId===e.exId));
-  const o={rdy:d.rdy,id:d.editing||d.id,date:d.date||today(),day:d.day,dayName:d.dayName,cycle:+num(d.cycle)||1,ex,status:all?'full':core?'core':'part',ts:Date.now()};
-  if(d.cb)o.cb=d.cb;if(o.rdy==null)delete o.rdy;return o;
+  const o={gym:d.gym||gymId(),rdy:d.rdy,id:d.editing||d.id,date:d.date||today(),day:d.day,dayName:d.dayName,cycle:+num(d.cycle)||1,ex,status:all?'full':core?'core':'part',ts:Date.now()};
+  if(d.cb)o.cb=d.cb;if(o.rdy==null)delete o.rdy;if(o.gym==='main')delete o.gym;return o;
 }
 function persistDraft(){
   const d=S.draft,s=buildFromDraft();
@@ -1492,8 +1499,26 @@ function statsHtml(ds){if(!ds.length)return '';
   const mg={};for(const x of ds){if(daysAgo(x.date)>6||daysAgo(x.date)<0)continue;for(const e of x.ex){const L=libGet(e.name),g=L?L[1]:'';if(!g||g==='cond')continue;mg[g]=(mg[g]||0)+e.sets.length}}
   const rows=Object.keys(GRP).filter(g=>mg[g]).map(g=>`<div class="mgr"><span>${GRP[g][LANG==='ar'?0:1]}</span><i style="width:${Math.min(100,mg[g]/20*100).toFixed(0)}%"></i><b class="en">${mg[g]}</b></div>`).join('');
   return `<details class="fsec sts" data-fk="stats"${fOpen.has('stats')?' open':''}><summary>${tr('الإحصائيات','Stats')}<span class="pchev">⌄</span></summary><div class="fbody">
+    <div class="row" style="margin-bottom:12px"><button class="btn sp" data-a="rep" data-d="7">${tr('تقرير الأسبوع','Weekly report')}</button><button class="btn sp" data-a="rep" data-d="30">${tr('تقرير الشهر','Monthly report')}</button></div>
     <div class="mu">${tr('جلسات كل أسبوع (آخر 16 أسبوع، الأحدث على الطرف). الدهبي = حققت 3','Sessions per week (last 16 weeks, newest at the end). Gold = hit 3')}</div><div class="wkb" dir="ltr">${bars}</div>
     ${rows?`<div class="mu" style="margin-top:14px">${tr('مجموعات كل عضلة في آخر 7 أيام (10–20 في الأسبوع مدى كويس للنمو)','Sets per muscle in the last 7 days (10–20 a week is a good range for growth)')}</div><div class="mgs">${rows}</div>`:''}</div></details>`}
+/* v125: تقرير أسبوعي / شهري */
+function reportText(days){const ds=done(),inP=x=>{const a=daysAgo(x.date);return a>=0&&a<days},cur=ds.filter(inP),prev=ds.filter(x=>!inP(x)&&daysAgo(x.date)>=0);
+  const L=[tr(`تقرير آخر ${days} يوم — ${today()}`,`Report for the last ${days} days — ${today()}`),''];
+  const sets=cur.reduce((a,x)=>a+x.ex.reduce((b,e)=>b+e.sets.length,0),0),vol=cur.reduce((a,x)=>a+x.ex.reduce((b,e)=>b+(e.unit?0:e.sets.reduce((c,r,j)=>c+r*(+(e.ws&&e.ws[j])||+e.w||0),0)),0),0);
+  L.push(`${tr('الجلسات','Sessions')}: ${cur.length}${days===7?` (${tr('الهدف 3','goal 3')})`:` (${tr('متوسط','avg')} ${(cur.length/(days/7)).toFixed(1)} ${tr('في الأسبوع','per week')})`}`);
+  L.push(`${tr('إجمالي المجموعات','Total sets')}: ${sets} · ${tr('الحجم (وزن × عدّات)','Volume (weight × reps)')}: ${Math.round(vol)} kg`);
+  const pr=[],up=[],stk=[];const seen=new Set();
+  for(const x of cur)for(const e of x.ex){const k=nk(e.name);if(e.unit||seen.has(k))continue;seen.add(k);const w=Math.max(...cur.filter(q=>q.ex.some(z=>nk(z.name)===k)).map(q=>+q.ex.find(z=>nk(z.name)===k).w||0));
+    const pw=Math.max(0,...prev.flatMap(q=>q.ex.filter(z=>nk(z.name)===k).map(z=>+z.w||0)));if(pw>0&&w>pw)pr.push(`${e.name}: ${pw} → ${w} kg`);
+    const ps=progState({sets:e.tsets||3,goal:e.goal||12},exHist(e.exId));if(ps&&ps.k==='up')up.push(e.name);if(ps&&ps.k==='stuck')stk.push(e.name)}
+  L.push('',tr('أوزان جديدة','New weights')+':',...(pr.length?pr.map(x=>'- '+x):['- '+tr('مفيش','none')]));
+  if(up.length)L.push('',tr('استحقيت زيادة في','Increase earned on')+':',...up.map(x=>'- '+x));
+  if(stk.length)L.push('',tr('واقف من غير زيادة','Stalled')+':',...stk.map(x=>'- '+x));
+  const b=(S.body||[]).filter(x=>daysAgo(x.d)>=0&&daysAgo(x.d)<days&&x.w>0).sort((x,y)=>x.d<y.d?-1:1);if(b.length>1)L.push('',`${tr('وزن الجسم','Bodyweight')}: ${b[0].w} → ${b[b.length-1].w} kg`);
+  const cbx=cur.filter(x=>x.cb).length;if(cbx)L.push('',`${tr('جلسات رجوع أو خفيفة','Comeback/light sessions')}: ${cbx}`);
+  return L.join('\n')}
+function reportModal(days){const t=reportText(days);modal(`<h3>${days===7?tr('تقرير الأسبوع','Weekly report'):tr('تقرير الشهر','Monthly report')}</h3><pre class="cardtxt">${esc(t)}</pre><div class="row"><button class="btn pri sp" data-a="repCopy" data-d="${days}">${tr('انسخ','Copy')}</button><button class="btn sp" data-a="repShare" data-d="${days}">${tr('شارك للتحليل','Share for analysis')}</button></div><button class="btn ghost w mt" data-a="closeM">${T().close}</button>`)}
 function renderHistory(){
   const L=T(),ds=done();hsList=ds;hsN=0;hsLast='';
   const hm=histMap(),inProg=new Set(S.program.days.flatMap(d=>d.ex.map(t=>nk(t.name))));
@@ -1719,7 +1744,8 @@ let libQ='',libG='all',libFor='prog';
 function libRowsHtml(){
   const q=libQ.trim().toLowerCase();
   const sx=(libFor==='sess'||libFor==='swap')&&S.draft,inS=n=>sx&&S.draft.ex.some(e=>nk(e.name)===nk(n));
-  return allLib().filter(x=>(libG==='all'||x[1]===libG)&&lbMatch(x,q)).map(x=>`<div class="prow" data-a="${sx?(libFor==='swap'?'sxSwap':'sxAdd'):'libAdd'}" data-n="${esc(x[0])}"><div class="sp"><div class="nm en">${esc(x[0])}</div><div class="mu">${(GRP[x[1]]||GRP.core)[LANG==='ar'?0:1]} · <span class="en">${x[3]}×${x[4]}</span></div></div><span class="icb">${inS(x[0])?'✓':'+'}</span></div>`).join('')||`<div class="empty">—</div>`;
+  const sf=n=>{const m=typeof META!=='undefined'&&META[n];return m&&(m.eq==='mach'||m.eq==='cable')?0:m&&m.eq==='bb'?2:1};let li=allLib().filter(x=>(libG==='all'||x[1]===libG)&&lbMatch(x,q));if(S.settings.safe||libFor==='swap')li=li.slice().sort((a,b)=>sf(a[0])-sf(b[0]));
+  return li.map(x=>`<div class="prow" data-a="${sx?(libFor==='swap'?'sxSwap':'sxAdd'):'libAdd'}" data-n="${esc(x[0])}"><div class="sp"><div class="nm en">${esc(x[0])}</div><div class="mu">${(GRP[x[1]]||GRP.core)[LANG==='ar'?0:1]} · <span class="en">${x[3]}×${x[4]}</span></div></div><span class="icb">${inS(x[0])?'✓':'+'}</span></div>`).join('')||`<div class="empty">—</div>`;
 }
 function libModal(){
   const rows=libRowsHtml();
@@ -1788,7 +1814,7 @@ async function deriveKey(pass,salt,iter){
 }
 async function sealBytes(key,bytes){const iv=crypto.getRandomValues(new Uint8Array(12));return{iv,ct:new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,bytes))}}
 /* كل اللي محتاجينه عشان الاسترجاع يرجّع كل حاجة (نفس الشكل في الملف وGitHub) */
-const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],libOv:S.libOv||{},exNotes:S.exNotes||{},steps:S.steps||{},body:S.body||[],mig:S.mig||0,fbDay:S.fbDay||null,dl:S.dl||null,prot:S.prot||null});
+const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],libOv:S.libOv||{},exNotes:S.exNotes||{},steps:S.steps||{},body:S.body||[],mig:S.mig||0,fbDay:S.fbDay||null,dl:S.dl||null,prot:S.prot||null,gyms:S.gyms||[]});
 async function packBackup(){
   const payload=enc.encode(JSON.stringify({app:'gymlog',v:1,at:Date.now(),data:snapData()}));
   let z=null;try{z=await pipe(payload,new CompressionStream('gzip'))}catch(e){}
@@ -1904,7 +1930,7 @@ function cleanSession(s){
   const ex=s.ex.filter(e=>e&&typeof e.name==='string'&&Array.isArray(e.sets)).map(cleanEx);
   const cb=s.cb&&typeof s.cb==='object'?{k:s.cb.k==='fb'?'fb':'lt',dl:s.cb.dl?1:undefined,p:nn(s.cb.p,.3,1,.9),g:nn(s.cb.g,0,9999,8),i:nn(s.cb.i,0,9,0),n:nn(s.cb.n,1,9,1)}:undefined;
   const o={id:String(s.id||uid()),date:s.date,day:String(s.day||''),dayName:String(s.dayName||s.day||'?').slice(0,80),cycle:nn(s.cycle,1,9999,1),status:['full','core','part','imp'].includes(s.status)?s.status:'part',ts:nn(s.ts,0,9e15,new Date(s.date+'T12:00:00').getTime()),ex};
-  if(s.imp)o.imp=1;if(cb)o.cb=cb;if(s.rdy!=null)o.rdy=nn(s.rdy,0,2,1);return o;
+  if(s.imp)o.imp=1;if(cb)o.cb=cb;if(s.gym&&typeof s.gym==='string')o.gym=s.gym.slice(0,40);if(s.rdy!=null)o.rdy=nn(s.rdy,0,2,1);return o;
 }
 function cleanRestore(d){
   if(!d||!d.program||!Array.isArray(d.program.days)||!Array.isArray(d.sessions))throw new Error('fmt');
@@ -1918,7 +1944,7 @@ async function applyRestore(d){
   if(!await ask(T().confRestore(c.ss.length),{danger:1}))return false;
   /* نسخة من اللي على الموبايل قبل الاسترجاع، عشان «تراجع» */
   try{await idb.set('state.prerestore',{at:Date.now(),data:JSON.parse(JSON.stringify(S))})}catch(e){}
-  S={v:1,photos:(S&&S.photos)||[],program:Object.assign({},d.program,{days:c.days}),sessions:c.ss,settings:Object.assign({cycle:1},d.settings&&typeof d.settings==='object'?d.settings:{},{lang:LANG}),draft:null,fbDay:d.fbDay&&Array.isArray(d.fbDay.ex)?{id:'FB',name:String(d.fbDay.name||'Full Body').slice(0,40),ex:d.fbDay.ex.filter(t=>t&&t.id&&typeof t.name==='string').map(cleanT)}:undefined,sys:d.sys||undefined,custom:Array.isArray(d.custom)?d.custom:[],libOv:(d.libOv&&typeof d.libOv==='object')?d.libOv:{},exNotes:(d.exNotes&&typeof d.exNotes==='object')?d.exNotes:{},steps:(d.steps&&typeof d.steps==='object')?d.steps:{},body:Array.isArray(d.body)?d.body:[],mig:Math.max(+d.mig||0,HIST_MIG)};
+  S={v:1,gyms:Array.isArray(d.gyms)?d.gyms.filter(g=>g&&typeof g.id==='string'&&typeof g.name==='string').map(g=>({id:g.id.slice(0,40),name:g.name.slice(0,20)})):[],photos:(S&&S.photos)||[],program:Object.assign({},d.program,{days:c.days}),sessions:c.ss,settings:Object.assign({cycle:1},d.settings&&typeof d.settings==='object'?d.settings:{},{lang:LANG}),draft:null,fbDay:d.fbDay&&Array.isArray(d.fbDay.ex)?{id:'FB',name:String(d.fbDay.name||'Full Body').slice(0,40),ex:d.fbDay.ex.filter(t=>t&&t.id&&typeof t.name==='string').map(cleanT)}:undefined,sys:d.sys||undefined,custom:Array.isArray(d.custom)?d.custom:[],libOv:(d.libOv&&typeof d.libOv==='object')?d.libOv:{},exNotes:(d.exNotes&&typeof d.exNotes==='object')?d.exNotes:{},steps:(d.steps&&typeof d.steps==='object')?d.steps:{},body:Array.isArray(d.body)?d.body:[],mig:Math.max(+d.mig||0,HIST_MIG)};
   if(S.draft&&(!Array.isArray(S.draft.ex)))S.draft=null;
   save();queueBackup();toast(c.bad?T().restoredSkip(c.bad):T().restored);go('home');return true;
 }
@@ -2093,6 +2119,7 @@ function renderData(){
     ${persisted===true?`<div class="mu">✓ ${L.persisted}</div>`:''}</div>
   <div class="thseg" role="group" aria-label="${L.themeT}"><button class="${(S.settings.theme||'iron')==='iron'?'on':''}" data-a="theme" data-k="iron">${THEMES.iron[LANG]}</button><button class="${S.settings.theme==='morning'?'on':''}" data-a="theme" data-k="morning">${THEMES.morning[LANG]}</button></div>
   <div class="qrow"><div class="mu">${tr('حجم الخط','Text size')}</div><div class="thseg">${[1,2,3].map(k=>`<button class="${(+S.settings.fs||1)===k?'on':''}" data-a="fs" data-k="${k}" style="font-size:${[14,16,18][k-1]}px">${[tr('عادي','Normal'),tr('أكبر','Larger'),tr('كبير','Large')][k-1]}</button>`).join('')}</div></div>
+  <div class="qrow"><div class="mu">${tr('ملف أمان: في الاقتراحات والتبديل والفول بادي، الأجهزة والكابل بيطلعوا الأول (أقل خطورة من الأوزان الحرة).','Safety profile: machines and cables come first in suggestions, swaps and the full body (lower risk than free weights).')}</div><div class="thseg"><button class="${S.settings.safe?'on':''}" data-a="safe" data-k="on">${tr('شغّال','On')}</button><button class="${S.settings.safe?'':'on'}" data-a="safe" data-k="off">${tr('مقفول','Off')}</button></div></div>
   <div class="qrow"><div class="mu">${tr('وضع رمضان: مجموعة أقل في كل تمرين، وراحة أطول 30 ثانية. أحسن وقت للتمرين بعد الفطار بساعة ونص لساعتين.','Ramadan mode: one set less per exercise and 30 s longer rests. Best time to train is 1.5–2 hours after iftar.')}</div><div class="thseg"><button class="${S.settings.ram?'on':''}" data-a="ram" data-k="on">${tr('شغّال','On')}</button><button class="${S.settings.ram?'':'on'}" data-a="ram" data-k="off">${tr('مقفول','Off')}</button></div></div>
   <div class="qrow"><div class="mu">${tr('بيت الشعر: دوسة = نسخ · سحب = تنقل','Verse: tap = copy · swipe = browse')}</div><div class="thseg"><button class="${qGestOn()?'on':''}" data-a="qGest" data-k="on">${tr('شغّال','On')}</button><button class="${qGestOn()?'':'on'}" data-a="qGest" data-k="off">${tr('مقفول','Off')}</button></div></div>
   ${bodySec()}
@@ -2214,6 +2241,13 @@ document.addEventListener('click',ev=>{
     case 'phOpen':phOpen(b.dataset.id);break;
     case 'phCmp':phOpen(b.dataset.id,true);break;
     case 'phDel':ask(tr('تمسح الصورة دي نهائيًا؟','Delete this photo permanently?'),{danger:1}).then(async ok=>{if(!ok)return;const id=b.dataset.id;S.photos=(S.photos||[]).filter(x=>x.id!==id);try{await idb.set('ph:'+id,null)}catch(e){}save();closeModal();renderData()});break;
+    case 'rep':reportModal(+b.dataset.d);break;
+    case 'repCopy':copy(reportText(+b.dataset.d));break;
+    case 'repShare':shareText(reportText(+b.dataset.d));break;
+    case 'gymSet':{S.settings.gym=b.dataset.id==='main'?'':b.dataset.id;save();renderHome();const det=document.querySelector('.dtl');if(det)det.open=true;toast(tr('الأوزان هتتاخد من آخر مرة في الجيم ده','Weights now come from your last time at this gym'));break}
+    case 'gymAdd':modal(`<h3>${tr('جيم جديد','New gym')}</h3><div class="mu" style="margin-bottom:8px">${tr('للسفر أو جيم تاني بأجهزة مختلفة. كل جيم بيفتكر أوزانه لوحده.','For travel or another gym with different machines. Each gym remembers its own weights.')}</div><label class="fld">${tr('الاسم','Name')}<input class="inp" id="gymN" maxlength="20"></label><div class="row"><button class="btn pri sp" data-a="gymSave">${T().saveB}</button><button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);break;
+    case 'gymSave':{const n=($('#gymN').value||'').trim();if(!n){toast(T().nameReq);break}S.gyms=S.gyms||[];const g={id:'g'+uid(),name:n};S.gyms.push(g);S.settings.gym=g.id;save();closeModal();go('home');break}
+    case 'safe':S.settings.safe=b.dataset.k==='on'?1:0;save();renderData();break;
     case 'clean':{const e=d.ex[curEx];e.clean=!e.clean;saveSoon();renderSession();break}
     case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
     case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value),mx={};for(const [k] of BMX){const v=num(($('#b_'+k)||{}).value);if(v>0&&v<400)mx[k]=v}if(!(w>0)&&!(c>0)&&!Object.keys(mx).length){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}
