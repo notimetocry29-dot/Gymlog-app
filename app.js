@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='146';
+const VER='147';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -752,7 +752,7 @@ const sRack=(a,t,v)=>{sTick(a,t,2600,v*.7);sNz(a,t+.01,.08,1500,2.5,v*.35,'bandp
 /* v146: أصوات حديد تقيلة بس — مفيش أجراس ولا صفارات، والرنّة قصيرة ومكتومة */
 function snd(k){if(!sndOn(k==='charge'?'orb':k))return;const a=acGet();if(!a)return;const t=a.currentTime+.015;
   if(k==='ui'){sThump(a,t,.4);sTick(a,t,1900,.9);sClank(a,t,640,.16,.07)}
-  else if(k==='tab'){sThump(a,t,.6);sClank(a,t,1050,.3,.14);sTick(a,t,3000,.4)}
+  else if(k==='tab')sRack(a,t,.5);
   else if(k==='orb'){sRack(a,t,.6);sThump(a,t+.2,1);sClank(a,t+.2,430,.42,.28);sNz(a,t+.2,.3,160,.7,.3,'lowpass')}
   else if(k==='charge'){for(let n=0,x=0;n<9;n++){x+=.11*Math.pow(.86,n);sTick(a,t+x,2200+n*120,.55);sClank(a,t+x,700+n*30,.12,.05)}sNz(a,t,.8,110,.8,.35,'lowpass',220,.5)}
   else if(k==='start')sRack(a,t,.55);
@@ -1798,7 +1798,7 @@ function renderData(){
   <details class="fsec" data-fk="snd"${fOpen.has('snd')?' open':''}><summary>${tr('الأصوات والاهتزاز','Sounds & vibration')}<span class="fst">${SND_K.some(sndOn)?tr('شغّالة','On'):tr('مقفولة','Off')}</span><span class="pchev">⌄</span></summary><div class="fbody">
     <div class="mu" style="margin-bottom:8px">${tr('التطبيق مايعرفش إن الموبايل على الصامت، فاقفل الأصوات من هنا لو محتاج.','The app can’t tell when your phone is on silent, so turn sounds off here if needed.')}</div>
     ${swRow('sndT',sndOn('orb'),tr('الدايرة','The circle'),tr('تعمير وضربة تقيلة لما تبدأ، وشحن وانت ضاغط','A rack and heavy hit when you start, a charge-up while you hold'),'orb')}
-    ${swRow('sndT',sndOn('tab'),tr('التنقل','Navigation'),tr('خبطة حديد وانت بتقلب التابات وبين التمارين','A steel hit when switching tabs and exercises'),'tab')}
+    ${swRow('sndT',sndOn('tab'),tr('التنقل','Navigation'),tr('صوت تعمير وانت بتقلب التابات وبين التمارين','A rack when switching tabs and exercises'),'tab')}
     ${swRow('sndT',sndOn('ui'),tr('الأزرار','Buttons'),tr('تكّة حديد تقيلة مع كل دوسة','A heavy steel click on every tap'),'ui')}
     ${swRow('sndT',sndOn('start'),tr('بداية المجموعة','Set start'),tr('صوت تعمير لما تبدأ الساعة','A rack when the stopwatch starts'),'start')}
     ${swRow('sndT',sndOn('log'),tr('تسجيل المجموعة','Set logged'),tr('ضربة قفل تأكد إنها اتسجلت','A lock-in hit confirming it was logged'),'log')}
