@@ -540,7 +540,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='109';
+const VER='110';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -838,7 +838,9 @@ function planDraft(id,c){
 }
 const cbPct=cb=>Math.round(cb.p*100)+'%';
 const cbLine=cb=>tr(`رجوع بعد ${cb.g} يوم · الأوزان ${cbPct(cb)} · سيب في إيدك 2–3 عدّات`,`Back after ${cb.g} days · weights ${cbPct(cb)} · leave 2–3 reps in the tank`);
-function cbCard(c){
+function cbCard(c,open){
+  const ar0=LANG==='ar';
+  if(!c)return `<button class="cbh" data-a="cbGo"><b>${tr('جلسة رجوع مفتوحة','Comeback session in progress')}</b><span class="cbgo">${tr('كمّل جلسة الرجوع','Continue the comeback session')} ${ar0?'‹':'›'}</span></button>`;
   const nm=s=>s.k==='fb'?tr('فول بادي','Full body'):tr('مخففة','Light'),ar=LANG==='ar',sep=`<i>${ar?'‹':'›'}</i>`;
   /* الخطوات اللي عدّت بتتعلّم بالجلسة اللي اتلعبت فعلًا (رجوع أو يوم عادي) */
   const pills=c.st.map((s,k)=>{if(k<c.i){const a=c.after[k];return `<span class="ok">✓ ${a&&a.cb?nm(a.cb)+' <bdi class="en">'+cbPct(a.cb)+'</bdi>':'<bdi class="en">'+esc(dayBase(a?a.dayName:''))+'</bdi>'}</span>`}
@@ -846,12 +848,15 @@ function cbCard(c){
   const dn=c.step.k==='fb'?'':day(nextDayId()).name;
   const how=c.step.k==='fb'?tr(`فول بادي: مجموعتين لكل تمرين، والأوزان ${cbPct(c.step)} من أوزانك قبل الغياب.`,`Full body: two sets per exercise, weights at ${cbPct(c.step)} of your pre-break weights.`)
     :tr(`<bdi class="en">${esc(dn)}</bdi> مخففة: مجموعة أقل في كل تمرين، والأوزان ${cbPct(c.step)} من أوزانك قبل الغياب.`,`${esc(dn)}, light: one set less per exercise, weights at ${cbPct(c.step)} of your pre-break weights.`);
-  return `<button class="cbh" data-a="cbGo"><b>${tr(`رجوع بعد ${c.g} يوم`,`Back after ${c.g} days`)}</b><span class="cbt">${how} ${tr('وقّف وانت لسه قادر على 2–3 عدّات.','Stop each set with 2–3 reps left.')}</span><span class="cbs" dir="${ar?'rtl':'ltr'}">${pills}</span><span class="cbgo">${tr('ابدأ جلسة الرجوع','Start the comeback session')} ${ar?'‹':'›'}</span></button>`;
+  return `<button class="cbh" data-a="cbGo"><b>${tr(`رجوع بعد ${c.g} يوم`,`Back after ${c.g} days`)}</b><span class="cbt">${how} ${tr('وقّف وانت لسه قادر على 2–3 عدّات.','Stop each set with 2–3 reps left.')}</span><span class="cbs" dir="${ar?'rtl':'ltr'}">${pills}</span><span class="cbgo">${open?tr('كمّل جلسة الرجوع','Continue the comeback session'):tr('ابدأ جلسة الرجوع','Start the comeback session')} ${ar?'‹':'›'}</span></button>`;
 }
 /* اقتراح بس: بيتفتح لما تدوس على الكارت. الدايرة و«ابدأ يوم تاني» والبرنامج بيفتحوا يومك العادي بأوزانك */
+const dEmpty=d=>!!d&&!d.editing&&!(d.ex||[]).some(e=>(e.sets||[]).some(v=>String(v).trim()!==''));
 function startComeback(){
+  /* جلسة الرجوع مفتوحة بالفعل: كمّلها */
+  if(S.draft&&S.draft.cb&&!S.draft.editing){openSession();return}
   const c=cbNow();if(!c)return;
-  if(S.draft&&!confirm(T().confNew))return;
+  if(S.draft&&!dEmpty(S.draft)&&!confirm(T().confNew))return;
   S.draft=null;S.draft=planDraft(c.step.k==='fb'?'FB':nextDayId(),c);
   openTips.clear();save();openSession();
 }
@@ -1050,8 +1055,8 @@ let qx=0,qy=0,qOn=false,qSw=0;
 document.addEventListener('touchstart',e=>{qOn=qGestOn()&&tab==='home'&&e.touches.length===1&&!!e.target.closest('.qt');if(qOn){qx=e.touches[0].clientX;qy=e.touches[0].clientY}},{passive:true});
 document.addEventListener('touchend',e=>{if(!qOn)return;qOn=false;const t=e.changedTouches[0],dx=t.clientX-qx,dy=t.clientY-qy;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){qSw=Date.now();quoteNav(dx<0?-1:1)}},{passive:true});
 function renderHome(){
-  const L=T(),dr=S.draft,ds=done(),c=dr?null:cbNow();
-  /* v108: بعد أي غياب الرئيسية بتقترح جلسة الرجوع لوحدها (فول بادي أو يوم مخفف) */
+  const L=T(),ds=done(),c=cbNow(),dcb=!!(S.draft&&S.draft.cb&&!S.draft.editing),dr=dcb?null:S.draft;
+  /* v110: المستطيل بيظهر طول ما شروط الرجوع قايمة، حتى لو فيه جلسة مفتوحة. الدايرة = يومك العادي، والمستطيل = الرجوع */
   const nd=dr?(dr.day||nextDayId()):nextDayId(),fb=nd==='FB';
   const pl=dr||planDraft(nd,null),dName=String(pl.dayName||'').replace(/ · Light$/,''),cp=c?planDraft(c.step.k==='fb'?'FB':nextDayId(),c):null;
   const wk=ds.filter(s=>daysAgo(s.date)>=0&&daysAgo(s.date)<7).length,days=S.program.days,cc=+pl.cycle||pl.cycle;
@@ -1077,7 +1082,7 @@ function renderHome(){
       <span class="oc"><span class="on1"><bdi>${esc(dName)}</bdi></span><span class="on2">${tag}</span></span>
     </button>
     <div class="oline${ds.length&&wk<3?' lo':''}"><span class="en">Cycle ${cc}</span>${last}</div>
-    ${c?cbCard(c):''}
+    ${c?cbCard(c,dcb):dcb?cbCard(null,true):''}
     ${homeQuote(ds,wk,dr)}
     </div>
     <details class="dtl"><summary>${tr('التفاصيل','Details')}${al?'<i class="aldot"></i>':''}</summary>
@@ -1095,7 +1100,7 @@ function renderHome(){
 /* ================= الجلسة ================= */
 function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),h=hh.find(x=>!x.cb)||hh[0];return{exId:t.id,name:t.name,unit:t.unit||'',core:!!t.core,goal:t.goal,tsets:t.sets,treps:t.reps,note0:t.note||libHow(t.name),w:src?src.w:(h?h.w:t.w),sets:src?src.sets.map(String):Array(t.sets).fill(''),dur:src&&src.dur?src.dur.slice():[],clean:src?!!src.clean:false,note:src?src.note||'':''}}
 function startSession(id){
-  if(S.draft&&!confirm(T().confNew))return;
+  if(S.draft&&!dEmpty(S.draft)&&!confirm(T().confNew))return;
   S.draft=null;
   S.draft=planDraft(id,null);
   openTips.clear();save();openSession();
