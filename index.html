@@ -409,6 +409,7 @@ html[data-fs="3"] #view>:not(.homew),html[data-fs="3"] .mbox,html[data-fs="3"] .
 .prh{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:var(--tx2);margin-bottom:8px}.prg{background:none;border:0;border-bottom:1px dotted var(--mu);color:inherit;font:inherit;padding:0}
 .prb{display:flex;gap:6px;justify-content:center;margin-top:10px}.prb button{flex:1;border:1px solid var(--bd);background:none;color:var(--tx2);border-radius:10px;min-height:40px;font:inherit;font-size:14px}
 .rdy{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;margin:0 16px 8px;font-size:13px;color:var(--mu)}.rdy button{border:1px solid var(--bd);background:none;color:var(--tx2);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;min-height:34px}
+.stk{color:var(--ac2)}
 .pfbn{font-size:13px;line-height:1.7;color:var(--mu);margin:0 2px 10px}
 .cbdh{margin:16px 0 6px;font-size:13px;color:var(--mu);text-align:start}
 .sxs{margin:0 0 10px}
@@ -592,7 +593,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='119';
+const VER='120';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -804,7 +805,7 @@ async function boot(){
   const fresh=!a&&!b;
   S=(a&&b)?((b.at||0)>(a.at||0)?b:a):(a||b||seed());
   /* v87: أول فتح خالص: ثيم Iron، دورة ١، ومن غير رسايل ترحيل قديمة */
-  if(fresh){S.mig=5;S.settings.theme='iron';S.settings.cycle=1;S.settings.lang='';S.settings.howLang=/^en/i.test(navigator.language||'')?'en':'ar'}
+  if(fresh){S.onb=1;S.mig=6;S.settings.theme='iron';S.settings.cycle=1;S.settings.lang='';S.settings.howLang=/^en/i.test(navigator.language||'')?'en':'ar'}
   S.settings=S.settings||{};
   if(!S.settings.lang)S.settings.lang=/^ar/i.test(navigator.language||'')?'ar':'en';
   LANG=S.settings.lang;
@@ -1039,6 +1040,15 @@ function rtEnd(done){clearInterval(RT&&RT.iv);RT=null;wakeOff();const el=$('#rtv
 const protToday=()=>{const p=S.prot;return p&&p.d===today()?+p.g||0:0};
 function protHtml(){const g=protToday(),G=+S.settings.protG||150,pc=Math.min(100,g/G*100);
   return `<div class="prt"><div class="prh"><span>${tr('بروتين النهارده','Protein today')}</span><b class="en">${g} / <button class="prg" data-a="protG">${G}</button> g</b></div><div class="rsb"><i style="width:${pc.toFixed(0)}%"></i></div><div class="prb">${[20,30,40].map(v=>`<button data-a="protAdd" data-v="${v}">+${v}</button>`).join('')}${g?`<button data-a="protAdd" data-v="-10">−10</button>`:''}</div></div>`}
+/* v120: الأسابيع ورا بعض اللي حققت فيها هدف الـ 3 جلسات (الأسبوع بيبدأ السبت) */
+function wkStreak(){const ds=done();if(!ds.length)return 0;const wk=iso=>Math.floor((new Date(iso+'T12:00:00')-new Date('2000-01-01T12:00:00'))/(7*864e5));
+  const c={};for(const x of ds){const k=wk(x.date);c[k]=(c[k]||0)+1}const now=wk(today());let n=0,k=now;if((c[k]||0)<3)k--;while((c[k]||0)>=3){n++;k--}return n}
+const RULE=()=>tr('قاعدة الزيادة: الوزن بيزيد بس لما تلعب الهدف كامل (زي 3×12) بأداء نضيف في يومين منفصلين على نفس الوزن. بعد الزيادة تدخل بـ 8 عدّات وتبني تاني لحد الهدف. جلسات الرجوع والأسبوع الخفيف مابيتحسبوش.','Progression rule: add weight only after you hit the full target (e.g. 3×12) with clean form on two separate days at the same weight. After the increase, start at 8 reps and build back up. Comeback and deload sessions do not count.');
+function ruleModal(){modal(`<h3>${tr('إزاي التطبيق بيحسب الزيادة','How progression works')}</h3><div class="dsec" style="line-height:1.9">${RULE()}</div><div class="mu mt" style="line-height:1.8">${tr('لو 5 جلسات عدّت على نفس الوزن من غير زيادة، التطبيق بيقولك خطوة محددة تعملها. وبعد أي غياب 8 أيام أو أكتر، بيقترح جلسة رجوع.','If 5 sessions pass at one weight without an increase, the app suggests a concrete step. After any break of 8+ days it suggests a comeback session.')}</div><button class="btn w mt" data-a="closeM">${T().close}</button>`)}
+/* أول فتحة خالص: 3 خطوات */
+function onbModal(step){const st=step||1;
+  if(st===1)modal(`<h3>${tr('أهلًا بيك في چيم لوج','Welcome to Gym Log')}</h3><div class="mu" style="margin-bottom:12px">${tr('بتتمرن كام يوم في الأسبوع؟','How many days a week do you train?')}</div>${[['ul2',2],['fb3',3],['ul4',4],['ulppl5',5]].map(([id,n])=>`<button class="btn w mt" data-a="onbSys" data-id="${id}">${esc(sysName(SYSTEMS.find(x=>x.id===id)))}</button>`).join('')}<button class="btn w ghost mt" data-a="onbSkip">${tr('بعدين','Later')}</button>`);
+  else modal(`<h3>${tr('حاجتين مهمين','Two things that matter')}</h3><div class="dsec" style="line-height:1.9">${RULE()}</div><div class="dsec" style="line-height:1.9">${tr('أول أسبوع: الأوزان اللي ظاهرة مجرد بداية. اختار وزن تقدر تلعب بيه الهدف بأداء نضيف، والتطبيق هيفتكره ويبني عليه.','First week: the weights shown are only a starting point. Pick a weight you can hit the target with in clean form; the app remembers it and builds from there.')}</div><div class="dsec" style="line-height:1.9">${tr('بياناتك متخزنة على الموبايل ده بس. خد نسخة احتياطية من «الملف» كل فترة.','Your data lives only on this phone. Save a backup from «File» now and then.')}</div><button class="btn pri w mt" data-a="onbDone">${tr('يلا نبدأ','Let\'s start')}</button>`)}
 function offerUndo(msg,snap){const el=$('#undo');if(!el)return;UND=snap;el.querySelector('span').textContent=msg;const b=el.querySelector('button');b.textContent=tr('تراجع','Undo');
   b.onclick=()=>{if(!UND)return;const o=JSON.parse(UND);UND=null;Object.assign(S,o);if(!o.fbDay)delete S.fbDay;save();queueBackup();el.classList.remove('on');if(!$('#sess').hidden&&!S.draft)closeSession();else if(S.draft&&$('#sess').hidden&&o.draft&&tab==='home')renderHome();go(tab);toast(tr('رجعت ✓','Restored ✓'))};
   el.classList.add('on');clearTimeout(offerUndo.t);offerUndo.t=setTimeout(()=>{el.classList.remove('on');UND=null},7000)}
@@ -1195,8 +1205,9 @@ function renderHome(){
       <div class="dl">${rows}</div>
       ${coreOf(pl.ex)}
       ${cp?`<div class="cbdh">${tr('جلسة الرجوع المقترحة','Suggested comeback session')} · <bdi class="en">${esc(cp.dayName)}</bdi></div><div class="dl">${rowsOf(cp.ex)}</div>${coreOf(cp.ex)}`:''}
-      <div class="dwk">${L.weekOf(wk)}</div>
+      <div class="dwk">${L.weekOf(wk)}${(()=>{const n=wkStreak();return n>=2?` · <span class="stk">${tr(`${n} أسابيع ورا بعض حققت الهدف`,`${n} weeks in a row on target`)}</span>`:''})()}</div>
       ${protHtml()}
+      <div class="dlk"><button class="plink" data-a="rule">${tr('إزاي التطبيق بيحسب الزيادة؟','How is progression decided?')}</button></div>
       <div class="dlk"><button class="plink" data-a="rtOpen">${tr('تايمر جولات (كوندشننج)','Round timer (conditioning)')}</button></div>
       ${al}
       <details class="alt"><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd).map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
@@ -1364,6 +1375,7 @@ function finishSession(){
   const s=persistDraft();lastDone=s;finishing=false;
   /* v115: ملخص آخر الجلسة: المدة، الأرقام القياسية، واللي استحق زيادة */
   const sm=[];if(t0&&!dd0.editing){const mn=Math.round((Date.now()-t0)/60000);if(mn>0&&mn<360)sm.push(`${tr('المدة','Duration')}: <b class="en">${mn}</b> ${tr('دقيقة','min')}`)}
+  {const N=S.sessions.length;if([10,25,50,100,150,200,300,500].includes(N))sm.unshift(`◆ ${tr(`الجلسة رقم ${N}. استمر.`,`Session number ${N}. Keep going.`)}`)}
   if(!s.cb)for(const e of s.ex){if(e.unit)continue;const h=prev[e.exId]||[],w=+e.w||0;if(!h.length||!w)continue;
     const mw=Math.max(...h.map(x=>+x.w||0)),bestR=Math.max(0,...h.filter(x=>(+x.w||0)===w).map(x=>Math.max(...x.sets)));
     if(w>mw)sm.push(`★ <bdi class="en">${esc(e.name)}</bdi>: ${tr('أتقل وزن','heaviest ever')} <b class="en">${w} k</b>`);
@@ -2122,6 +2134,9 @@ document.addEventListener('click',ev=>{
     case 'protAdd':{const v=+b.dataset.v;S.prot={d:today(),g:Math.max(0,protToday()+v)};save();queueBackup();const pe=document.querySelector('.prt');if(pe)pe.outerHTML=protHtml();break}
     case 'protG':{const cur=+S.settings.protG||150,nx=cur>=200?100:cur+10;S.settings.protG=nx;save();const pe=document.querySelector('.prt');if(pe)pe.outerHTML=protHtml();toast(tr(`هدف البروتين ${nx} جم (دوس تاني للتغيير)`,`Protein goal ${nx} g (tap again to change)`));break}
     case 'rdy':{const v=+b.dataset.v;d.rdy=v;save();renderSession();if(v===0)toast(tr('يوم تقيل: خليك على الأساسي، أو «معايا وقت قليل» من ⋯. الالتزام أهم من الرقم النهارده.','Rough day: stick to the essentials or use «short on time» from ⋯. Showing up beats the number today.'));break}
+    case 'onbSys':{const id=b.dataset.id;if(id!==(S.sys&&S.sys.cur||'ul4'))switchSys(id);save();onbModal(2);break}
+    case 'onbSkip':case 'onbDone':delete S.onb;save();closeModal();go('home');break;
+    case 'rule':ruleModal();break;
     case 'clean':{const e=d.ex[curEx];e.clean=!e.clean;saveSoon();renderSession();break}
     case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
     case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value),mx={};for(const [k] of BMX){const v=num(($('#b_'+k)||{}).value);if(v>0&&v<400)mx[k]=v}if(!(w>0)&&!(c>0)&&!Object.keys(mx).length){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}
@@ -2245,7 +2260,7 @@ window.addEventListener('scroll',()=>{clearTimeout(window.__st);window.__st=setT
 window.addEventListener('pagehide',flushSave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){flushSave();saveUI();if(S.draft)queueDraftBackup()}else if(!$('#sess').hidden)wakeOn()});
 const UI0=readUI();
-boot().then(()=>{if(migTheme()){delete S.settings.thGr;delete S.settings.thDawn;save()}applyLang();if(S.impN){const k=S.impN;S.impN=0;save();setTimeout(()=>toast(T().histNote(k)),600)}go('home');restoreUI(UI0);if(S.mig6ask){delete S.mig6ask;save();setTimeout(async()=>{if(await ask(tr('التطبيق بقى بيعتبر أداءك نضيف من الأول، وانت بتعلّم «مش نضيف» بس لو حصلت مرجحة. نعتبر جلساتك اللي فاتت نضيفة كمان، علشان قاعدة الزيادة تبدأ تحسب منها؟','Form now counts as clean by default; you mark «not clean» only when it is not. Count your past sessions as clean too, so the progression rule can use them?'),{yes:tr('أيوه','Yes'),no:tr('لأ','No')})){for(const x of S.sessions)if(!x.imp)for(const e of x.ex)e.clean=true;save();queueBackup();go(tab)}},900)}setTimeout(()=>('requestIdleCallback' in window?requestIdleCallback(warmTabs,{timeout:4000}):warmTabs()),2500);if(pendMig){toast(T().migNote);pendMig=false}if(SYNC.on&&SYNC.dirty)setTimeout(runBackup,1500)});
+boot().then(()=>{if(migTheme()){delete S.settings.thGr;delete S.settings.thDawn;save()}applyLang();if(S.impN){const k=S.impN;S.impN=0;save();setTimeout(()=>toast(T().histNote(k)),600)}go('home');restoreUI(UI0);if(S.onb)setTimeout(()=>onbModal(1),700);if(S.mig6ask){delete S.mig6ask;save();setTimeout(async()=>{if(await ask(tr('التطبيق بقى بيعتبر أداءك نضيف من الأول، وانت بتعلّم «مش نضيف» بس لو حصلت مرجحة. نعتبر جلساتك اللي فاتت نضيفة كمان، علشان قاعدة الزيادة تبدأ تحسب منها؟','Form now counts as clean by default; you mark «not clean» only when it is not. Count your past sessions as clean too, so the progression rule can use them?'),{yes:tr('أيوه','Yes'),no:tr('لأ','No')})){for(const x of S.sessions)if(!x.imp)for(const e of x.ex)e.clean=true;save();queueBackup();go(tab)}},900)}setTimeout(()=>('requestIdleCallback' in window?requestIdleCallback(warmTabs,{timeout:4000}):warmTabs()),2500);if(pendMig){toast(T().migNote);pendMig=false}if(SYNC.on&&SYNC.dirty)setTimeout(runBackup,1500)});
 </script>
 </body>
 </html>
