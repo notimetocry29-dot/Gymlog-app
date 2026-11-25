@@ -65,7 +65,9 @@ async function page(st) {
   await pg.evaluate(() => closeModal(true));
   await pg.click('.cbq [data-a="start"]'); await pg.waitForTimeout(500); await pg.evaluate(() => { closeSession(); go('home'); }); await pg.waitForTimeout(300);
   ok(await pg.evaluate(() => !!document.querySelector('.cbq [data-a="cbSwap"]')), 'after choosing the usual day, the comeback option stays under the circle');
-  await pg.click('.cbq [data-a="cbSwap"]'); await pg.waitForTimeout(500);
+  await pg.evaluate(() => { S.draft.ex[0].sets[0] = '10'; save(); go('home'); }); await pg.waitForTimeout(200);
+  ok(await pg.evaluate(() => !!document.querySelector('.cbq [data-a="cbSwap"]')), 'the comeback button stays even after logging a set in the usual day');
+  await pg.click('.cbq [data-a="cbSwap"]'); await pg.waitForTimeout(400); await pg.click('#ask .ok'); await pg.waitForTimeout(500);
   ok(await pg.evaluate(() => !$('#sess').hidden && S.draft && S.draft.cb && !S.draft.cb.dl), 'tapping it goes straight into the comeback session');
   await pg.evaluate(() => { closeSession(); S.draft = null; save(); go('home'); }); await pg.waitForTimeout(300);
   await pg.evaluate(() => { S.settings.lang = 'en'; LANG = 'en'; S.settings.howLang = 'ar'; go('home'); }); await pg.waitForTimeout(200);

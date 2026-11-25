@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='136';
+const VER='137';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -574,7 +574,6 @@ function renderHome0(){
   const L=T(),ds=done(),c=cbNow(),dlx=c?null:dlNow(),dcb=!!(S.draft&&S.draft.cb&&!S.draft.editing),dr=S.draft;
   const mode=dr?'draft':c?'cb':dlx&&!dlx.skip?'dl':'norm';
   /* v134: لو اخترت يومك العادي (أو أجّلت)، الاختيار التعويضي بيفضل موجود تحت الدايرة لحد ما تبدأ تسجّل */
-  const nrm=!!(dr&&!dr.cb&&!dr.editing),alt=nrm&&dEmpty(dr);
   const nd=dr?(dr.day||nextDayId()):mode==='cb'&&c.step.k==='fb'?'FB':nextDayId(),fb=nd==='FB';
   const pl=dr||(mode==='cb'?planDraft(nd,c):mode==='dl'?(()=>{const x=planDraft(nd,{g:0,i:0,n:1,step:{k:'lt',p:.9}});x.cb.dl=1;return x})():planDraft(nd,null));
   const dName=fb?tr('جسم كامل','Full body'):String(pl.dayName||'').replace(/ · Light$/,'');
@@ -592,10 +591,12 @@ function renderHome0(){
   const act=dr?'resume':mode==='cb'?'cbGo':mode==='dl'?'dlGo':'start';
   /* سطر هادي تحت الدايرة */
   let q='';
-  if(c&&nrm)q=`<div class="cbq">${tr(`رجعت بعد ${c.g} يوم`,`Back after ${c.g} days`)} · <button data-a="cbWhy">${tr('ليه؟','Why?')}</button>${alt?` · <button data-a="cbSwap">${tr('العب جلسة الرجوع بدله','Play the comeback session instead')}</button>`:''}</div>`;
-  else if(dlx&&(nrm||mode==='norm'))q=`<div class="cbq">${dlx.act?tr(`أسبوع خفيف · فاضل ${dlx.left} يوم`,`Light week · ${dlx.left} day(s) left`):tr(`${dlx.wk} أسابيع تمرين متواصل`,`${dlx.wk} weeks in a row`)} · <button data-a="dlWhy">${tr('ليه؟','Why?')}</button>${!dr||alt?` · <button data-a="dlGo">${dr?tr('العب يوم خفيف بدله','Play a light day instead'):tr('العب يوم خفيف','Play a light day')}</button>`:''}</div>`;
-  else if(mode==='cb'||(dcb&&!dr.cb.dl&&c))q=`<div class="cbq">${tr(`رجعت بعد ${c.g} يوم`,`Back after ${c.g} days`)} · <button data-a="cbWhy">${tr('ليه؟','Why?')}</button>${dr?'':` · <button data-a="start" data-d="${esc(nextDayId())}">${tr('العب يومك العادي','Play your usual day')}</button>`}</div>`;
-  else if(mode==='dl'||(dcb&&dr.cb.dl))q=`<div class="cbq">${dlx&&dlx.act?tr(`أسبوع خفيف · فاضل ${dlx.left} يوم`,`Light week · ${dlx.left} day(s) left`):dlx?tr(`${dlx.wk} أسابيع تمرين متواصل`,`${dlx.wk} weeks in a row`):tr('أسبوع خفيف','Light week')} · <button data-a="dlWhy">${tr('ليه؟','Why?')}</button>${dr||(dlx&&dlx.act)?'':` · <button data-a="dlSkip">${tr('مش دلوقتي','Not now')}</button>`}</div>`;
+  /* v137: طول ما الرجوع (أو الأسبوع الخفيف) شغال، السطر ده بيفضل تحت الدايرة: «ليه؟» + زرار يدخلك التمرين التعويضي على طول، مهما اخترت قبلها */
+  const inCb=!!(dcb&&!dr.cb.dl),inDl=!!(dcb&&dr.cb.dl);
+  if(c){const go=inCb?'':` · <button class="cbgo2" data-a="cbSwap">${c.step.k==='fb'?tr('العب الفول بادي','Play the full body'):tr('العب اليوم المخفف','Play the light day')} ${LANG==='ar'?'‹':'›'}</button>`;
+    q=`<div class="cbq">${tr(`رجعت بعد ${c.g} يوم`,`Back after ${c.g} days`)} · <button data-a="cbWhy">${tr('ليه؟','Why?')}</button>${go}${!dr&&mode==='cb'?` · <button data-a="start" data-d="${esc(nextDayId())}">${tr('يومك العادي','Your usual day')}</button>`:''}</div>`}
+  else if(dlx||inDl){const go=inDl?'':` · <button class="cbgo2" data-a="dlGo">${tr('العب يوم خفيف','Play a light day')} ${LANG==='ar'?'‹':'›'}</button>`;
+    q=`<div class="cbq">${dlx&&dlx.act?tr(`أسبوع خفيف · فاضل ${dlx.left} يوم`,`Light week · ${dlx.left} day(s) left`):dlx?tr(`${dlx.wk} أسابيع تمرين متواصل`,`${dlx.wk} weeks in a row`):tr('أسبوع خفيف','Light week')} · <button data-a="dlWhy">${tr('ليه؟','Why?')}</button>${go}${!dr&&dlx&&!dlx.act&&!dlx.skip?` · <button data-a="dlSkip">${tr('مش دلوقتي','Not now')}</button>`:''}</div>`}
   else if(!dr&&new Date().getDay()===6&&ds.some(x=>daysAgo(x.date)>=1&&daysAgo(x.date)<=7))q=`<div class="cbq">${tr('أسبوعك اللي فات','Your last week')}: ${ds.filter(x=>daysAgo(x.date)>=1&&daysAgo(x.date)<=7).length}/3 · <button data-a="rep" data-d="7">${tr('التقرير','Report')} ›</button></div>`;
   let al='';
   if(syncPublic())al+=`<div class="warn">${L.syncPub}</div>`;

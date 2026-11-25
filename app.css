@@ -837,3 +837,4 @@ html[dir=ltr] select.inp,html[dir=ltr] .psel,html[dir=ltr] .lbf .psel{background
 html[data-th=morning] .orb .ch{stroke:#fff;opacity:1}
 @keyframes cmt{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.orb .cmt{animation:none}}
+.cbq .cbgo2{text-decoration:none;font-weight:600;color:var(--ac2);white-space:nowrap}
