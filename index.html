@@ -358,7 +358,12 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 .dtl .warn,.dtl .bkn{margin:0 0 10px}
 /* v108: كارت الرجوع بعد الغياب */
 .hs.cbm .orb{width:min(80vw,330px,calc(100dvh - 520px))}
-.cbh{margin:14px auto 0;max-width:340px;padding:11px 14px 10px;border-radius:16px;background:var(--s1);border:1px solid var(--bd);text-align:center;font-size:13px;line-height:1.65;color:var(--mu)}
+.cbh{display:block;width:100%;margin:14px auto 0;max-width:340px;padding:11px 14px 10px;border-radius:16px;background:var(--s1);border:1px solid var(--bd);text-align:center;font:inherit;font-size:13px;line-height:1.65;color:var(--mu);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .08s ease-out,background .08s}
+.cbh:active{transform:scale(.98);background:var(--s2)}
+.cbh .cbt{display:block}
+.cbgo{display:block;margin-top:9px;padding-top:8px;border-top:1px solid var(--bd);color:var(--ac2);font-weight:600;font-size:13.5px}
+.cbdh{margin:16px 0 6px;font-size:13px;color:var(--mu);text-align:start}
+.sxs{margin:0 0 10px}
 .cbh b{display:block;color:var(--tx2);font-weight:600;font-size:14px;margin-bottom:3px}
 .cbs{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:4px 5px;margin-top:8px;font-size:12px}
 .cbs span{padding:2px 9px;border-radius:99px;border:1px solid var(--bd);white-space:nowrap}
@@ -535,7 +540,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='108';
+const VER='109';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -797,7 +802,7 @@ function cbNow(){
   const ds=done();if(!ds.length)return null;
   const at=(g,i)=>{let st=cbSteps(g);if(i>=st.length)return null;
     if(st.some(x=>x.k==='fb')&&fbPick().length<3)st=st.map(x=>({k:'lt',p:x.p}));
-    return{g,i,n:st.length,st,step:st[i]}};
+    return{g,i,n:st.length,st,step:st[i],after:ds.slice(0,i).reverse()}};
   const g0=daysAgo(ds[0].date);if(g0>=CBD)return at(g0,0);
   for(let i=0;i<Math.min(ds.length-1,4);i++){const g=dGap(ds[i].date,ds[i+1].date);if(g>=CBD)return at(g,i+1)}
   return null;
@@ -834,11 +839,21 @@ function planDraft(id,c){
 const cbPct=cb=>Math.round(cb.p*100)+'%';
 const cbLine=cb=>tr(`رجوع بعد ${cb.g} يوم · الأوزان ${cbPct(cb)} · سيب في إيدك 2–3 عدّات`,`Back after ${cb.g} days · weights ${cbPct(cb)} · leave 2–3 reps in the tank`);
 function cbCard(c){
-  const nm=s=>s.k==='fb'?tr('فول بادي','Full body'):tr('مخففة','Light');
-  const pills=c.st.map((s,k)=>`<span class="${k<c.i?'ok':k===c.i?'on':''}">${k<c.i?'✓ ':''}${nm(s)} <bdi class="en">${cbPct(s)}</bdi></span>`).join(`<i>${LANG==='ar'?'‹':'›'}</i>`)+`<i>${LANG==='ar'?'‹':'›'}</i><span>${tr('جدولك','Your plan')}</span>`;
+  const nm=s=>s.k==='fb'?tr('فول بادي','Full body'):tr('مخففة','Light'),ar=LANG==='ar',sep=`<i>${ar?'‹':'›'}</i>`;
+  /* الخطوات اللي عدّت بتتعلّم بالجلسة اللي اتلعبت فعلًا (رجوع أو يوم عادي) */
+  const pills=c.st.map((s,k)=>{if(k<c.i){const a=c.after[k];return `<span class="ok">✓ ${a&&a.cb?nm(a.cb)+' <bdi class="en">'+cbPct(a.cb)+'</bdi>':'<bdi class="en">'+esc(dayBase(a?a.dayName:''))+'</bdi>'}</span>`}
+    return `<span class="${k===c.i?'on':''}">${nm(s)} <bdi class="en">${cbPct(s)}</bdi></span>`}).join(sep)+`${sep}<span>${tr('جدولك','Your plan')}</span>`;
+  const dn=c.step.k==='fb'?'':day(nextDayId()).name;
   const how=c.step.k==='fb'?tr(`فول بادي: مجموعتين لكل تمرين، والأوزان ${cbPct(c.step)} من أوزانك قبل الغياب.`,`Full body: two sets per exercise, weights at ${cbPct(c.step)} of your pre-break weights.`)
-    :tr(`نفس يومك بمجموعة أقل في كل تمرين، والأوزان ${cbPct(c.step)} من أوزانك قبل الغياب.`,`Your usual day with one set less per exercise, weights at ${cbPct(c.step)} of your pre-break weights.`);
-  return `<div class="cbh"><b>${tr(`رجوع بعد ${c.g} يوم`,`Back after ${c.g} days`)}</b><div>${how} ${tr('وقّف وانت لسه قادر على 2–3 عدّات.','Stop each set with 2–3 reps left.')}</div><div class="cbs" dir="${LANG==='ar'?'rtl':'ltr'}">${pills}</div></div>`;
+    :tr(`<bdi class="en">${esc(dn)}</bdi> مخففة: مجموعة أقل في كل تمرين، والأوزان ${cbPct(c.step)} من أوزانك قبل الغياب.`,`${esc(dn)}, light: one set less per exercise, weights at ${cbPct(c.step)} of your pre-break weights.`);
+  return `<button class="cbh" data-a="cbGo"><b>${tr(`رجوع بعد ${c.g} يوم`,`Back after ${c.g} days`)}</b><span class="cbt">${how} ${tr('وقّف وانت لسه قادر على 2–3 عدّات.','Stop each set with 2–3 reps left.')}</span><span class="cbs" dir="${ar?'rtl':'ltr'}">${pills}</span><span class="cbgo">${tr('ابدأ جلسة الرجوع','Start the comeback session')} ${ar?'‹':'›'}</span></button>`;
+}
+/* اقتراح بس: بيتفتح لما تدوس على الكارت. الدايرة و«ابدأ يوم تاني» والبرنامج بيفتحوا يومك العادي بأوزانك */
+function startComeback(){
+  const c=cbNow();if(!c)return;
+  if(S.draft&&!confirm(T().confNew))return;
+  S.draft=null;S.draft=planDraft(c.step.k==='fb'?'FB':nextDayId(),c);
+  openTips.clear();save();openSession();
 }
 /* وزن الشغل: آخر وزن من جلسة عادية (جلسات الرجوع المخففة مابتغيّرش وزنك) */
 const baseH=id=>{const hh=exHist(id);return hh.find(x=>!x.cb)||hh[0]};
@@ -1037,8 +1052,8 @@ document.addEventListener('touchend',e=>{if(!qOn)return;qOn=false;const t=e.chan
 function renderHome(){
   const L=T(),dr=S.draft,ds=done(),c=dr?null:cbNow();
   /* v108: بعد أي غياب الرئيسية بتقترح جلسة الرجوع لوحدها (فول بادي أو يوم مخفف) */
-  const nd=dr?(dr.day||nextDayId()):(c&&c.step.k==='fb'?'FB':nextDayId()),fb=nd==='FB';
-  const pl=dr||planDraft(nd,c),dName=String(pl.dayName||'').replace(/ · Light$/,'');
+  const nd=dr?(dr.day||nextDayId()):nextDayId(),fb=nd==='FB';
+  const pl=dr||planDraft(nd,null),dName=String(pl.dayName||'').replace(/ · Light$/,''),cp=c?planDraft(c.step.k==='fb'?'FB':nextDayId(),c):null;
   const wk=ds.filter(s=>daysAgo(s.date)>=0&&daysAgo(s.date)<7).length,days=S.program.days,cc=+pl.cycle||pl.cycle;
   const n=days.length,g=n>1?9:0;
   /* الدايرة: كل قوس يوم من الدورة. مليان = خلص، منوّر = النهارده، باهت = لسه */
@@ -1047,8 +1062,9 @@ function renderHome(){
     return `<path class="ar${x.id===nd?' cur':dn?' dn':''}" d="${arcP(136,k*360/n+g/2,(k+1)*360/n-g/2)}"/>`}).join(''):`<circle class="ar cur" cx="150" cy="150" r="136"/>`;
   let last='';
   if(ds[0]){const k=Math.max(0,daysAgo(ds[0].date));last=' · '+tr('آخر جلسة: ','Last: ')+(k===0?tr('النهارده','today'):k===1?tr('امبارح','yesterday'):tr(`من ${k} يوم`,`${k} days ago`))}
-  const rows=pl.ex.map(e=>`<div class="dr${e.core?' c':''}"><span class="dn2 en">${esc(e.name)}</span><span class="dw en">${e.unit?'':fw(e.w)+' · '}${e.tsets}×${e.treps}${e.unit?' '+esc(unitTxt(e.unit)):''}</span></div>`).join('');
-  const tag=dr?L.resume:(c?(c.step.k==='fb'?tr('رجوع','Comeback'):tr('مخففة','Light'))+' · ':'')+L.exN(pl.ex.length);
+  const rowsOf=ex=>ex.map(e=>`<div class="dr${e.core?' c':''}"><span class="dn2 en">${esc(e.name)}</span><span class="dw en">${e.unit?'':fw(e.w)+' · '}${e.tsets}×${e.treps}${e.unit?' '+esc(unitTxt(e.unit)):''}</span></div>`).join(''),rows=rowsOf(pl.ex);
+  const coreOf=ex=>`<div class="coreline">${L.coreL}: <span class="en">${esc(ex.filter(e=>e.core).map(e=>e.name).join(' + '))}</span></div>`;
+  const tag=dr?L.resume:L.exN(pl.ex.length);
   /* تنبيهات: جوّه التفاصيل، ونقطة صغيرة على الزرار لو فيه حاجة */
   let al='';
   if(syncPublic())al+=`<div class="warn">${L.syncPub}</div>`;
@@ -1066,7 +1082,8 @@ function renderHome(){
     </div>
     <details class="dtl"><summary>${tr('التفاصيل','Details')}${al?'<i class="aldot"></i>':''}</summary>
       <div class="dl">${rows}</div>
-      <div class="coreline">${L.coreL}: <span class="en">${esc(pl.ex.filter(e=>e.core).map(e=>e.name).join(' + '))}</span></div>
+      ${coreOf(pl.ex)}
+      ${cp?`<div class="cbdh">${tr('جلسة الرجوع المقترحة','Suggested comeback session')} · <bdi class="en">${esc(cp.dayName)}</bdi></div><div class="dl">${rowsOf(cp.ex)}</div>${coreOf(cp.ex)}`:''}
       <div class="dwk">${L.weekOf(wk)}</div>
       ${al}
       <details class="alt"><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd).map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
@@ -1080,7 +1097,7 @@ function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),h=hh.find
 function startSession(id){
   if(S.draft&&!confirm(T().confNew))return;
   S.draft=null;
-  S.draft=planDraft(id,cbNow());
+  S.draft=planDraft(id,null);
   openTips.clear();save();openSession();
 }
 function editSession(id){
@@ -1160,7 +1177,7 @@ function openPick(kind,j){
 }
 function openMenu(){
   const d=S.draft,L=T(),sh=$('#sheet');sh.hidden=false;
-  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="meta2"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div>${d.editing||!d.ex.some(x=>x.core)||d.ex.every(x=>x.core)?'':`<button class="btn w ghost mt" data-a="coreOnly">${tr('الأساسي بس','Essentials only')}</button>`}<button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><button class="btn w pri" data-a="sxOpen">+ ${tr('ضيف تمرين للجلسة','Add an exercise')}</button><div class="meta2 mt"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div>${d.editing||!d.ex.some(x=>x.core)||d.ex.every(x=>x.core)?'':`<button class="btn w ghost mt" data-a="coreOnly">${tr('الأساسي بس','Essentials only')}</button>`}<button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
 }
 function openGuide(){
   const d=S.draft;if(!d)return;const e=d.ex[curEx];if(!e)return;const x=libGet(e.name),sh=$('#sheet');
@@ -1474,18 +1491,21 @@ function infoModal(i){
   ${t.note&&t.note!==how?`<div class="tnote" style="margin-top:10px"><b>${tr('ملاحظتك','Your note')}:</b> ${esc(t.note)}</div>`:''}
   <div class="row mt"><button class="btn pri sp" data-a="editT" data-i="${i}">${tr('تعديل التمرين','Edit exercise')}</button><button class="btn ghost" data-a="closeM">${T().close}</button></div>`);
 }
-let libQ='',libG='all';
+let libQ='',libG='all',libFor='prog';
 function libRowsHtml(){
   const q=libQ.trim().toLowerCase();
-  return allLib().filter(x=>(libG==='all'||x[1]===libG)&&lbMatch(x,q)).map(x=>`<div class="prow" data-a="libAdd" data-n="${esc(x[0])}"><div class="sp"><div class="nm en">${esc(x[0])}</div><div class="mu">${(GRP[x[1]]||GRP.core)[LANG==='ar'?0:1]} · <span class="en">${x[3]}×${x[4]}</span></div></div><span class="icb">+</span></div>`).join('')||`<div class="empty">—</div>`;
+  const sx=libFor==='sess'&&S.draft,inS=n=>sx&&S.draft.ex.some(e=>nk(e.name)===nk(n));
+  return allLib().filter(x=>(libG==='all'||x[1]===libG)&&lbMatch(x,q)).map(x=>`<div class="prow" data-a="${sx?'sxAdd':'libAdd'}" data-n="${esc(x[0])}"><div class="sp"><div class="nm en">${esc(x[0])}</div><div class="mu">${(GRP[x[1]]||GRP.core)[LANG==='ar'?0:1]} · <span class="en">${x[3]}×${x[4]}</span></div></div><span class="icb">${inS(x[0])?'✓':'+'}</span></div>`).join('')||`<div class="empty">—</div>`;
 }
 function libModal(){
   const rows=libRowsHtml();
-  modal(`<h3>${tr('مكتبة التمارين','Exercise library')}</h3>
+  const sx=libFor==='sess'&&S.draft,pd=sx&&S.program.days.find(x=>x.id===S.draft.day),pg=!!(pd&&S.settings.sxProg);
+  modal(`<h3>${sx?tr('ضيف تمرين للجلسة','Add an exercise'):tr('مكتبة التمارين','Exercise library')}</h3>
+  ${pd?`<div class="thseg sxs"><button class="${pg?'':'on'}" data-a="sxProg" data-v="0">${tr('الجلسة دي بس','This session only')}</button><button class="${pg?'on':''}" data-a="sxProg" data-v="1">${tr('وفي البرنامج كمان','Also in the program')}</button></div>`:''}
   <input class="inp" id="libS" dir="auto" placeholder="${tr('ابحث…','Search…')}" value="${esc(libQ)}" style="text-align:start;margin-bottom:8px">
   <div class="chips"><button class="${libG==='all'?'on':''}" data-a="libG" data-g="all">${tr('الكل','All')}</button>${Object.keys(GRP).map(g=>`<button class="${libG===g?'on':''}" data-a="libG" data-g="${g}">${GRP[g][LANG==='ar'?0:1]}</button>`).join('')}</div>
   <div id="libR" style="max-height:44vh;overflow-y:auto">${rows}</div>
-  <div class="row mt"><button class="btn sp" data-a="addT">${tr('تمرين مخصص','Custom exercise')}</button><button class="btn ghost" data-a="closeM">${T().close}</button></div>`);
+  <div class="row mt">${sx?'':`<button class="btn sp" data-a="addT">${tr('تمرين مخصص','Custom exercise')}</button>`}<button class="btn ghost${sx?' sp':''}" data-a="closeM">${T().close}</button></div>`);
   }
 function sysModal(){
   sysInit();
@@ -1955,7 +1975,17 @@ document.addEventListener('click',ev=>{
     case 'sysOpen':sysModal();break;
     case 'pedit':pEdit=!pEdit;renderProgram();break;
     case 'sysPick':if(confirm(tr('هتبدّل النظام. تمارينك الحالية محفوظة وترجعلها. تكمّل؟','Switch system? Your current exercises are kept. Continue?'))){switchSys(b.dataset.id);closeModal();renderProgram();toast(tr('النظام اتغيّر ✓','System changed ✓'))}break;
-    case 'libOpen':libQ='';libG='all';libModal();break;
+    case 'libOpen':libQ='';libG='all';libFor='prog';libModal();break;
+    case 'sxOpen':closeSheet();libQ='';libG='all';libFor='sess';libModal();break;
+    case 'sxProg':S.settings.sxProg=b.dataset.v==='1'?1:0;save();libModal();break;
+    case 'sxAdd':{const d=S.draft;if(!d)break;const n=b.dataset.n;let k=d.ex.findIndex(e=>nk(e.name)===nk(n));
+      if(k<0){const pd=S.program.days.find(x=>x.id===d.day);let t=null;
+        if(pd&&S.settings.sxProg){t=pd.ex.find(x=>nk(x.name)===nk(n));if(!t){t=mk(n);pd.ex.push(t)}}
+        const e=draftEx(t||mk(n));if(d.cb)cbApply(e,d.cb);d.ex.push(e);k=d.ex.length-1;save();queueBackup();
+        toast(pd&&S.settings.sxProg?tr('اتضاف للجلسة وللبرنامج ✓','Added to the session and the program ✓'):tr('اتضاف للجلسة ✓','Added to the session ✓'))}
+      else toast(tr('التمرين موجود في الجلسة','Already in this session'));
+      closeModal();curEx=k;wAnim=true;renderSession();wAnim=false;$('#sess').scrollTop=0;break}
+    case 'cbGo':if(b.classList.contains('cbh')){try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}}startComeback();break;
     case 'libG':libG=b.dataset.g;libModal();break;
     case 'cuNew':cuModal();break;
     case 'cuEdit':cuModal(b.dataset.n);break;
