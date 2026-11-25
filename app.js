@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='148';
+const VER='149';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -750,15 +750,30 @@ const sAir=(a,t,dur,f1,f2,v)=>sNz(a,t,dur,f1,1.4,v,'bandpass',f2,dur*.45);
 /* تعمير السلاح: سحب الأقسام لورا وبعدين رجوعها بخبطة حديد */
 const sRack=(a,t,v)=>{sTick(a,t,1300,v*.9);sNz(a,t+.01,.08,600,1.5,v*.4,'lowpass',1100,.03);sClank(a,t+.09,240,v*.8,.16);sTick(a,t+.09,1500,v*.9);sThump(a,t+.09,v*.85)};
 /* v146: أصوات حديد تقيلة بس — مفيش أجراس ولا صفارات، والرنّة قصيرة ومكتومة */
+/* v149: أصوات سلاح بس — كل صوت مبني من أجزاء حركة السلاح الحقيقية */
+/* تكّة جاف: سن الأمان / الزناد */
+const wClick=(a,t,v)=>{sNz(a,t,.014,1500,1,v,'lowpass');sOsc(a,t,.035,420,v*.45,'triangle',190,.001);sOsc(a,t,.05,95,v*.35,'sine',55,.002)};
+/* احتكاك الأقسام وهي بتتسحب (حبيبات معدن ورا بعض) */
+const wSlide=(a,t,dur,v,up)=>{const n=Math.max(4,Math.round(dur/.009));for(let k=0;k<n;k++){const x=t+k*dur/n+Math.random()*.003;sNz(a,x,.012,500+(up?k:n-k)*28,2,v*(.45+.55*Math.random()),'bandpass')}sNz(a,t,dur,350,1,v*.35,'lowpass',up?900:350,dur*.4)};
+/* رجوع الأقسام لقدّام بخبطة */
+const wSlam=(a,t,v)=>{wClick(a,t,v);sThump(a,t,v*.9);sClank(a,t,230,v*.6,.14)};
+/* تعمير كامل: سحب لورا ثم رجوع */
+const wRack=(a,t,v)=>{wClick(a,t,v*.6);wSlide(a,t+.012,.075,v*.7,1);wClick(a,t+.09,v*.5);wSlide(a,t+.1,.05,v*.6,0);wSlam(a,t+.15,v)};
+/* دخول الخزنة: زقّة + خبطة كف + تكّة قفل */
+const wMag=(a,t,v)=>{wSlide(a,t,.05,v*.5,1);sNz(a,t+.05,.06,700,.8,v*1.1,'lowpass');sThump(a,t+.05,v*.8);wClick(a,t+.1,v*.9)};
+/* تعمير الديك: تكّتين، التانية أتقل */
+const wHammer=(a,t,v)=>{wClick(a,t,v*.6);wClick(a,t+.045,v);sClank(a,t+.045,280,v*.35,.08)};
+/* طلقة: ضربة واطية + انفجار هوا بيقفل + ذيل بعيد */
+const wShot=(a,t,v)=>{sNz(a,t,.012,1700,.7,v*1.2,'lowpass');sOsc(a,t,.55,95,v,'sine',32,.002);sOsc(a,t,.18,190,v*.4,'triangle',60,.001);sNz(a,t,.5,1600,.8,v*.9,'lowpass',140,.004);sNz(a,t+.05,1.3,260,.7,v*.35,'lowpass',90,.08)};
 function snd(k){if(!sndOn(k==='charge'?'orb':k))return;const a=acGet();if(!a)return;const t=a.currentTime+.015;
-  if(k==='ui'){sThump(a,t,.5);sTick(a,t,1200,.7);sClank(a,t,200,.18,.08)}
-  else if(k==='tab')sRack(a,t,.55);
-  else if(k==='orb'){sRack(a,t,.6);sThump(a,t+.2,1);sClank(a,t+.2,150,.5,.3);sNz(a,t+.2,.4,120,.7,.35,'lowpass')}
-  else if(k==='charge'){for(let n=0,x=0;n<9;n++){x+=.11*Math.pow(.86,n);sTick(a,t+x,900+n*50,.7);sClank(a,t+x,170+n*8,.16,.05)}sNz(a,t,.8,90,.8,.4,'lowpass',180,.5)}
-  else if(k==='start')sRack(a,t,.6);
-  else if(k==='log'){sThump(a,t,.85);sClank(a,t,260,.42,.18);sTick(a,t,1300,.45)}
-  else if(k==='rest'){sRack(a,t,.8);sRack(a,t+.38,.95);sThump(a,t+.47,1);sClank(a,t+.47,190,.45,.25)}
-  else if(k==='end'){sRack(a,t,.75);sThump(a,t+.3,1);sClank(a,t+.3,120,.55,.4);sNz(a,t+.3,.6,110,.7,.45,'lowpass');sThump(a,t+.62,.9);sClank(a,t+.62,175,.42,.3)}}
+  if(k==='ui')wClick(a,t,.8);
+  else if(k==='tab')wRack(a,t,.6);
+  else if(k==='orb'){wMag(a,t,.75);wRack(a,t+.28,.85)}
+  else if(k==='charge'){wClick(a,t,.6);wSlide(a,t+.015,.55,.75,1);wClick(a,t+.57,.7)}
+  else if(k==='start')wRack(a,t,.7);
+  else if(k==='log')wMag(a,t,.8);
+  else if(k==='rest'){wHammer(a,t,.85);wRack(a,t+.3,.95)}
+  else if(k==='end'){wRack(a,t,.7);wShot(a,t+.45,1)}}
 function beep(n){snd(n>=3?'end':n>=2?'rest':'start')}
 function restStart(e){const d=S.draft;if(!d||!e)return;d.rest={t0:Date.now(),dur:restFor(e)};saveSoon();if(!rsIv)rsIv=setInterval(restTick,250);restTick()}
 /* v139: عدّاد الراحة بيتبني مرة واحدة، وبعدها بيتحدّث الرقم والشريط بس (الأزرار مابتتبنيش كل ربع ثانية فمابتضيعش دوسات) */
@@ -1797,13 +1812,13 @@ function renderData(){
   ${swRow('ram',S.settings.ram,tr('وضع رمضان','Ramadan mode'),tr('مجموعة أقل وراحة أطول. اتمرن بعد الفطار بساعة ونص لساعتين','One set less, longer rests. Train 1.5–2 h after iftar'))}
   <details class="fsec" data-fk="snd"${fOpen.has('snd')?' open':''}><summary>${tr('الأصوات والاهتزاز','Sounds & vibration')}<span class="fst">${SND_K.some(sndOn)?tr('شغّالة','On'):tr('مقفولة','Off')}</span><span class="pchev">⌄</span></summary><div class="fbody">
     <div class="mu" style="margin-bottom:8px">${tr('التطبيق مايعرفش إن الموبايل على الصامت، فاقفل الأصوات من هنا لو محتاج.','The app can’t tell when your phone is on silent, so turn sounds off here if needed.')}</div>
-    ${swRow('sndT',sndOn('orb'),tr('الدايرة','The circle'),tr('تعمير وضربة تقيلة لما تبدأ، وشحن وانت ضاغط','A rack and heavy hit when you start, a charge-up while you hold'),'orb')}
-    ${swRow('sndT',sndOn('tab'),tr('التنقل','Navigation'),tr('صوت تعمير وانت بتقلب التابات وبين التمارين','A rack when switching tabs and exercises'),'tab')}
-    ${swRow('sndT',sndOn('ui'),tr('الأزرار','Buttons'),tr('تكّة حديد تقيلة مع كل دوسة','A heavy steel click on every tap'),'ui')}
-    ${swRow('sndT',sndOn('start'),tr('بداية المجموعة','Set start'),tr('صوت تعمير لما تبدأ الساعة','A rack when the stopwatch starts'),'start')}
-    ${swRow('sndT',sndOn('log'),tr('تسجيل المجموعة','Set logged'),tr('ضربة قفل تأكد إنها اتسجلت','A lock-in hit confirming it was logged'),'log')}
-    ${swRow('sndT',sndOn('rest'),tr('آخر الراحة','End of rest'),tr('تعمير مزدوج: المجموعة الجاية','Double rack: next set'),'rest')}
-    ${swRow('sndT',sndOn('end'),tr('نهاية الجلسة','Session end'),tr('تعمير وضربتين حديد: المهمة خلصت','Rack and two steel impacts: mission complete'),'end')}
+    ${swRow('sndT',sndOn('orb'),tr('الدايرة','The circle'),tr('خزنة وتعمير لما تبدأ، وسحب الأقسام وانت ضاغط','Magazine in and rack on start, slow bolt pull while you hold'),'orb')}
+    ${swRow('sndT',sndOn('tab'),tr('التنقل','Navigation'),tr('تعمير وانت بتقلب التابات وبين التمارين','A rack when switching tabs and exercises'),'tab')}
+    ${swRow('sndT',sndOn('ui'),tr('الأزرار','Buttons'),tr('تكّة سن الأمان مع كل دوسة','A safety-selector click on every tap'),'ui')}
+    ${swRow('sndT',sndOn('start'),tr('بداية المجموعة','Set start'),tr('تعمير لما تبدأ الساعة','A rack when the stopwatch starts'),'start')}
+    ${swRow('sndT',sndOn('log'),tr('تسجيل المجموعة','Set logged'),tr('خزنة بتدخل مكانها: المجموعة اتسجلت','Magazine seated: set logged'),'log')}
+    ${swRow('sndT',sndOn('rest'),tr('آخر الراحة','End of rest'),tr('تعمير الديك وبعده تعمير: المجموعة الجاية','Hammer cock, then rack: next set'),'rest')}
+    ${swRow('sndT',sndOn('end'),tr('نهاية الجلسة','Session end'),tr('تعمير وطلقة: المهمة خلصت','Rack and a shot: mission complete'),'end')}
     ${swRow('vibT',vibOn(),tr('الاهتزاز','Vibration'),tr('هزّة مع الدوسات وآخر الراحة','Haptics on taps and at the end of rest'))}
     <button class="btn w mt" data-a="sndTest">${tr('اسمع الأصوات','Play the sounds')}</button>
   </div></details>
