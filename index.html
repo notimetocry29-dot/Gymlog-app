@@ -413,6 +413,8 @@ html[data-fs="3"] #view>:not(.homew),html[data-fs="3"] .mbox,html[data-fs="3"] .
 .rdy{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;margin:0 16px 8px;font-size:13px;color:var(--mu)}.rdy button{border:1px solid var(--bd);background:none;color:var(--tx2);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;min-height:34px}
 .stk{color:var(--ac2)}
 .cimg{width:100%;border-radius:12px;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto}
+.sts{margin:4px 0 10px}.wkb{display:flex;align-items:flex-end;gap:4px;height:48px;margin-top:8px}.wkb i{flex:1;background:var(--s2);border-radius:3px}.wkb i.lo{background:var(--acbd)}.wkb i.ok{background:var(--ac)}
+.mgs{display:flex;flex-direction:column;gap:7px;margin-top:8px}.mgr{display:grid;grid-template-columns:110px 1fr 28px;align-items:center;gap:8px;font-size:13px}.mgr i{height:6px;border-radius:99px;background:var(--ac);display:block}.mgr b{text-align:end;font-weight:600}
 .pfbn{font-size:13px;line-height:1.7;color:var(--mu);margin:0 2px 10px}
 .cbdh{margin:16px 0 6px;font-size:13px;color:var(--mu);text-align:start}
 .sxs{margin:0 0 10px}
@@ -596,7 +598,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='121';
+const VER='122';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -1464,6 +1466,15 @@ function histChunk(){const L=T(),part=hsList.slice(hsN,hsN+(hsN?30:12));hsN+=par
   return part.map(s=>{
     let mh='';try{const m=new Date(s.date+'T00:00:00').toLocaleDateString(LANG==='ar'?'ar-EG':'en-GB',{month:'long',year:'numeric'});if(m!==hsLast){hsLast=m;mh=`<div class="pmon">${m}</div>`}}catch(e){}
     return `${mh}<div class="pr2"><div class="pr2b" data-a="sess" data-id="${s.id}"><div class="sp"><div class="pnm"><bdi>${esc(s.dayName)}</bdi></div><div class="mu">${fmtD(s.date)} · <span class="en">C${s.cycle}</span> · ${L.exN(s.ex.length)}</div></div><span class="pst ${s.status}">${L.st[s.status]||''}</span></div></div>`}).join('')}
+/* v122: إحصائيات: الالتزام آخر 16 أسبوع، ومجموعات كل عضلة في آخر 7 أيام */
+function statsHtml(ds){if(!ds.length)return '';
+  const wk=iso=>Math.floor((new Date(iso+'T12:00:00')-new Date('2000-01-01T12:00:00'))/(7*864e5)),now=wk(today()),c={};for(const x of ds){const k=now-wk(x.date);if(k>=0&&k<16)c[k]=(c[k]||0)+1}
+  const mx=Math.max(3,...Object.values(c)),bars=Array.from({length:16},(_,i)=>15-i).map(k=>{const n=c[k]||0;return `<i class="${n>=3?'ok':n?'lo':''}" style="height:${Math.max(4,n/mx*44).toFixed(0)}px" title="${n}"></i>`}).join('');
+  const mg={};for(const x of ds){if(daysAgo(x.date)>6||daysAgo(x.date)<0)continue;for(const e of x.ex){const L=libGet(e.name),g=L?L[1]:'';if(!g||g==='cond')continue;mg[g]=(mg[g]||0)+e.sets.length}}
+  const rows=Object.keys(GRP).filter(g=>mg[g]).map(g=>`<div class="mgr"><span>${GRP[g][LANG==='ar'?0:1]}</span><i style="width:${Math.min(100,mg[g]/20*100).toFixed(0)}%"></i><b class="en">${mg[g]}</b></div>`).join('');
+  return `<details class="fsec sts" data-fk="stats"${fOpen.has('stats')?' open':''}><summary>${tr('الإحصائيات','Stats')}<span class="pchev">⌄</span></summary><div class="fbody">
+    <div class="mu">${tr('جلسات كل أسبوع (آخر 16 أسبوع، الأحدث على الطرف). الدهبي = حققت 3','Sessions per week (last 16 weeks, newest at the end). Gold = hit 3')}</div><div class="wkb" dir="ltr">${bars}</div>
+    ${rows?`<div class="mu" style="margin-top:14px">${tr('مجموعات كل عضلة في آخر 7 أيام (10–20 في الأسبوع مدى كويس للنمو)','Sets per muscle in the last 7 days (10–20 a week is a good range for growth)')}</div><div class="mgs">${rows}</div>`:''}</div></details>`}
 function renderHistory(){
   const L=T(),ds=done();hsList=ds;hsN=0;hsLast='';
   const hm=histMap(),inProg=new Set(S.program.days.flatMap(d=>d.ex.map(t=>nk(t.name))));
@@ -1474,6 +1485,7 @@ function renderHistory(){
   const dopts=Object.keys(dn).sort((x,y)=>dc[y]-dc[x]);
   let h=`<div class="lsearch"><select id="exPick" class="psel"><option value="">${L.exPickPh}</option>${S.program.days.map(d=>`<optgroup label="${esc(d.name)}">${d.ex.map(t=>`<option value="${t.id}">${esc(t.name)} (${(hm[nk(t.name)]||[]).length})</option>`).join('')}</optgroup>`).join('')}${old.length?`<optgroup label="${tr('تمارين قديمة','Older exercises')}">${old.map(o=>`<option value="n:${esc(o[0])}">${esc(o[0])} (${o[1]})</option>`).join('')}</optgroup>`:''}</select><span class="pchev">⌄</span></div>
   <div class="lsearch"><select id="dayPick" class="psel"><option value="">${tr('اختار يوم تمرين…','Choose a workout day…')}</option>${dopts.map(k=>`<option value="${esc(k)}">${esc(dn[k])} (${dc[k]})</option>`).join('')}</select><span class="pchev">⌄</span></div>`;
+  h+=statsHtml(ds);
   if(!ds.length)h+=`<div class="empty">${L.noSess}</div>`;
   else h+=`<div class="plist" id="hsL">${histChunk()}</div>${hsN<ds.length?'<div id="hsMore" style="height:1px"></div>':''}`;
   $('#view').innerHTML=h;
