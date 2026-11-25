@@ -271,7 +271,6 @@ html .brand .wm b,html[data-th] .brand .wm b{font-size:15px;font-weight:800;lett
 .cr .crf{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-width:210px;min-height:48px;padding:0 22px;border:1px solid var(--ac);border-radius:99px;color:var(--ac2);text-decoration:none;font-size:15px;letter-spacing:.08em;-webkit-tap-highlight-color:transparent}
 .cr .crf:active{background:color-mix(in srgb,var(--tx) 8%,transparent)}
 .cr .crv{margin-top:22px;font-size:11px;letter-spacing:.12em;color:var(--mu);opacity:.7}
-.cr .crv span{text-decoration:underline;cursor:pointer;padding:6px 4px}
 /* v87: شاشة البداية — أول فتح أو بعد ساعتين غياب */
 #splash{position:fixed;inset:0;z-index:99;background:radial-gradient(circle at 50% 44%,var(--hero) 0,var(--bg) 55%,var(--bg) 100%);display:none;align-items:center;justify-content:center;transition:opacity .5s ease}
 #splash.on{display:flex}#splash.out{opacity:0;pointer-events:none}

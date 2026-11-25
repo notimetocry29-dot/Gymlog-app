@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='135';
+const VER='136';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -486,13 +486,7 @@ function openCredits(){
   <div class="crk">AN APP MADE BY</div>
   <div class="cra">Ahmed Maher</div>
   <a class="crf" href="https://www.facebook.com/share/1HWtZibWS7/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M13.5 22v-8h2.7l.5-3.4h-3.2V8.5c0-1 .4-1.7 1.8-1.7h1.5V3.9c-.3 0-1.2-.2-2.2-.2-2.3 0-3.9 1.4-3.9 4v2.5H7.5V14h2.9v8z"/></svg><span>Facebook</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
-  <div class="crv">v${VER} · <span data-hr="1">Reload</span></div></div>`)}
-async function hardRefresh(){
-  const lg=document.querySelector('.brand .lg');if(lg)lg.classList.add('spin');
-  saveUI();try{await sq}catch(e){}
-  try{if('serviceWorker' in navigator){const reg=await navigator.serviceWorker.getRegistration();if(reg){await reg.update();if(reg.waiting){reg.waiting.postMessage('skip');setTimeout(()=>location.reload(),1800);return}}}}catch(e){}
-  location.reload();
-}
+  <div class="crv">v${VER}</div></div>`)}
 /* زرار الرجوع في تطبيق الأندرويد: الويب بيتصرف الأول، ولو إنت في الرئيسية بيسأل «تخرج؟» */
 window.__glSaved=ok=>{const bk=window.__glBk;window.__glBk=false;if(ok&&bk){markBackup();refresh();toast(T().savedFile)}else toast(ok?T().saved:tr('مقدرتش أحفظ الملف','Could not save the file'))};
 function exitAsk(){
@@ -1614,7 +1608,6 @@ document.addEventListener('click',ev=>{
   if(ev.target.closest('.brand .lg')){newQuote();return}
   if(ev.target.closest('.brand .wmk')){openCredits();return}
   {const qe=ev.target.closest('.qt');if(qe&&tab==='home'&&qGestOn()){if(Date.now()-qSw>450)copyQuote(qe);return}}
-  if(ev.target.closest('[data-hr]')){hardRefresh();return}
   const tb=ev.target.closest('.tabs button');if(tb){navTab(tb.dataset.tab);return}
   if(ev.target.id==='modal'){closeModal();return}
   const b=ev.target.closest('[data-a]');if(!b)return;
