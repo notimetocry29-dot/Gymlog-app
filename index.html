@@ -362,6 +362,16 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 .cbh:active{transform:scale(.98);background:var(--s2)}
 .cbh .cbt{display:block}
 .cbgo{display:block;margin-top:9px;padding-top:8px;border-top:1px solid var(--bd);color:var(--ac2);font-weight:600;font-size:13.5px}
+/* v113: رسايل الموافقة بشكل التطبيق بدل رسايل النظام */
+#ask{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.55);opacity:0;transition:opacity .18s ease}
+#ask.on{opacity:1}
+#ask .abx{width:100%;max-width:360px;background:var(--s1);border:1px solid var(--bd);border-radius:20px;padding:22px 20px 16px;text-align:center;transform:translateY(10px) scale(.98);transition:transform .2s cubic-bezier(.2,.7,.2,1)}
+#ask.on .abx{transform:none}
+#ask .atx{font-size:16px;line-height:1.75;color:var(--tx2);margin:0 4px 18px}
+#ask .abt{display:flex;gap:10px}
+#ask .abt button{flex:1;min-height:48px;border-radius:14px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;border:1px solid var(--bd);background:var(--s2);color:var(--tx2)}
+#ask .abt .ok{background:var(--ac);border-color:var(--ac);color:var(--onac,#111)}
+#ask .abt .ok.dg{background:transparent;border-color:var(--badtx);color:var(--badtx)}
 .pfbn{font-size:13px;line-height:1.7;color:var(--mu);margin:0 2px 10px}
 .cbdh{margin:16px 0 6px;font-size:13px;color:var(--mu);text-align:start}
 .sxs{margin:0 0 10px}
@@ -545,7 +555,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='112';
+const VER='113';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -860,12 +870,24 @@ function cbCard(c,open){
   return `<button class="cbh" data-a="cbGo"><b>${tr(`رجوع بعد ${c.g} يوم`,`Back after ${c.g} days`)}</b><span class="cbt">${how} ${tr('وقّف وانت لسه قادر على 2–3 عدّات.','Stop each set with 2–3 reps left.')}</span><span class="cbs" dir="${ar?'rtl':'ltr'}">${pills}</span><span class="cbgo">${open?tr('كمّل جلسة الرجوع','Continue the comeback session'):tr('ابدأ جلسة الرجوع','Start the comeback session')} ${ar?'‹':'›'}</span></button>`;
 }
 /* اقتراح بس: بيتفتح لما تدوس على الكارت. الدايرة و«ابدأ يوم تاني» والبرنامج بيفتحوا يومك العادي بأوزانك */
+/* v113: ask(نص) بدل confirm: نافذة بنفس الثيم، وبترجع وعد (موافقة = true) */
+function ask(msg,o={}){return new Promise(res=>{
+  const old=document.getElementById('ask');if(old)old.remove();
+  const w=document.createElement('div');w.id='ask';w.setAttribute('role','dialog');w.setAttribute('aria-modal','true');
+  w.innerHTML=`<div class="abx"><div class="atx" dir="auto">${esc(msg)}</div><div class="abt"><button class="ok${o.danger?' dg':''}">${esc(o.yes||tr('تمام','OK'))}</button><button class="no">${esc(o.no||tr('إلغاء','Cancel'))}</button></div></div>`;
+  let done=false;const end=v=>{if(done)return;done=true;w.classList.remove('on');document.removeEventListener('keydown',kd,true);setTimeout(()=>w.remove(),180);res(v)};
+  const kd=e=>{if(e.key==='Escape'){e.stopPropagation();end(false)}};
+  w.addEventListener('click',e=>{e.stopPropagation();if(e.target.closest('.ok'))end(true);else if(e.target.closest('.no')||e.target===w)end(false)});
+  document.addEventListener('keydown',kd,true);
+  document.body.appendChild(w);void w.offsetWidth;w.classList.add('on');try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
+  setTimeout(()=>{const b=w.querySelector('.no');b&&b.focus({preventScroll:true})},30);
+})}
 const dEmpty=d=>!!d&&!d.editing&&!(d.ex||[]).some(e=>(e.sets||[]).some(v=>String(v).trim()!==''));
-function startComeback(){
+async function startComeback(){
   /* جلسة الرجوع مفتوحة بالفعل: كمّلها */
   if(S.draft&&S.draft.cb&&!S.draft.editing){openSession();return}
   const c=cbNow();if(!c)return;
-  if(S.draft&&!dEmpty(S.draft)&&!confirm(T().confNew))return;
+  if(S.draft&&!dEmpty(S.draft)&&!await ask(T().confNew))return;
   S.draft=null;S.draft=planDraft(c.step.k==='fb'?'FB':nextDayId(),c);
   openTips.clear();save();openSession();
 }
@@ -1108,15 +1130,15 @@ function renderHome(){
 
 /* ================= الجلسة ================= */
 function draftEx(t,src){const hh=exHist(t.id,S.draft&&S.draft.editing),h=hh.find(x=>!x.cb)||hh[0];return{exId:t.id,name:t.name,unit:t.unit||'',core:!!t.core,goal:t.goal,tsets:t.sets,treps:t.reps,note0:t.note||libHow(t.name),w:src?src.w:(h?h.w:t.w),sets:src?src.sets.map(String):Array(t.sets).fill(''),dur:src&&src.dur?src.dur.slice():[],clean:src?!!src.clean:false,note:src?src.note||'':''}}
-function startSession(id){
-  if(S.draft&&!dEmpty(S.draft)&&!confirm(T().confNew))return;
+async function startSession(id){
+  if(S.draft&&!dEmpty(S.draft)&&!await ask(T().confNew))return;
   S.draft=null;
   S.draft=planDraft(id,id==='FB'?cbNow():null);
   openTips.clear();save();openSession();
 }
-function editSession(id){
+async function editSession(id){
   const s=S.sessions.find(x=>x.id===id);if(!s)return;
-  if(S.draft&&!confirm(T().confEditOver))return;
+  if(S.draft&&!await ask(T().confEditOver))return;
   const d=S.program.days.find(x=>x.id===s.day);
   S.draft={id:s.id,editing:s.id,date:s.date,day:s.day,dayName:s.dayName,cycle:s.cycle,ex:[]};if(s.cb)S.draft.cb=s.cb;
   const ex=s.ex.map(e=>{const t=d&&d.ex.find(x=>x.id===e.exId)||{id:e.exId,name:e.name,unit:e.unit,core:e.core,goal:e.goal,sets:e.tsets||e.sets.length,reps:e.treps||e.sets[0],note:''};return draftEx(t,e)});
@@ -1668,7 +1690,7 @@ async function enableSyncWith(tok,p1,repo){
   }catch(e){SYNC.on=false;await saveSync();toast(T().syncErr(syncMsg(String(e.message||e))))}
 }
 async function disableSync(){
-  if(!confirm(T().syncConfOff))return;
+  if(!await ask(T().syncConfOff,{danger:1}))return;
   SYNC.on=false;BKEY=null;await saveSync();try{await idb.set('bk.token',null);await idb.set('bk.key',null)}catch(e){}renderData();
 }
 async function restoreRemote(){
@@ -1679,7 +1701,7 @@ async function restoreRemote(){
     SYNC.repo=repo;brOK=false;rSha=null;
     const o=await openBackup(await readRemote(tok),p1);
     if(!await applyRestore(o.data))return;
-    if(!SYNC.on&&confirm(T().syncAfterRestore))await enableSyncWith(tok,p1,repo);
+    if(!SYNC.on&&await ask(T().syncAfterRestore))await enableSyncWith(tok,p1,repo);
   }catch(e){toast(T().syncErr(syncMsg(String(e.message||e))))}
 }
 /* ================= الاسترجاع (ملف أو GitHub) ================= */
@@ -1698,7 +1720,7 @@ function cleanRestore(d){
 }
 async function applyRestore(d){
   const c=cleanRestore(d);
-  if(!confirm(T().confRestore(c.ss.length)))return false;
+  if(!await ask(T().confRestore(c.ss.length),{danger:1}))return false;
   /* نسخة من اللي على الموبايل قبل الاسترجاع، عشان «تراجع» */
   try{await idb.set('state.prerestore',{at:Date.now(),data:JSON.parse(JSON.stringify(S))})}catch(e){}
   S={v:1,program:Object.assign({},d.program,{days:c.days}),sessions:c.ss,settings:Object.assign({cycle:8},d.settings||{},{lang:LANG}),draft:d.draft||null,sys:d.sys||undefined,custom:Array.isArray(d.custom)?d.custom:[],libOv:(d.libOv&&typeof d.libOv==='object')?d.libOv:{},exNotes:(d.exNotes&&typeof d.exNotes==='object')?d.exNotes:{},steps:(d.steps&&typeof d.steps==='object')?d.steps:{},body:Array.isArray(d.body)?d.body:[],mig:Math.max(+d.mig||0,HIST_MIG)};
@@ -1707,7 +1729,7 @@ async function applyRestore(d){
 }
 async function undoRestore(){
   let p=null;try{p=await idb.get('state.prerestore')}catch(e){}
-  if(!p||!p.data||!confirm(T().confUndoRestore))return;
+  if(!p||!p.data||!await ask(T().confUndoRestore))return;
   S=p.data;try{await idb.set('state.prerestore',null)}catch(e){}
   save();queueBackup();toast(T().undoDone);go('home');
 }
@@ -1824,12 +1846,12 @@ function csvToSessions(txt){
   }
   return[...map.values()].filter(s=>s.ex.length);
 }
-function csvMerge(txt){
+async function csvMerge(txt){
   const add=csvToSessions(txt);if(!add.length)return false;
   const have=new Set(S.sessions.map(x=>x.date+'|'+x.cycle+'|'+x.dayName));
   const fresh=add.filter(x=>!have.has(x.date+'|'+x.cycle+'|'+x.dayName));
   if(!fresh.length){toast(tr('كل الجلسات دي موجودة عندك أصلًا','All these sessions are already in your log'));return true}
-  if(!confirm(tr(`ده ملف Excel (CSV) مش نسخة كاملة. هيتضاف ${fresh.length} جلسة لسجلك من غير ما يمسح حاجة، والبرنامج والإعدادات مش هيتغيروا. أكمّل؟`,`This is an Excel (CSV) file, not a full backup. ${fresh.length} session(s) will be added to your log; nothing is deleted and your program and settings stay as they are. Continue?`)))return true;
+  if(!await ask(tr(`ده ملف Excel (CSV) مش نسخة كاملة. هيتضاف ${fresh.length} جلسة لسجلك من غير ما يمسح حاجة، والبرنامج والإعدادات مش هيتغيروا. أكمّل؟`,`This is an Excel (CSV) file, not a full backup. ${fresh.length} session(s) will be added to your log; nothing is deleted and your program and settings stay as they are. Continue?`)))return true;
   S.sessions=S.sessions.concat(fresh).sort((a,b)=>(a.ts||0)-(b.ts||0));
   save();queueBackup();toast(tr(`اتضاف ${fresh.length} جلسة ✓`,`Added ${fresh.length} session(s) ✓`));go('home');return true;
 }
@@ -1838,7 +1860,7 @@ async function importText(txt){
   let d;
   try{d=parseBackup(txt);cleanRestore(d)}
   catch(e){
-    let ok=false;try{ok=csvMerge(txt)}catch(e2){}
+    let ok=false;try{ok=await csvMerge(txt)}catch(e2){}
     if(!ok)toast(String(txt).trim()?T().badFile:tr('الملف ده فاضي — احفظ نسخة جديدة','This file is empty — save a new backup'));
     return}
   await applyRestore(d);
@@ -1952,7 +1974,7 @@ document.addEventListener('click',ev=>{
     case 'resume':if(b.classList.contains('orb'))orbGo(b,openSession);else openSession();break;
     case 'closeS':flushSave();closeSession();if(S.draft)queueDraftBackup();break;
     case 'shareDraft':shareDraft();break;
-    case 'discard':if(confirm(d.editing?L.confCancelEdit:L.confDiscard)){S.draft=null;openTips.clear();save();closeSession()}break;
+    case 'discard':ask(d.editing?L.confCancelEdit:L.confDiscard,{danger:1}).then(ok=>{if(ok){S.draft=null;openTips.clear();save();closeSession()}});break;
     case 'addset':d.ex[i].sets.push('');save();renderSession();break;
     case 'exGo':goEx(i);break;
     case 'setTap':{const j=+b.dataset.j,e=d.ex[curEx];if(num(e.sets[j])>0){openPick('s',j);break}
@@ -1983,14 +2005,14 @@ document.addEventListener('click',ev=>{
     case 'aiS':{const s=S.sessions.find(x=>x.id===b.dataset.id);if(s)shareText(aiText(s,s.id));break}
     case 'editS':editSession(b.dataset.id);break;
     case 'undoRestore':undoRestore();break;
-    case 'delS':if(confirm(L.confDel)){S.sessions=S.sessions.filter(x=>x.id!==b.dataset.id);if(S.draft&&S.draft.editing===b.dataset.id)S.draft=null;save();queueBackup();closeModal();go(tab)}break;
+    case 'delS':ask(L.confDel,{danger:1}).then(ok=>{if(ok){S.sessions=S.sessions.filter(x=>x.id!==b.dataset.id);if(S.draft&&S.draft.editing===b.dataset.id)S.draft=null;save();queueBackup();closeModal();go(tab)}});break;
     case 'closeM':closeModal();break;
     case 'pday':pDay=b.dataset.d;renderProgram();break;
-    case 'fbReset':if(confirm(tr('ترجّع الفول بادي للاختيار التلقائي من برنامجك؟','Reset the full body to the automatic pick from your program?'))){S.fbDay=null;fbDay();save();queueBackup();renderProgram();toast(tr('اترجع ✓','Reset ✓'))}break;
+    case 'fbReset':ask(tr('ترجّع الفول بادي للاختيار التلقائي من برنامجك؟','Reset the full body to the automatic pick from your program?')).then(ok=>{if(ok){S.fbDay=null;fbDay();save();queueBackup();renderProgram();toast(tr('اترجع ✓','Reset ✓'))}});break;
     case 'exInfo':infoModal(i);break;
     case 'sysOpen':sysModal();break;
     case 'pedit':pEdit=!pEdit;renderProgram();break;
-    case 'sysPick':if(confirm(tr('هتبدّل النظام. تمارينك الحالية محفوظة وترجعلها. تكمّل؟','Switch system? Your current exercises are kept. Continue?'))){switchSys(b.dataset.id);closeModal();renderProgram();toast(tr('النظام اتغيّر ✓','System changed ✓'))}break;
+    case 'sysPick':ask(tr('هتبدّل النظام. تمارينك الحالية محفوظة وترجعلها. تكمّل؟','Switch system? Your current exercises are kept. Continue?')).then(ok=>{if(ok){switchSys(b.dataset.id);closeModal();renderProgram();toast(tr('النظام اتغيّر ✓','System changed ✓'))}});break;
     case 'libOpen':libQ='';libG='all';libFor='prog';libModal();break;
     case 'sxOpen':closeSheet();libQ='';libG='all';libFor='sess';libModal();break;
     case 'sxProg':S.settings.sxProg=b.dataset.v==='1'?1:0;save();libModal();break;
@@ -2009,7 +2031,7 @@ document.addEventListener('click',ev=>{
     case 'hwSave':hwSave(b.dataset.n);break;
     case 'hwReset':{const n=b.dataset.n,old=libHow(n);if(S.libOv)delete S.libOv[n];hwApply(n,old);toast(tr('رجع الأصلي ✓','Restored ✓'));break}
     case 'cuSave':cuSave(b.dataset.n);break;
-    case 'cuDel':if(confirm(tr('تحذف التمرين ده من مكتبتك؟ برنامجك وسجلك مش هيتأثروا.','Delete this exercise from your library? Your program and log are not affected.'))){S.custom=(S.custom||[]).filter(x=>x.name!==b.dataset.n);save();queueBackup();closeModal();renderLib()}break;
+    case 'cuDel':ask(tr('تحذف التمرين ده من مكتبتك؟ برنامجك وسجلك مش هيتأثروا.','Delete this exercise from your library? Your program and log are not affected.'),{danger:1}).then(ok=>{if(ok){S.custom=(S.custom||[]).filter(x=>x.name!==b.dataset.n);save();queueBackup();closeModal();renderLib()}});break;
     case 'qGest':S.settings.qGest=b.dataset.k==='off'?0:1;save();renderData();break;
     case 'howLang':S.settings.howLang=b.dataset.k==='en'?'en':'ar';save();renderData();break;
     case 'lbE':lbE=b.dataset.e;{const c=$('#lbEC'),l=$('#lbL');if(c)c.innerHTML=lbEChips();if(l)l.innerHTML=libRows()}break;
@@ -2020,11 +2042,11 @@ document.addEventListener('click',ev=>{
     case 'dayAdd':{const nd={id:'D'+uid(),name:tr('يوم جديد','New day'),ex:[]};S.program.days.push(nd);pDay=nd.id;save();queueBackup();renderProgram();dayModal();break}
     case 'dayEdit':dayModal();break;
     case 'daySave':{const v=$('#dName').value.trim();if(v){day(pDay).name=v;save();queueBackup()}closeModal();renderProgram();break}
-    case 'dayDel':if(confirm(tr('تحذف اليوم ده بتمارينه؟ السجل القديم مش هيتأثر.','Delete this day and its exercises? Your log is not affected.'))){S.program.days=S.program.days.filter(x=>x.id!==pDay);pDay=S.program.days[0].id;save();queueBackup();closeModal();renderProgram()}break;
+    case 'dayDel':ask(tr('تحذف اليوم ده بتمارينه؟ السجل القديم مش هيتأثر.','Delete this day and its exercises? Your log is not affected.'),{danger:1}).then(ok=>{if(ok){S.program.days=S.program.days.filter(x=>x.id!==pDay);pDay=S.program.days[0].id;save();queueBackup();closeModal();renderProgram()}});break;
     case 'editT':tplModal(i);break;
     case 'addT':cuModal();break;
     case 'saveT':saveTpl(i);break;
-    case 'delT':if(confirm(L.confDelEx)){day(pDay).ex.splice(i,1);save();queueBackup();closeModal();renderProgram()}break;
+    case 'delT':ask(L.confDelEx,{danger:1}).then(ok=>{if(ok){day(pDay).ex.splice(i,1);save();queueBackup();closeModal();renderProgram()}});break;
     case 'copyT':copy(tplCard(day(pDay)));break;
     case 'backup':backupNow();break;
     case 'share':shareBackup();break;
