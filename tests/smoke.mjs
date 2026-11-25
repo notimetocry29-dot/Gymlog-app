@@ -148,5 +148,22 @@ async function page(st) {
 { const st = state(20); const { pg, errs, ctx } = await page(st);
   ok(await pg.evaluate(() => { const c0 = cbNow(); S.sessions.push(Object.assign(JSON.parse(JSON.stringify(S.sessions[0])), { id: 'usual', date: today(), ts: Date.now() })); const c1 = cbNow(); return c0 && c1 && c1.i === c0.i; }), 'playing the usual day does not consume a comeback step');
   ok(errs.length === 0, 'no page errors (comeback steps) ' + errs.join(';')); await ctx.close(); }
+// 11) v141: الملاحظة في مكانها، «آخر 3 مرات» بيبان، مفيش datalist، الصورة فيها كل التمارين، تفاصيل السجل
+{ const { pg, errs, ctx } = await page(state(2));
+  await pg.setViewportSize({ width: 360, height: 640 });
+  await pg.evaluate(() => { startSession('U1'); closeSheet(); }); await pg.waitForTimeout(400);
+  ok(await pg.evaluate(() => { const t = $('#sess .wnote'); return t && t.value === '' && !/المقابض|Handles/.test(t.value) && !document.querySelector('#sess .whint'); }), 'the note under the exercise is your own (no library text)');
+  await pg.fill('#sess .wnote', 'كوع قريب'); await pg.waitForTimeout(900);
+  ok(await pg.evaluate(() => memoOf(S.draft.ex[0].name) === 'كوع قريب' && S.draft.ex[0].note === 'كوع قريب'), 'typing the note saves it permanently and into the session');
+  await pg.waitForTimeout(600); await pg.evaluate(() => { closeModal(true); S.draft.rdyAsk = 1; closeSheet(); $('#sess').scrollTop = 0; }); await pg.click('#sess [data-a=tgl]'); await pg.waitForTimeout(900);
+  ok(await pg.evaluate(() => { const b = $('#l3box'), nv = $('#sess .wnav'); return b && b.getBoundingClientRect().top < nv.getBoundingClientRect().top; }), 'opening «Last 3 times» scrolls it into view');
+  ok(await pg.evaluate(() => { memoModal('Lat Pulldown'); return $('#memoT').value === ''; }), 'the note editor never pre-fills library text');
+  await pg.evaluate(() => { closeModal(true); closeSession(); S.draft = null; }); await pg.waitForTimeout(400); await pg.evaluate(() => { pDay = 'U1'; tplModal(0); }); await pg.waitForTimeout(200);
+  ok(await pg.evaluate(() => !document.querySelector('datalist') && !!$('#tSug')), 'no native datalist in the exercise editor');
+  await pg.fill('#tName', 'lat'); await pg.waitForTimeout(200);
+  ok(await pg.evaluate(() => document.querySelectorAll('#tSug .sugi').length > 0), 'matching exercises show in a themed list');
+  ok(await pg.evaluate(async () => { closeModal(true); const s = JSON.parse(JSON.stringify(S.sessions[0])); s.ex = Array.from({ length: 12 }, (_, k) => Object.assign({}, s.ex[0], { name: 'Ex ' + k, dur: [30, 30, 30], note: 'n' + k })); const b = await cardImg(s); const im = await createImageBitmap(b); return im.height > 1500; }), 'session image keeps every exercise with times and notes');
+  ok(await pg.evaluate(() => { S.sessions[0].ex[0].note = 'ملاحظتي'; S.sessions[0].ex[0].dur = [40, 40, 40]; sessModal(S.sessions[0].id); const t = $('#modal .mbox').textContent; return /ملاحظتي/.test(t) && /2:00/.test(t); }), 'history session detail shows notes and set times');
+  ok(errs.length === 0, 'no page errors (v141 UI) ' + errs.join(';')); await ctx.close(); }
 await br.close();
 console.log(fail ? `\n${fail} test(s) failed` : '\nall tests passed'); process.exit(fail ? 1 : 0);

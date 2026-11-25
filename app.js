@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='140';
+const VER='141';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -19,8 +19,15 @@ const fmtD=iso=>{try{return new Date(iso+'T12:00:00').toLocaleDateString(loc(),{
 const daysAgo=iso=>Math.round((new Date(today()+'T12:00:00')-new Date(iso+'T12:00:00'))/864e5);
 const noW=w=>w===''||w==null||isNaN(+w)||+w===0;
 const fw=w=>noW(w)?'—':(+w)+' k';
-function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);el.style.transform='';el.style.opacity='';toast.t=setTimeout(()=>el.classList.remove('on'),t.length>45?3200:1500)}
-(()=>{let x0=null;const el=()=>$('#toast');document.addEventListener('touchstart',e=>{if(e.target.closest&&e.target.closest('#toast')){x0=e.touches[0].clientX;clearTimeout(toast.t)}},{passive:true});document.addEventListener('touchmove',e=>{if(x0==null)return;const dx=e.touches[0].clientX-x0;el().style.transform=`translateX(calc(-50% + ${dx}px))`;el().style.opacity=String(Math.max(0,1-Math.abs(dx)/160))},{passive:true});document.addEventListener('touchend',e=>{if(x0==null)return;const dx=(e.changedTouches[0].clientX-x0);x0=null;const t=el();if(Math.abs(dx)>50){t.classList.remove('on');setTimeout(()=>{t.style.transform='';t.style.opacity=''},250)}else{t.style.transform='';t.style.opacity='';toast.t=setTimeout(()=>t.classList.remove('on'),1200)}})})();
+function toast(t,o){const el=$('#toast');el.textContent=t;el.classList.toggle('top',!!(o&&o.top));el.classList.add('on');clearTimeout(toast.t);el.style.transform='';el.style.opacity='';toast.t=setTimeout(()=>el.classList.remove('on'),t.length>45?3200:1500)}
+(()=>{let x0=null;const el=()=>$('#toast');document.addEventListener('touchstart',e=>{if(e.target.closest&&e.target.closest('#toast')){x0=e.touches[0].clientX;clearTimeout(toast.t)}},{passive:true});document.addEventListener('touchmove',e=>{if(x0==null)return;const dx=e.touches[0].clientX-x0;el().style.transform=`translateX(calc(-50% + ${dx}px))`;el().style.opacity=String(Math.max(0,1-Math.abs(dx)/160))},{passive:true});document.addEventListener('touchend',e=>{if(x0==null)return;const dx=(e.changedTouches[0].clientX-x0);x0=null;const t=el();if(Math.abs(dx)>50){t.classList.remove('on');setTimeout(()=>{t.style.transform='';t.style.opacity=''},250)}else{t.style.transform='';t.style.opacity='';toast.t=setTimeout(()=>t.classList.remove('on'),1200)}});
+  document.addEventListener('touchcancel',()=>{if(x0==null)return;x0=null;const t=el();t.style.transform='';t.style.opacity='';toast.t=setTimeout(()=>t.classList.remove('on'),1200)},{passive:true})})();
+/* v141: رسالة «تراجع» كمان بتتسحب يمين أو شمال تختفي */
+(()=>{let x0=null;const el=()=>$('#undo'),reset=u=>{u.style.transform='';u.style.opacity=''};
+  document.addEventListener('touchstart',e=>{const u=e.target.closest&&e.target.closest('#undo');if(u&&u.classList.contains('on')&&!e.target.closest('button'))x0=e.touches[0].clientX},{passive:true});
+  document.addEventListener('touchmove',e=>{if(x0==null)return;const dx=e.touches[0].clientX-x0,u=el();u.style.transform=`translateX(calc(-50% + ${dx}px))`;u.style.opacity=String(Math.max(0,1-Math.abs(dx)/160))},{passive:true});
+  const end=e=>{if(x0==null)return;const dx=e&&e.changedTouches?e.changedTouches[0].clientX-x0:0;x0=null;const u=el();if(Math.abs(dx)>50){u.classList.remove('on');UND=null;setTimeout(()=>reset(u),250)}else reset(u)};
+  document.addEventListener('touchend',end,{passive:true});document.addEventListener('touchcancel',()=>end(null),{passive:true})})();
 
 /* ================= البيانات ================= */
 function E(name,w,sets,reps,o={}){return{id:uid(),name,w,sets,reps,goal:o.goal??(o.unit?reps:Math.max(12,reps)),unit:o.unit||'',core:!!o.core,note:o.note||''}}
@@ -152,7 +159,12 @@ function exHist(exId,skip,nm0){const out=[];
   const me=S.program.days.concat(S.fbDay?[S.fbDay]:[]).flatMap(d=>d.ex).find(x=>x.id===exId),dx=!me&&!nm0&&S.draft&&S.draft.ex.find(x=>x.exId===exId),nm=me?nk(me.name):nm0?nk(nm0):dx?nk(dx.name):null;
   for(const s of done()){if(s.id===skip)continue;const e=s.ex.find(x=>x.exId===exId)||(nm&&s.ex.find(x=>nk(x.name)===nm));if(e)out.push(Object.assign({date:s.date,cycle:s.cycle,cb:s.cb?1:0,gym:gymOf(s)},e))}return out}
 function histMap(){const m={};for(const s of done())for(const e of s.ex){const k=nk(e.name);(m[k]||(m[k]=[])).push(Object.assign({date:s.date,cycle:s.cycle,cb:s.cb?1:0},e))}return m}
-function setsStr(e){const a=e.sets;const u=e.unit?' '+unitTxt(e.unit):'';if(!a.length)return '';if(Array.isArray(e.ws)&&e.ws.length===a.length&&e.ws.some(x=>+x!==+e.w))return a.map((r,j)=>`${+e.ws[j]}×${r}`).join(' / ');return a.every(r=>r===a[0])?`${a.length}×${a[0]}${u}`:a.join('/')+u}
+function setsNum(e){const a=e.sets;if(!a.length)return '';if(Array.isArray(e.ws)&&e.ws.length===a.length&&e.ws.some(x=>+x!==+e.w))return a.map((r,j)=>`${+e.ws[j]}×${r}`).join(' / ');return a.every(r=>r===a[0])?`${a.length}×${a[0]}`:a.join('/')}
+function setsStr(e){const n=setsNum(e);return n&&e.unit&&!(Array.isArray(e.ws)&&e.ws.length===e.sets.length&&e.ws.some(x=>+x!==+e.w))?n+' '+unitTxt(e.unit):n}
+/* v141: الأرقام في عزل LTR والوحدة العربي برّاها، فـ «3×45 ثانية» بتتقري صح في العربي */
+const uH=u=>u?' '+esc(unitTxt(u)):'';
+const setsH=e=>{const n=setsNum(e);return n?`<bdi class="en">${esc(n)}</bdi>${setsStr(e)!==n?uH(e.unit):''}`:''};
+const tgtH=(s,r,g,u)=>`<bdi class="en">${esc(String(+s||0))}×${tgt(r,g,u)}</bdi>${uH(u)}`;
 
 /* ================= v108: الرجوع بعد الغياب (تلقائي بعد أي فترة غياب) =================
    القوة بتفضل تقريبًا 2–3 أسابيع. اللي بيقع الأول: حماية العضلة من الشد العنيف بعد التمرين، والنَفَس، والأوتار.
@@ -252,7 +264,7 @@ function cbPreview(){const c=cbNow();if(!c){startComeback();return}
   const pd=planDraft(c.step.k==='fb'?'FB':nextDayId(),c),fb=c.step.k==='fb';
   modal(`<h3>${tr('تمرينتك المقترحة النهارده','Your suggested workout today')}</h3>
   <div class="mu" style="margin-bottom:12px;line-height:1.8">${tr(`غبت ${c.g} يوم، فالنهارده ${fb?'جسم كامل خفيف':'<bdi class="en">'+esc(pd.dayName.replace(' · Light',''))+'</bdi> مخففة'} والأوزان <b class="en">${cbPct(c.step)}</b> من أوزانك قبل الغياب. خطوة ${c.i+1} من ${c.n}، وبعدها ترجع لجدولك.`,`You were away ${c.g} days, so today is ${fb?'a light full body':esc(pd.dayName.replace(' · Light',''))+' (light)'} at <b>${cbPct(c.step)}</b> of your pre-break weights. Step ${c.i+1} of ${c.n}, then back to your plan.`)}</div>
-  <div class="cbpl">${pd.ex.map(e=>`<div class="cbpr"><span class="sp en">${esc(e.name)}${e.core?' <i class="cbc">★</i>':''}</span><span class="en mu">${e.tsets}×${e.treps}${e.unit?' '+esc(unitTxt(e.unit)):''}</span><b class="en">${e.w&&+e.w?fw(e.w):'—'}</b></div>`).join('')}</div>
+  <div class="cbpl">${pd.ex.map(e=>`<div class="cbpr"><span class="sp en">${esc(e.name)}${e.core?' <i class="cbc">★</i>':''}</span><span class="mu">${tgtH(e.tsets,e.treps,0,e.unit)}</span><b class="en">${e.w&&+e.w?fw(e.w):'—'}</b></div>`).join('')}</div>
   <div class="mu" style="margin:10px 0 14px">${tr('وقّف كل مجموعة وانت لسه قادر على 2–3 عدّات. الجلسة دي مش بتتحسب في قاعدة الزيادة.','Stop each set with 2–3 reps left. This session does not count toward the progression rule.')}</div>
   <div class="row"><button class="btn pri sp" data-a="cbStart">${tr('ابدأ','Start')}</button><button class="btn ghost" data-a="cbWhy">${tr('ليه؟','Why?')}</button></div>`)}
 async function startComeback(){
@@ -305,7 +317,7 @@ function exFlags(e,s){const a=[];
   if(e.ss&&s){const k=s.ex.indexOf(e),nx=s.ex[k+1];if(nx)a.push(tr(`سوبرسيت مع ${nx.name}`,`superset with ${nx.name}`))}
   return a}
 function cardText(s){
-  const L=[`Cycle ${s.cycle}`,`${s.dayName} — ${s.date}`];
+  const L=[`${tr('الدورة','Cycle')} ${s.cycle}`,`${s.dayName} — ${s.date}`];
   L.push(...sessMeta(s));
   if(s.cb)L.push(s.cb.dl?tr(`أسبوع خفيف · الأوزان ${cbPct(s.cb)}`,`Light week · weights ${cbPct(s.cb)}`):tr(`رجوع بعد ${s.cb.g} يوم · الأوزان ${cbPct(s.cb)}`,`Back after ${s.cb.g} days · weights ${cbPct(s.cb)}`));L.push('');
   for(const e of s.ex){const f=exFlags(e,s);L.push(e.name+(f.length?` (${f.join(' · ')})`:''));
@@ -317,7 +329,7 @@ function cardText(s){
   return L.join('\n').trim();
 }
 function tplCard(d){
-  const L=[`Cycle ${calcCycle(d.id)}`,'',d.name,''];
+  const L=[`${tr('الدورة','Cycle')} ${calcCycle(d.id)}`,'',d.name,''];
   for(const t of d.ex){const l=baseH(t.id);L.push(t.name);L.push(`${fw(l?l.w:t.w)} | ${t.sets}×${t.reps}${t.unit?' '+unitTxt(t.unit):''}`);if(t.note)L.push(t.note);L.push('')}
   L.push(T().coreLine+': '+coreNames(d).join(' + '));
   return L.join('\n');
@@ -382,7 +394,7 @@ function rtEnd(done){clearInterval(RT&&RT.iv);RT=null;wakeOff();const el=$('#rtv
 /* v119: عدّاد البروتين اليومي: أزرار سريعة، من غير حساب سعرات */
 const protToday=()=>{const p=S.prot;return p&&p.d===today()?+p.g||0:0};
 function protHtml(){const g=protToday(),G=+S.settings.protG||150;
-  return `<div class="prt"><span>${tr('بروتين النهارده','Protein today')} <b class="en">${g}/<button class="prg" data-a="protG">${G}</button>g</b></span><span class="prb">${[20,30,40].map(v=>`<button data-a="protAdd" data-v="${v}">+${v}</button>`).join('')}</span></div>`}
+  return `<div class="prt"><span>${tr('بروتين النهارده','Protein today')} <b class="en">${g}/<button class="prg" data-a="protG">${G}</button>g</b></span><span class="prb">${[20,30,40].map(v=>`<button data-a="protAdd" data-v="${v}"><bdi class="en">+${v}</bdi></button>`).join('')}</span></div>`}
 /* v120: الأسابيع ورا بعض اللي حققت فيها هدف الـ 3 جلسات (الأسبوع بيبدأ السبت) */
 function wkStreak(){const ds=done();if(!ds.length)return 0;const wk=iso=>Math.floor((new Date(iso+'T12:00:00')-new Date('2000-01-01T12:00:00'))/(7*864e5));
   const c={};for(const x of ds){const k=wk(x.date);c[k]=(c[k]||0)+1}const now=wk(today());let n=0,k=now;if((c[k]||0)<3)k--;while((c[k]||0)>=3){n++;k--}return n}
@@ -393,21 +405,42 @@ function onbModal(step){const st=step||1;
   if(st===1)modal(`<h3>${tr('أهلًا بيك في چيم لوج','Welcome to Gym Log')}</h3><div class="mu" style="margin-bottom:12px">${tr('بتتمرن كام يوم في الأسبوع؟','How many days a week do you train?')}</div>${[['ul2',2],['fb3',3],['ul4',4],['ulppl5',5]].map(([id,n])=>`<button class="btn w mt" data-a="onbSys" data-id="${id}">${esc(sysName(SYSTEMS.find(x=>x.id===id)))}</button>`).join('')}<button class="btn w ghost mt" data-a="onbSkip">${tr('بعدين','Later')}</button>`);
   else modal(`<h3>${tr('حاجتين مهمين','Two things that matter')}</h3><div class="dsec" style="line-height:1.9">${RULE()}</div><div class="dsec" style="line-height:1.9">${tr('أول أسبوع: الأوزان اللي ظاهرة مجرد بداية. اختار وزن تقدر تلعب بيه الهدف بأداء نضيف، والتطبيق هيفتكره ويبني عليه.','First week: the weights shown are only a starting point. Pick a weight you can hit the target with in clean form; the app remembers it and builds from there.')}</div><div class="dsec" style="line-height:1.9">${tr('بياناتك متخزنة على الموبايل ده بس. خد نسخة احتياطية من «الملف» كل فترة.','Your data lives only on this phone. Save a backup from «File» now and then.')}</div><button class="btn pri w mt" data-a="onbDone">${tr('يلا نبدأ','Let\'s start')}</button>`)}
 /* v121: كارت صورة للجلسة بنفس الثيم وبيت شعر */
+/* v141: صورة الجلسة: كل تمرين بوزنه ومجموعاته ووقته وأداءه والـ RIR وملاحظته، والإجمالي تحت. مفيش تمرين بيتقص */
 async function cardImg(s){
   await (document.fonts&&document.fonts.ready);const cs=getComputedStyle(document.documentElement),v=k=>cs.getPropertyValue(k).trim()||'#888';
-  const W=1080,ex=s.ex.slice(0,9),H=Math.max(1080,520+ex.length*120),c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
-  g.fillStyle=v('--bg');g.fillRect(0,0,W,H);g.strokeStyle=v('--ac');g.lineWidth=6;g.globalAlpha=.6;g.beginPath();g.arc(W-150,150,90,-Math.PI/2,Math.PI*1.1);g.stroke();g.globalAlpha=1;
-  const F='"Figtree","ArUI",sans-serif';g.textBaseline='alphabetic';
-  g.fillStyle=v('--tx2');g.font='700 72px '+F;g.textAlign='left';g.direction='ltr';g.fillText(String(s.dayName).replace(/ · Light$/,''),80,170);
-  g.fillStyle=v('--mu');g.font='400 36px '+F;g.fillText(`${s.date} · Cycle ${s.cycle}`,80,225);
-  let y=330;for(const e of ex){g.fillStyle=v('--tx2');g.font='600 44px '+F;g.fillText(e.name.length>30?e.name.slice(0,29)+'…':e.name,80,y);
-    g.fillStyle=v('--ac2');g.font='500 38px '+F;g.fillText(`${noW(e.w)?'—':(+e.w)+' kg'}   ${setsStr(e)}`,80,y+52);y+=120}
+  const W=1080,ar=LANG==='ar',X=ar?W-80:80,F='"Figtree","ArUI",sans-serif',c=document.createElement('canvas'),m=c.getContext('2d');
+  const wrap=(t,font,max)=>{m.font=font;const out=[];let line='';for(const w of String(t).split(/\s+/)){const tt=line?line+' '+w:w;if(m.measureText(tt).width>max&&line){out.push(line);line=w}else line=tt}if(line)out.push(line);return out.slice(0,3)};
+  const rows=s.ex.map(e=>{const a=[];if(e.dur&&e.dur.some(x=>x>0))a.push(`${tr('الوقت','Time')} ${mmss(durSum(e))}`);if(!e.unit)a.push(e.clean?'✓ '+T().clean:tr('مش نضيف','not clean'));if(e.rir!=null)a.push(`${tr('فاضل','RIR')} ${e.rir===3?'3+':e.rir}`);
+    const nt=e.note?wrap('✎ '+e.note,'400 32px '+F,W-160):[];return{e,meta:a.join('  ·  '),nt,h:118+(a.length?46:0)+nt.length*42}});
+  const meta=sessMeta(s).filter(x=>!/^(النوم|Sleep)/.test(x)),tot=s.ex.reduce((a,e)=>a+durSum(e),0);
+  const H=Math.max(1080,330+rows.reduce((a,r)=>a+r.h,0)+(tot?70:0)+260);c.width=W;c.height=H;const g=m;
+  g.fillStyle=v('--bg');g.fillRect(0,0,W,H);g.strokeStyle=v('--ac');g.lineWidth=6;g.globalAlpha=.6;g.beginPath();g.arc(ar?150:W-150,150,90,-Math.PI/2,Math.PI*1.1);g.stroke();g.globalAlpha=1;
+  const T0=(t,font,col,dir)=>{g.font=font;g.fillStyle=col;g.direction=dir||(ar?'rtl':'ltr');g.textAlign=ar?'right':'left'};
+  T0('',`700 72px ${F}`,v('--tx2'),'ltr');g.fillText(String(s.dayName).replace(/ · Light$/,''),X,170);
+  T0('',`400 36px ${F}`,v('--mu'));g.fillText(`${s.date} · ${tr('الدورة','Cycle')} ${s.cycle}${meta.length?' · '+meta[0]:''}`,X,225);
+  let y=320;
+  for(const r of rows){const e=r.e;T0('',`600 44px ${F}`,v('--tx2'),'ltr');g.fillText((e.core?'★ ':'')+(e.name.length>34?e.name.slice(0,33)+'…':e.name),X,y);
+    T0('',`500 38px ${F}`,v('--ac2'));g.fillText(`${noW(e.w)?'':(+e.w)+' kg   '}${setsStr(e)}`,X,y+52);let yy=y+52;
+    if(r.meta){yy+=46;T0('',`400 32px ${F}`,v('--mu'));g.fillText(r.meta,X,yy)}
+    for(const l of r.nt){yy+=42;T0('',`400 32px ${F}`,v('--tx2'),/[؀-ۿ]/.test(l)?'rtl':'ltr');g.textAlign=ar?'right':'left';g.fillText(l,X,yy)}
+    y+=r.h}
+  if(tot){T0('',`600 36px ${F}`,v('--tx2'));g.fillText(`${tr('إجمالي وقت المجموعات','Total set time')}: ${mmss(tot)}`,X,y+10)}
   const q=(QSEL&&QSEL.q)||'';if(q){g.fillStyle=v('--mu');g.textAlign='center';g.direction='rtl';g.font='700 44px "BasQ",'+F;q.split('|').slice(0,2).forEach((l,k)=>g.fillText(l.trim(),W/2,H-150+k*62))}
-  g.direction='rtl';g.textAlign='right';g.fillStyle=v('--mu');g.font='500 32px '+F;g.fillText('چيم لوج',W-80,H-50);
+  g.direction='rtl';g.textAlign=ar?'left':'right';g.fillStyle=v('--mu');g.font='500 32px '+F;g.fillText('چيم لوج',ar?80:W-80,H-50);
   return new Promise(r=>c.toBlob(b=>r(b),'image/png'))}
-async function shareImg(s){const b=await cardImg(s);if(!b)return;const f=new File([b],`gym-${s.date}.png`,{type:'image/png'});
-  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e.name==='AbortError')return}
-  const u=URL.createObjectURL(b);modal(`<h3>${tr('صورة الجلسة','Session image')}</h3><img class="cimg" src="${u}" alt=""><div class="mu mt">${tr('دوسة مطوّلة على الصورة علشان تحفظها أو تبعتها.','Long-press the image to save or share it.')}</div><div class="row mt"><a class="btn pri sp" href="${u}" download="gym-${s.date}.png">${tr('نزّل الصورة','Download')}</a><button class="btn ghost" data-a="closeM">${T().close}</button></div>`)}
+/* v141: الحفظ بيعدّي على قايمة المشاركة أو الـ APK (مفيش زرار «تنزيل» بتاع المتصفح) */
+function blobUrl64(b){return new Promise((ok,no)=>{const f=new FileReader();f.onload=()=>ok(f.result);f.onerror=no;f.readAsDataURL(b)})}
+async function saveBlob(b,name,mime){
+  if(window.Android&&Android.saveBase64){try{const u=await blobUrl64(b);if(Android.saveBase64(name,mime,u))return 'pending'}catch(e){}return false}
+  const f=new File([b],name,{type:mime});
+  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return true}}catch(e){if(e.name==='AbortError')return 'cancel'}
+  if(FS){try{const h=await showSaveFilePicker({suggestedName:name});const w=await h.createWritable();await w.write(b);await w.close();return true}catch(e){if(e.name==='AbortError')return 'cancel'}}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);return true}catch(e){return false}}
+async function shareImg(s){const b=await cardImg(s);if(!b)return;const name=`gym-${s.date}.png`;
+  const u=URL.createObjectURL(b);modal(`<h3>${tr('صورة الجلسة','Session image')}</h3><img class="cimg" src="${u}" alt=""><div class="row mt"><button class="btn pri sp" data-a="imgSave">${tr('احفظ أو ابعت الصورة','Save or send the image')}</button><button class="btn ghost" data-a="closeM">${T().close}</button></div>`);
+  IMG={b,name}}
+let IMG=null;
+async function imgSave(){if(!IMG)return;const r=await saveBlob(IMG.b,IMG.name,'image/png');if(r===true)toast(tr('اتحفظت ✓','Saved ✓'));else if(r===false)toast(tr('مقدرتش أحفظ الصورة','Could not save the image'))}
 /* v121: مشاركة برنامج بكود: نسخ ولصق */
 function progCode(){const days=S.program.days.map(d=>({n:d.name,e:d.ex.map(t=>[t.name,t.sets,t.reps,t.goal,t.unit||'',t.core?1:0])}));return 'GL1:'+btoa(unescape(encodeURIComponent(JSON.stringify(days))))}
 function progFromCode(t){const m=String(t||'').trim().match(/GL1:([A-Za-z0-9+/=]+)/);if(!m)throw 0;const a=JSON.parse(decodeURIComponent(escape(atob(m[1]))));if(!Array.isArray(a)||!a.length)throw 0;
@@ -522,7 +555,7 @@ window.addEventListener('popstate',e=>{
   if(Sx.hidden&&!(wasM&&(st.tab||'home')===tab))go(st.tab||'home');
 });
 try{history.replaceState({},'')}catch(e){}
-function go(t){tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));({home:renderHome,hist:renderHistory,prog:renderProgram,lib:renderLib,data:renderData})[t]();{const v=$('#view');v.classList.remove('vin');void v.offsetWidth;v.classList.add('vin')}window.scrollTo(0,0);saveUI()}
+function go(t){edgeOff();tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));({home:renderHome,hist:renderHistory,prog:renderProgram,lib:renderLib,data:renderData})[t]();{const v=$('#view');v.classList.remove('vin');void v.offsetWidth;v.classList.add('vin')}window.scrollTo(0,0);saveUI()}
 function modal(h){const m=$('#modal'),bx=m.querySelector('.mbox');bx.removeAttribute('dir');bx.removeAttribute('lang');bx.innerHTML=h;if(m.hidden&&!hs().modal)history.pushState(Object.assign({tab:tab},hs(),{modal:1}),'');m.hidden=false}
 let mClosed=0;
 function closeModal(silent){$('#modal').hidden=true;mClosed=Date.now();if(!silent&&hs().modal)history.back()}
@@ -587,7 +620,7 @@ function renderHome0(){
     :`<circle class="ar cur one" cx="150" cy="150" r="136"/><g class="cmt" style="animation-delay:-${((Date.now()%7000)/1000).toFixed(2)}s">${Array.from({length:24},(_,k)=>`<circle class="ct" cx="150" cy="150" r="136" pathLength="100" stroke-dasharray="1.34 98.66" stroke-dashoffset="${-(k*1.3).toFixed(2)}" style="opacity:${(.04+.96*Math.pow((k+1)/24,2.2)).toFixed(3)}"/>`).join('')}<circle class="ch" cx="150" cy="150" r="136" pathLength="100" stroke-dasharray="1.2 98.8" stroke-dashoffset="-31"/></g>`;
   let last='';
   if(ds[0]){const k=Math.max(0,daysAgo(ds[0].date));last=' · '+tr('آخر جلسة: ','Last: ')+(k===0?tr('النهارده','today'):k===1?tr('امبارح','yesterday'):tr(`من ${k} يوم`,`${k} days ago`))}
-  const rowsOf=ex=>ex.map(e=>`<div class="dr${e.core?' c':''}"><span class="dn2 en">${esc(e.name)}</span><span class="dw en">${e.unit?'':fw(e.w)+' · '}${esc(String(+e.tsets||0))}×${tgt(e.treps,e.goal,e.unit)}${e.unit?' '+esc(unitTxt(e.unit)):''}</span></div>`).join('');
+  const rowsOf=ex=>ex.map(e=>`<div class="dr${e.core?' c':''}"><span class="dn2 en">${esc(e.name)}</span><span class="dw">${e.unit?'':`<bdi class="en">${fw(e.w)}</bdi> · `}${tgtH(e.tsets,e.treps,e.goal,e.unit)}</span></div>`).join('');
   const coreOf=ex=>`<div class="coreline">${L.coreL}: <span class="en">${esc(ex.filter(e=>e.core).map(e=>e.name).join(' + '))}</span></div>`;
   const cbk=pl.cb?(pl.cb.dl?tr('أسبوع خفيف','Light week'):tr('رجوع','Comeback'))+' · <bdi class="en">'+cbPct(pl.cb)+'</bdi> · ':'';
   const tag=dr?cbk+L.resume:cbk+L.exN(pl.ex.length)+`</span><span class="on3">${tr('دوس للبدء','tap to start')}`;
@@ -652,7 +685,7 @@ function openSession(){setTimeout(askReady,450);if(!S.draft||!S.draft.ex.length)
 function askReady(){const d=S.draft;if(!d||d.editing||d.rdy!=null||d.rdyAsk||d.ex.some(x=>x.sets.some(v=>num(v)>0)))return;const sh=$('#sheet');if(!sh)return;sh.hidden=false;sh.innerHTML=`<div class="sbk" data-a="rdySkip"></div><div class="sbx"><div class="mgh">${tr('نومك وطاقتك النهارده؟','Sleep and energy today?')}</div><div class="rdy2">${[[2,tr('كويس','Good')],[1,tr('متوسط','OK')],[0,tr('وحش','Poor')]].map(([v,t])=>`<button data-a="rdyGo" data-v="${v}">${t}</button>`).join('')}</div><button class="mrow sk" data-a="rdySkip">${tr('تخطّي','Skip')}</button></div>`}
 let WL=null;async function wakeOn(){try{window.Android&&Android.keepAwake(true)}catch(e){}try{if('wakeLock' in navigator&&!WL&&!document.hidden){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}}catch(e){}}
 function wakeOff(){try{window.Android&&Android.keepAwake(false)}catch(e){}try{WL&&WL.release()}catch(e){}WL=null}
-function closeSession(){wakeOff();swHalt();flushSave();$('#sess').hidden=true;document.body.style.overflow='';if(tab==='home')renderHome();saveUI();if(hs().sess)history.back()}
+function closeSession(){edgeOff();wakeOff();swHalt();flushSave();$('#sess').hidden=true;document.body.style.overflow='';if(tab==='home')renderHome();saveUI();if(hs().sess)history.back()}
 const openTips=new Set();
 /* ===== شاشة التمرين (v57): تمرين واحد في الشاشة ===== */
 let curEx=0,pk=null,swIv=null,wAnim=false,finishing=false;
@@ -670,7 +703,7 @@ function restTick(){const d=S.draft,el=$('#rst');if(!d||!d.rest){clearInterval(r
   if(rem<=0&&!r.done){r.done=1;saveSoon();try{navigator.vibrate&&navigator.vibrate([220,120,220])}catch(e){}beep(2)}
   if(rem<-12){d.rest=null;saveSoon();clearInterval(rsIv);rsIv=null;if(el)el.innerHTML='';return}
   if(!el)return;const pc=Math.max(0,Math.min(100,(1-rem/r.dur)*100)),mode=rem>0?'run':'go';
-  if(el.dataset.m!==mode||!el.firstChild){el.dataset.m=mode;el.innerHTML=mode==='run'?`<div class="rsb"><i></i></div><div class="rsr"><span>${tr('راحة','Rest')} <b class="en"></b></span><button data-a="rsAdd">+30</button><button data-a="rsSkip">${tr('تخطّي','Skip')}</button></div>`:`<div class="rsr go"><span>${tr('يلا المجموعة الجاية','Next set')} ✓</span></div>`}
+  if(el.dataset.m!==mode||!el.firstChild){el.dataset.m=mode;el.innerHTML=mode==='run'?`<div class="rsb"><i></i></div><div class="rsr"><span>${tr('راحة','Rest')} <b class="en"></b></span><button data-a="rsAdd"><bdi class="en">+30</bdi></button><button data-a="rsSkip">${tr('تخطّي','Skip')}</button></div>`:`<div class="rsr go"><span>${tr('يلا المجموعة الجاية','Next set')} ✓</span></div>`}
   if(mode==='run'){const b=el.querySelector('.rsr b'),i=el.querySelector('.rsb i');if(b)b.textContent=mmss(rem);if(i)i.style.width=pc.toFixed(1)+'%'}}
 /* الإحماء للتمارين المركّبة التقيلة: 50%×8 · 70%×4 · 85%×2 */
 function warmTxt(e){const w=num(e.w),m=typeof META!=='undefined'&&META[e.name];if(e.unit||!(w>=20)||!m||m.kind!=='comp')return '';const st=stepOf(e.name);
@@ -702,7 +735,7 @@ function swHtml(e){
   const d=S.draft,on=!!(d.sw&&d.sw.i===curEx),j=on&&d.sw.j>=0?d.sw.j:swNext(e),L=on?tr('دوس تاني تسجّل','Tap to log'):j<e.sets.length?tr('ابدأ المجموعة '+(j+1),'Start set '+(j+1)):tr('مجموعة جديدة','New set');
   return `<button class="swt${on?' on':''}" data-a="sw" aria-label="${esc(L)}"><span class="swi">${on?'<i class="swp"></i>':'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="14" r="7.5"/><path d="M12 10.5V14l2.2 1.6M9.5 2.5h5M12 2.5v4M18.4 7.6l1.4-1.4"/></svg>'}</span><span class="swc"><b class="en" id="${on?'swT':''}">${on?mmss((Date.now()-d.sw.t0)/1000):'0:00'}</b><small>${L}</small></span></button>`;
 }
-function goEx(k){const d=S.draft;if(!d||k<0||k>=d.ex.length||k===curEx)return;closeSheet();curEx=k;wAnim=true;renderSession();wAnim=false;$('#sess').scrollTop=0}
+function goEx(k){const d=S.draft;if(!d||k<0||k>=d.ex.length||k===curEx)return;closeSheet();edgeOff();curEx=k;wAnim=true;renderSession();wAnim=false;$('#sess').scrollTop=0}
 /* الأقواس بتلف دايماً ببطء. دوسة مطوّلة = لف سريع طول ما إيدك عليها. دوسة واحدة = لفة سريعة قصيرة وبعدها التمرين */
 const ORB={ang:0,sp:8,tg:8,idle:8,fast:520,hold:false,swallow:false,t:0,lt:0,reduce:matchMedia('(prefers-reduced-motion: reduce)').matches};
 function orbTick(ts){
@@ -767,10 +800,10 @@ function renderSession(){
   if(curEx>=d.ex.length)curEx=d.ex.length-1;if(curEx<0)curEx=0;
   const i=curEx,e=d.ex[i],n=d.ex.length,last=i===n-1,h=exHist(e.exId,d.editing,e.name),l=h[0],p=d.cb?null:progMsg({sets:e.tsets,goal:e.goal},h,e.unit,e.name),ps=d.cb?null:progState({sets:e.tsets,goal:e.goal},h),earn=!!(ps&&ps.k==='up'&&!e.unit);
   const u=e.unit?' '+esc(unitTxt(e.unit)):'',showW=!(noW(e.w)&&e.unit);
-  const showL=openTips.has('l'+i),showH=openTips.has('h'+i),showN=openTips.has('n'+i)||!!e.note;
+  const showL=openTips.has('l'+i);
   const seg=d.ex.map((x,k)=>{const s=exSt(x);return `<button class="sg${k===i?' cur':''}${fullyIn(x)?' dn':s==='part'?' wn':''}" data-a="exGo" data-i="${k}" aria-label="${k+1}"><i></i></button>`}).join('');
   const du=e.dur||[],cir=e.sets.map((r,j)=>{const v=num(r)>0;return `<div class="cw"><button class="cir${v?' on':''}${POP===j?' pop':''}" data-a="setTap" data-j="${j}" aria-label="${tr('مجموعة','Set')} ${j+1}">${v?`<span class="en">${esc(r)}</span>`:`<span class="cix en">${j+1}</span><span class="en">${esc(String(+e.treps||0))}</span>`}</button><small class="ct en">${num((e.ws||[])[j])>0&&num(e.ws[j])!==num(e.w)?esc(String(num(e.ws[j])))+' k':''}${du[j]>0?(num((e.ws||[])[j])>0&&num(e.ws[j])!==num(e.w)?' · ':'')+mmss(du[j]):''}</small></div>`}).join('');
-  const lastP=h.length?h.slice(0,3).map(x=>`<div><bdi>${fmtD(x.date)}</bdi> · <bdi class="en">${fw(x.w)} | ${esc(setsStr(x))}</bdi></div>`).join(''):`<div>${L.first}</div>`;
+  const lastP=h.length?h.slice(0,3).map(x=>`<div class="l3"><bdi>${fmtD(x.date)}</bdi> · <bdi class="en">${fw(x.w)}</bdi> · ${setsH(x)}${x.dur&&x.dur.some(v=>v>0)?` · <bdi class="en">${mmss(durSum(x))}</bdi>`:''}${x.unit?'':x.clean?'':` · <span class="bad">${tr('مش نضيف','not clean')}</span>`}${x.note?`<div class="l3n" dir="auto">✎ ${esc(x.note)}</div>`:''}</div>`).join(''):`<div>${L.first}</div>`;
   const ar=LANG==='ar';
   $('#sess').innerHTML=`<div class="wtop"><button class="wx" data-a="closeS" aria-label="${L.back}">×</button><div class="wseg">${seg}</div><button class="wx" data-a="menu" aria-label="${tr('خيارات','Options')}">⋯</button></div>
   <div class="corec" id="corec" aria-live="polite"></div>
@@ -779,21 +812,20 @@ function renderSession(){
     ${e.ss&&d.ex[i+1]?`<div class="sstag">⇄ ${tr('سوبرسيت مع','Superset with')} <bdi class="en">${esc(d.ex[i+1].name)}</bdi></div>`:i>0&&d.ex[i-1].ss?`<div class="sstag">⇄ ${tr('سوبرسيت مع','Superset with')} <bdi class="en">${esc(d.ex[i-1].name)}</bdi></div>`:''}
     <button class="wname en${e.core?' core':''}" data-a="guide" aria-label="${tr('طريقة الأداء','How to perform')}">${esc(e.name)}</button>
     <div class="war">${LANG==='ar'&&typeof META!=='undefined'&&META[e.name]&&META[e.name].ar?`<span>${esc(META[e.name].ar)}</span>`:''}<button class="wic" data-a="guide">ⓘ ${tr('الأداء','How')}</button><button class="wic" data-a="swOpen">⇄ ${tr('بدّل','Swap')}</button></div>
-    <div class="wtg">${showW?`${e.unit?'':`<button class="wpm" data-a="wStep" data-v="-1" aria-label="${tr('أخف','Lighter')}">−</button>`}<button class="wwt en${earn?' earn':''}" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>${e.unit?'':`<button class="wpm" data-a="wStep" data-v="1" aria-label="${tr('أتقل','Heavier')}">+</button>`}`:''}<span class="wsr en">${esc(String(+e.tsets||0))}×${tgt(e.treps,e.goal,e.unit)}${u}</span></div>
+    <div class="wtg">${showW?`${e.unit?'':`<button class="wpm" data-a="wStep" data-v="-1" aria-label="${tr('أخف','Lighter')}">−</button>`}<button class="wwt en${earn?' earn':''}" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>${e.unit?'':`<button class="wpm" data-a="wStep" data-v="1" aria-label="${tr('أتقل','Heavier')}">+</button>`}`:''}<span class="wsr">${tgtH(e.tsets,e.treps,e.goal,e.unit)}</span></div>
     <div class="wsets">${cir}</div>
     <div class="wlast" data-a="hist" data-id="${esc(e.exId)}">${l?`${tr('آخر مرة','Last')}: <bdi class="en">${fw(l.w)} · ${esc(setsStr(l))}</bdi> · ${fmtD(l.date)}`:tr('أول مرة تلعبه','First time')}${!e.sets.some(v=>num(v)>0)&&warmTxt(e)?`<br>${tr('إحماء','Warm-up')}: <bdi class="en">${warmTxt(e)}</bdi>`:''}</div>
     <div class="rst" id="rst"></div>
     ${e.sets.length&&e.sets.every(v=>num(v)>0)&&!e.unit?`<div class="wrir"><span>${tr('فاضل في إيدك كام؟','Reps left in the tank?')}</span>${[tr('على الآخر','To failure'),tr('فاضل 1–2','1–2 left'),tr('فاضل 3+','3+ left')].map((t,k)=>`<button class="${e.rir===(k===0?0:k===1?2:3)?'on':''}" data-a="rir" data-v="${k===0?0:k===1?2:3}">${t}</button>`).join('')}</div>`:''}
     ${e.unit?'':`<button class="wcl${e.clean?' on':''}" data-a="clean">${e.clean?tr('✓ أداء نضيف','✓ Clean form'):tr('مش نضيف (مرجحة أو أداء مكسور)','Not clean (swinging or broken form)')}</button>`}
     ${e.unit||S.settings.swOn||(d.sw&&d.sw.i===curEx)?`<div class="wrest">${swHtml(e)}</div>`:''}
-    <div class="whint${memoOf(e.name)?' mine':''}" dir="auto" data-a="memo" data-n="${esc(e.name)}">${esc(memoOf(e.name)||(e.note0&&e.note0!==libHowAlt(e.name)?e.note0:(libHow(e.name)||e.note0||'')))||tr('اكتب ملاحظتك للتمرين ده','Write your note for this exercise')}</div>
-    <div class="wlinks"><button data-a="tgl" data-k="l${i}">↺ ${tr('آخر 3 مرات','Last 3 times')}</button><button data-a="tgl" data-k="n${i}">✎ ${L.note}</button><button data-a="addset" data-i="${i}">+ ${tr('مجموعة','Set')}</button></div>
-    ${showL?`<div class="tnote">${lastP}${p?`<div class="pmsg ${p.c}">${p.t}</div>`:''}</div>`:''}
-    ${showN?`<input class="inp noteI" data-f="n" value="${esc(e.note)}" placeholder="${L.notePh}">`:''}
+    <textarea class="wnote" dir="auto" rows="1" maxlength="1200" data-f="memo" aria-label="${tr('ملاحظتك','Your note')}" placeholder="✎ ${tr('اكتب ملاحظتك للتمرين ده…','Write your note for this exercise…')}">${esc(memoOf(e.name))}</textarea>
+    <div class="wlinks"><button data-a="tgl" data-k="l${i}" aria-expanded="${showL}">↺ ${tr('آخر 3 مرات','Last 3 times')} <span class="tch${showL?' on':''}">⌄</span></button><button data-a="addset" data-i="${i}">+ ${tr('مجموعة','Set')}</button></div>
+    ${showL?`<div class="tnote" id="l3box">${lastP}${p?`<div class="pmsg ${p.c}">${p.t}</div>`:''}</div>`:''}
   </div>
   <div class="wnav"><button class="btn wb" data-a="exGo" data-i="${i-1}"${i===0?' disabled':''} aria-label="${tr('اللي قبله','Previous')}">‹</button>${last?`<button class="btn pri wb" data-a="finish">${d.editing?L.saveEdit:tr('خلّص','Finish')}</button>`:`<button class="btn wb" data-a="exGo" data-i="${i+1}" aria-label="${tr('اللي بعده','Next')}">›</button>`}</div>
   <div id="sheet" hidden></div>`;
-  updCore();
+  updCore();{const ta=$('#sess .wnote');if(ta)growTa(ta)}
   if(d.sw&&!swIv)swIv=setInterval(swTick,250);
   if(d.rest){if(!rsIv)rsIv=setInterval(restTick,250);restTick()}
 }
@@ -840,7 +872,7 @@ function finishSession(){
   sm.push(nx.length?`${tr('الجاية: زوّد في','Next time: add weight on')} <bdi class="en">${esc(nx.join('، '))}</bdi>`:tr('الجاية: نفس الأوزان، وحاول تكمّل الهدف','Next time: same weights, aim to complete the target'));
   for(let k=sm.length-2;k>=0;k--)if(/استحقيت الزيادة|increase earned/.test(sm[k]))sm.splice(k,1);
   $('#sess').innerHTML=`<div class="wdone"><div class="wchk">✓</div><div class="wdt"><bdi>${esc(nm)}</bdi></div><div class="wds">${s.status==='full'?L.savedFull:s.status==='core'?L.savedCore:L.saved}</div>${sm.length?`<div class="wsum">${sm.map(x=>`<div>${x}</div>`).join('')}</div>`:''}</div>
-  <div class="wdn2"><button class="plink" data-a="shareDone">${tr('مشاركة…','Share…')}</button><button class="btn pri w" data-a="doneClose">${tr('تمام','Done')}</button></div>`;
+  <div class="wdn2" data-t0="${Date.now()}"><button class="plink" data-a="shareDone">${tr('مشاركة…','Share…')}</button><button class="btn pri w" data-a="doneClose">${tr('تمام','Done')}</button></div>`;
 }
 const logged=e=>e.sets.some(r=>num(r)>0);
 /* حالة التمرين: none | part (ناقص خانات) | low (كل الخانات مليانة بس أقل من الهدف) | ok */
@@ -886,7 +918,7 @@ function exHistModal(exId){
   const ch=h.filter(x=>!x.unit&&+x.w>0&&!x.cb).slice(0,40).reverse(),best=Math.max(0,...ch.map(x=>e1rm(+x.w,Math.max(...x.sets))));
   modal(`<h3 class="en" style="text-align:start">${esc(nm)}</h3><div class="mu" style="margin-bottom:8px"><span class="en">${esc(dn)}</span> · ${L.sessCount(h.length)}</div>
   ${ch.length>1?`<div class="lch"><div class="mu">${tr('الوزن على مدار الوقت','Weight over time')}</div>${lineSvg(ch.map(x=>+x.w),tr('الوزن','Weight'))}<div class="mu">${tr('أقصى وزن تقديري لعدّة واحدة','Estimated one-rep max')}: <b class="en">${best.toFixed(1)} k</b></div></div>`:''}
-  ${h.length?`<table class="h">${h.map(x=>`<tr><td>${fmtD(x.date)}</td><td class="en">${fw(x.w)}</td><td class="en">${esc(setsStr(x))}</td><td>${x.clean?`<span style="color:var(--ok)">${L.clean}</span>`:''}</td></tr>`).join('')}</table>`:`<div class="empty">${L.noData}</div>`}
+  ${h.length?`<table class="h">${h.map(x=>`<tr><td>${fmtD(x.date)}</td><td class="en">${fw(x.w)}</td><td>${setsH(x)}</td><td>${x.clean?`<span style="color:var(--ok)">${L.clean}</span>`:''}</td></tr>`).join('')}</table>`:`<div class="empty">${L.noData}</div>`}
   <button class="btn w mt" data-a="closeM">${L.close}</button>`);
 }
 
@@ -914,6 +946,9 @@ function reportText(days){const ds=done(),inP=x=>{const a=daysAgo(x.date);return
   const sets=cur.reduce((a,x)=>a+x.ex.reduce((b,e)=>b+e.sets.length,0),0),vol=cur.reduce((a,x)=>a+x.ex.reduce((b,e)=>b+(e.unit?0:e.sets.reduce((c,r,j)=>c+r*(+(e.ws&&e.ws[j])||+e.w||0),0)),0),0);
   L.push(`${tr('الجلسات','Sessions')}: ${cur.length}${days===7?` (${tr('الهدف 3','goal 3')})`:` (${tr('متوسط','avg')} ${(cur.length/(days/7)).toFixed(1)} ${tr('في الأسبوع','per week')})`}`);
   L.push(`${tr('إجمالي المجموعات','Total sets')}: ${sets}`);
+  {const mins=cur.map(x=>x.t0&&x.ts&&x.ts>x.t0&&!x.imp?Math.round((x.ts-x.t0)/60000):0).filter(m=>m>0&&m<600),st=cur.reduce((a,x)=>a+x.ex.reduce((b,e)=>b+durSum(e),0),0);
+   if(mins.length){const tm=mins.reduce((a,b)=>a+b,0);L.push(`${tr('وقت التمرين','Training time')}: ${Math.floor(tm/60)?Math.floor(tm/60)+' '+tr('ساعة','h')+' ':''}${tm%60} ${tr('دقيقة','min')} (${tr('متوسط الجلسة','avg session')} ${Math.round(tm/mins.length)} ${tr('دقيقة','min')})`)}
+   if(st>0)L.push(`${tr('وقت المجموعات (ساعة الإيقاف)','Set time (stopwatch)')}: ${mmss(st)}`)}
   const pr=[],up=[],stk=[];const seen=new Set();
   for(const x of cur)for(const e of x.ex){const k=nk(e.name);if(e.unit||seen.has(k))continue;seen.add(k);const w=Math.max(...cur.filter(q=>q.ex.some(z=>nk(z.name)===k)).map(q=>+q.ex.find(z=>nk(z.name)===k).w||0));
     const pw=Math.max(0,...prev.flatMap(q=>q.ex.filter(z=>nk(z.name)===k).map(z=>+z.w||0)));if(pw>0&&w>pw)pr.push(`${e.name}: ${pw} → ${w} kg`);
@@ -946,7 +981,7 @@ function renderHistory(){
 function exHistName(nm){
   const L=T(),h=histMap()[nk(nm)]||[];
   modal(`<h3 class="en" style="text-align:start">${esc(nm)}</h3><div class="mu" style="margin-bottom:8px">${L.sessCount(h.length)}</div>
-  ${h.length?`<table class="h">${h.map(x=>`<tr><td>${fmtD(x.date)}</td><td class="en">${fw(x.w)}</td><td class="en">${esc(setsStr(x))}</td><td>${x.clean?`<span style="color:var(--ok)">${L.clean}</span>`:''}</td></tr>`).join('')}</table>`:`<div class="empty">${L.noData}</div>`}
+  ${h.length?`<table class="h">${h.map(x=>`<tr><td>${fmtD(x.date)}</td><td class="en">${fw(x.w)}</td><td>${setsH(x)}</td><td>${x.clean?`<span style="color:var(--ok)">${L.clean}</span>`:''}</td></tr>`).join('')}</table>`:`<div class="empty">${L.noData}</div>`}
   <button class="btn w mt" data-a="closeM">${L.close}</button>`);
 }
 function dayHistModal(k){
@@ -978,7 +1013,9 @@ function lpMenu(el){const k=el.dataset.lp,R=(a,ic,t,x='')=>`<button class="mrow$
 })();
 function sessModal(id){
   const L=T(),s=S.sessions.find(x=>x.id===id);if(!s)return;
-  modal(`<h3><bdi>${esc(s.dayName)}</bdi> · ${fmtD(s.date)}</h3><div class="dl">${s.ex.map(e=>`<div class="dr"><span class="dn2 en">${esc(e.name)}</span><span class="dw en">${e.unit?'':fw(e.w)+' · '}${esc(setsStr(e))}</span></div>`).join('')}</div>
+  const mt=sessMeta(s),tot=s.ex.reduce((a,e)=>a+durSum(e),0);
+  modal(`<h3><bdi>${esc(s.dayName)}</bdi> · ${fmtD(s.date)}</h3>${mt.length||tot?`<div class="mu" style="margin:-4px 0 10px">${mt.map(esc).join(' · ')}${tot?`${mt.length?' · ':''}${tr('وقت المجموعات','Set time')} <bdi class="en">${mmss(tot)}</bdi>`:''}</div>`:''}<div class="dl">${s.ex.map(e=>{const x=[];if(e.dur&&e.dur.some(v=>v>0))x.push(`${tr('الوقت','Time')}: <bdi class="en">${e.dur.map(v=>v>0?mmss(v):'—').join(' | ')}</bdi> = <bdi class="en">${mmss(durSum(e))}</bdi>`);if(!e.unit)x.push(e.clean?`<span class="ok">✓ ${T().clean}</span>`:`<span class="bad">${tr('مش نضيف','not clean')}</span>`);if(e.rir!=null)x.push(`${tr('فاضل','RIR')} <bdi class="en">${e.rir===3?'3+':e.rir}</bdi>`);const f=exFlags(e,s);
+    return `<div class="dr sd"><div class="sdh"><span class="dn2 en">${esc(e.name)}</span><span class="dw">${e.unit?'':`<bdi class="en">${fw(e.w)}</bdi> · `}${setsH(e)}</span></div>${x.length||f.length?`<div class="sdx">${f.map(esc).concat(x).join(' · ')}</div>`:''}${e.note?`<div class="sdn" dir="auto">✎ ${esc(e.note)}</div>`:''}</div>`}).join('')}</div>
   <div class="row mt"><button class="btn pri sp" data-a="editS" data-id="${esc(s.id)}">${L.edit}</button><button class="btn sp" data-a="shareS" data-id="${esc(s.id)}">${tr('مشاركة…','Share…')}</button></div>
   <button class="mrow dan" data-a="delS" data-id="${esc(s.id)}">${L.del}</button>`);
 }
@@ -999,10 +1036,10 @@ const libGet=n=>LIB.find(x=>x[0]===n)||customLib().find(x=>x[0]===n);
 const libOv=n=>(S.libOv&&S.libOv[n])||null;
 /* v132: ملاحظتك الشخصية لكل تمرين — بتفضل للأبد وبتظهر في كل جلسة وفي تاب التمارين */
 const memoOf=n=>(S.exMemo&&S.exMemo[nk(n)])||'';
-function memoModal(n){const cur=memoOf(n)||((()=>{const t=S.draft&&S.draft.ex.find(e=>e.name===n);return t&&t.note0&&t.note0!==libHowAlt(n)?t.note0:libHow(n)})()||'');
+function memoModal(n){const cur=memoOf(n);
   modal(`<h3>${tr('ملاحظتك','Your note')}</h3><div class="mu" style="margin-bottom:8px"><bdi class="en">${esc(n)}</bdi> · ${tr('بتفضل محفوظة للتمرين ده في كل جلسة وفي تاب التمارين.','Kept for this exercise in every session and in the Exercises tab.')}</div>
-  <textarea class="inp" id="memoT" rows="6" dir="auto" maxlength="1200">${esc(cur)}</textarea>
-  <div class="row mt"><button class="btn pri sp" data-a="memoSave" data-n="${esc(n)}">${T().saveB}</button>${memoOf(n)?`<button class="btn ghost" data-a="memoDel" data-n="${esc(n)}">${tr('رجّع الشرح الأصلي','Restore default')}</button>`:`<button class="btn ghost" data-a="closeM">${T().cancel}</button>`}</div>`)}
+  <textarea class="inp" id="memoT" rows="6" dir="auto" maxlength="1200" placeholder="${tr('اكتب ملاحظتك…','Write your note…')}">${esc(cur)}</textarea>
+  <div class="row mt"><button class="btn pri sp" data-a="memoSave" data-n="${esc(n)}">${T().saveB}</button>${memoOf(n)?`<button class="btn ghost" data-a="memoDel" data-n="${esc(n)}">${tr('امسح الملاحظة','Delete note')}</button>`:`<button class="btn ghost" data-a="closeM">${T().cancel}</button>`}</div>`)}
 function memoDone(){closeModal();if(S.draft&&!$('#sess').hidden)renderSession();if(tab==='lib')renderLib()}
 const exNotes=n=>(S.exNotes&&S.exNotes[String(n||'').trim().toLowerCase()])||[];
 /* v139: ملاحظة اتكتبت في جلسة بتتسجل مرة واحدة للجلسة دي؛ لو عدّلت الجلسة بعدين، الملاحظة بتتبدّل مش بتتكرر */
@@ -1060,7 +1097,7 @@ function histBlock(h){
   if(!h.length)return `<div class="mu" style="margin-top:10px">${tr('لسه ماتسجلش في أي جلسة.','Not logged in any session yet.')}</div>`;
   const best=Math.max(...h.map(x=>+x.w||0));
   return `<div class="lhist"><div class="lht"><b>${tr('سجلّك','Your log')}</b> · ${tr(h.length+' جلسة','' +h.length+' session(s)')}${best>0?` · ${tr('أعلى وزن','Best')} <span class="en">${fw(best)}</span>`:''}</div>
-  <table class="h">${h.slice(0,10).map(x=>`<tr><td>${fmtD(x.date)}</td><td class="en">${fw(x.w)}</td><td class="en">${esc(setsStr(x))}</td></tr>`).join('')}</table>${h.length>10?`<div class="mu">+${h.length-10}</div>`:''}</div>`;
+  <table class="h">${h.slice(0,10).map(x=>`<tr><td>${fmtD(x.date)}</td><td class="en">${fw(x.w)}</td><td>${setsH(x)}</td></tr>`).join('')}</table>${h.length>10?`<div class="mu">+${h.length-10}</div>`:''}</div>`;
 }
 function lbBody(x,hm){return `<div class="howto">${detHtml(x)||`<span class="mu">${tr('مفيش شرح. اضغط تعديل واكتب شرحك.','No guide yet. Tap Edit and write yours.')}</span>`}</div>${notesHtml(x[0])}
     ${histBlock(hm[nk(x[0])]||[])}
@@ -1073,7 +1110,7 @@ function libRows(){
   const q=lbQ.trim().toLowerCase(),inP=new Set(S.program.days.flatMap(d=>d.ex.map(t=>t.name)));
   const r=allLib().filter(x=>(lbG==='all'||x[1]===lbG)&&(lbE==='all'||lbEq(x)===lbE)&&lbMatch(x,q));
   if(!r.length)return `<div class="empty">—</div>`;
-  const row=x=>`<details class="pr2 lbn" data-n="${esc(x[0])}"><summary data-lp="lx" data-n="${esc(x[0])}"><div class="sp"><div class="pnm en">${esc(x[0])}</div><div class="mu">${LANG==='ar'&&META[x[0]]?esc(META[x[0]].ar)+' · ':''}<span class="en">${esc(x[3])}×${esc(x[4])}${x[5]?' '+esc(unitTxt(x[5])):''}</span> · ${(EQN[lbEq(x)]||EQN.other)[LANG==='ar'?0:1]}${x[9]?' · '+tr('تمريني','Mine'):''}</div></div>${inP.has(x[0])?'<span class="pdot"></span>':''}<span class="pchev">⌄</span></summary>
+  const row=x=>`<details class="pr2 lbn" data-n="${esc(x[0])}"><summary data-lp="lx" data-n="${esc(x[0])}"><div class="sp"><div class="pnm en">${esc(x[0])}</div><div class="mu">${LANG==='ar'&&META[x[0]]?esc(META[x[0]].ar)+' · ':''}${tgtH(x[3],x[4],0,x[5])} · ${(EQN[lbEq(x)]||EQN.other)[LANG==='ar'?0:1]}${x[9]?' · '+tr('تمريني','Mine'):''}</div></div>${inP.has(x[0])?'<span class="pdot"></span>':''}<span class="pchev">⌄</span></summary>
     <div class="lbody"></div></details>`;
   return GRP_ORDER.map(g=>{const rs=r.filter(x=>x[1]===g);if(!rs.length)return '';
     const op=!!q||lbG!=='all'||lbOpenG.has(g);
@@ -1096,7 +1133,7 @@ function hwModal(n){
   const d=E?(detEn(x,o)||(o.en!=null?[ '',o.en,'','','']:null)||['','','','','']):(o.d||DET[n]||['','','','','']);
   const sh=E?(o.shortEn!=null&&o.shortEn!==''?o.shortEn:(x[7]||'')):(o.short!=null&&o.short!==''?o.short:x[6]);
   modal(`<h3 class="en">${esc(n)}</h3><div class="mu" style="margin-bottom:10px">${tr('عدّل الشرح والمعلومات. اللي تكتبه هو اللي هيظهر في شاشة اللعب.','Edit the guide and notes. What you write is what shows in the session screen.')} <span class="en">(${E?'English':'عربي'})</span></div>
-  <label class="fld">${tr('ملخص قصير (بيظهر تحت المجموعات في اللعب)','Short summary (shown under the sets)')}<textarea class="inp${E?' en':''}" id="hwS" rows="2" dir="${dir}">${esc(sh)}</textarea></label>
+  <label class="fld">${tr('ملخص قصير','Short summary')}<textarea class="inp${E?' en':''}" id="hwS" rows="2" dir="${dir}">${esc(sh)}</textarea></label>
   ${L.map((t,k)=>`<label class="fld">${t}<textarea class="inp${E?' en':''}" id="hwD${k}" rows="${k===3?4:3}" dir="${dir}">${esc(d[k]||'')}</textarea></label>`).join('')}
   ${nt}
   <div class="mu" style="margin:-4px 0 12px">${tr('لغة الشرح بتتغيّر من «الملف» ← اللغة.','The guide language is set in File → Language.')}</div>
@@ -1127,7 +1164,7 @@ function hwSave(n){
 function cuModal(n){
   const c=n?(S.custom||[]).find(x=>x.name===n):null,t=c||{name:'',g:'chest',w:'',sets:3,reps:12,unit:'',how:''};
   modal(`<h3>${c?tr('تعديل التمرين','Edit exercise'):tr('تمرين جديد','New exercise')}</h3>
-  <label class="fld">${tr('الاسم','Name')}<input class="inp en" id="cuN" value="${esc(t.name)}" style="text-align:left"></label>
+  <label class="fld">${tr('الاسم','Name')}<input class="inp" id="cuN" dir="auto" value="${esc(t.name)}" style="text-align:start"></label>
   <label class="fld">${tr('العضلة','Muscle group')}<select class="inp" id="cuG">${Object.keys(GRP).map(g=>`<option value="${g}"${cuG(t)===g?' selected':''}>${GRP[g][LANG==='ar'?0:1]}</option>`).join('')}</select></label>
   <div class="fgrid"><label class="fld">${T().weight}<input class="inp" id="cuW" inputmode="decimal" value="${esc(t.w)}"></label><label class="fld">${T().sets}<input class="inp" id="cuS" inputmode="numeric" value="${esc(t.sets)}"></label><label class="fld">${T().reps}<input class="inp" id="cuR" inputmode="numeric" value="${esc(t.reps)}"></label></div>
   <label class="fld">${T().unit}<select class="inp" id="cuU">${['','ث','خطوة','د'].map(u=>`<option value="${u}"${t.unit===u?' selected':''}>${T().units[u]}</option>`).join('')}</select></label>
@@ -1163,10 +1200,10 @@ function renderProgram(){
   const cores=d.ex.filter(t=>t.core).map(t=>esc(t.name));
   const rows=d.ex.map((t,i)=>{
     const l=exHist(t.id)[0],lb=libGet(t.name),bw=baseH(t.id);
-    const meta=`<span class="en">${fw(bw?bw.w:t.w)} · ${t.sets}×${t.reps}${t.unit?' '+esc(unitTxt(t.unit)):''}</span>`;
+    const meta=`${t.unit?'':`<bdi class="en">${fw(bw?bw.w:t.w)}</bdi> · `}${tgtH(t.sets,t.reps,0,t.unit)}`;
     if(pEdit)return `<div class="pr2" data-i="${i}"><span class="pgrip" data-grip aria-label="${tr('اسحب للترتيب','Drag to reorder')}">≡</span><div class="pr2b" data-a="editT" data-i="${i}"><span class="pno${t.core?' cr':''}">${i+1}</span><div class="sp"><div class="pnm en">${esc(t.name)}</div><div class="mu">${meta}</div></div><span class="pchev">✎</span></div></div>`;
-    const last=l?`${setsStr(l)?setsStr(l)+' · ':''}${fw(l.w)} · ${esc(l.date||'')}`:tr('لسه ماتلعبش','Not logged yet');
-    return `<details class="pr2"><summary data-lp="pt" data-i="${i}" data-n="${esc(t.name)}"><span class="pno${t.core?' cr':''}">${i+1}</span><div class="sp"><div class="pnm en">${esc(t.name)}</div><div class="mu">${meta}${lb?` · ${GRP[lb[1]][LANG==='ar'?0:1]}`:''}</div></div><span class="pchev">⌄</span></summary><div class="pdrop"><div class="mu">${tr('آخر أداء','Last time')}: <span class="en">${last}</span></div><button class="plink" data-a="exInfo" data-i="${i}">${tr('طريقة اللعب','How to perform')}</button></div></details>`;
+    const last=l?`${setsH(l)?setsH(l)+' · ':''}<bdi class="en">${fw(l.w)}</bdi> · ${fmtD(l.date)}`:tr('لسه ماتلعبش','Not logged yet');
+    return `<details class="pr2"><summary data-lp="pt" data-i="${i}" data-n="${esc(t.name)}"><span class="pno${t.core?' cr':''}">${i+1}</span><div class="sp"><div class="pnm en">${esc(t.name)}</div><div class="mu">${meta}${lb?` · ${GRP[lb[1]][LANG==='ar'?0:1]}`:''}</div></div><span class="pchev">⌄</span></summary><div class="pdrop"><div class="mu">${tr('آخر أداء','Last time')}: ${last}</div><button class="plink" data-a="exInfo" data-i="${i}">${tr('طريقة اللعب','How to perform')}</button></div></details>`;
   }).join('')||`<div class="empty">${tr('اليوم فاضي.','Empty day.')}</div>`;
   const tabs=days.map((x,k)=>`<button class="${x.id===pDay?'on':''}" data-a="pday" data-d="${esc(x.id)}">${esc(shortDay(x.name))}</button>`).join('');
   $('#view').innerHTML=`<button class="psys" data-a="sysOpen"><span class="en">${esc(sysName(sp))}</span><span class="pchev">⌄</span></button>
@@ -1180,7 +1217,7 @@ function renderProgram(){
 function infoModal(i){
   const d=day(pDay),t=d.ex[i];if(!t)return;const lb=libGet(t.name),how=libHow(t.name),l=baseH(t.id);
   modal(`<h3 class="en" style="text-align:start">${esc(t.name)}</h3>
-  <div class="mu" style="margin-bottom:10px">${lb?GRP[lb[1]][LANG==='ar'?0:1]+' · ':''}<span class="en">${fw(l?l.w:t.w)} | ${t.sets}×${t.reps}${t.unit?' '+esc(unitTxt(t.unit)):''}</span></div>
+  <div class="mu" style="margin-bottom:10px">${lb?GRP[lb[1]][LANG==='ar'?0:1]+' · ':''}${t.unit?'':`<bdi class="en">${fw(l?l.w:t.w)}</bdi> · `}${tgtH(t.sets,t.reps,0,t.unit)}</div>
   <div class="howto">${lb&&detHtml(lb)||`<span class="mu">${tr('مفيش شرح جاهز للتمرين ده. اكتب تعليماتك الخاصة في التعديل.','No built-in guide for this exercise. Add your own instructions in Edit.')}</span>`}</div>
   ${t.note&&t.note!==how?`<div class="tnote" style="margin-top:10px"><b>${tr('ملاحظتك','Your note')}:</b> ${esc(t.note)}</div>`:''}
   <div class="row mt"><button class="btn pri sp" data-a="editT" data-i="${i}">${tr('تعديل التمرين','Edit exercise')}</button><button class="btn ghost" data-a="closeM">${T().close}</button></div>`);
@@ -1190,7 +1227,7 @@ function libRowsHtml(){
   const q=libQ.trim().toLowerCase();
   const sx=(libFor==='sess'||libFor==='swap')&&S.draft,inS=n=>sx&&S.draft.ex.some(e=>nk(e.name)===nk(n));
   const sf=n=>{const m=typeof META!=='undefined'&&META[n];return m&&(m.eq==='mach'||m.eq==='cable')?0:m&&m.eq==='bb'?2:1};let li=allLib().filter(x=>(libG==='all'||x[1]===libG)&&lbMatch(x,q));if(S.settings.safe||libFor==='swap')li=li.slice().sort((a,b)=>sf(a[0])-sf(b[0]));
-  return li.map(x=>`<div class="prow" data-a="${sx?(libFor==='swap'?'sxSwap':'sxAdd'):'libAdd'}" data-n="${esc(x[0])}"><div class="sp"><div class="nm en">${esc(x[0])}</div><div class="mu">${(GRP[x[1]]||GRP.core)[LANG==='ar'?0:1]} · <span class="en">${esc(x[3])}×${esc(x[4])}</span></div></div><span class="icb">${inS(x[0])?'✓':'+'}</span></div>`).join('')||`<div class="empty">—</div>`;
+  return li.map(x=>`<div class="prow" data-a="${sx?(libFor==='swap'?'sxSwap':'sxAdd'):'libAdd'}" data-n="${esc(x[0])}"><div class="sp"><div class="nm en">${esc(x[0])}</div><div class="mu">${(GRP[x[1]]||GRP.core)[LANG==='ar'?0:1]} · ${tgtH(x[3],x[4],0,x[5])}</div></div><span class="icb">${inS(x[0])?'✓':'+'}</span></div>`).join('')||`<div class="empty">—</div>`;
 }
 function libModal(){
   const rows=libRowsHtml();
@@ -1215,13 +1252,13 @@ function sysModal(){
 function dayModal(){
   const d=day(pDay);
   modal(`<h3>${tr('تعديل اليوم','Edit day')}</h3>
-  <label class="fld">${tr('اسم اليوم','Day name')}<input class="inp en" id="dName" maxlength="24" value="${esc(d.name)}" style="text-align:left"></label>
+  <label class="fld">${tr('اسم اليوم','Day name')}<input class="inp" id="dName" dir="auto" maxlength="24" value="${esc(d.name)}" style="text-align:start"></label>
   <div class="row"><button class="btn pri sp" data-a="daySave">${T().saveB}</button>${S.program.days.length>1&&pDay!=='FB'?`<button class="btn dan" data-a="dayDel">${tr('احذف اليوم','Delete day')}</button>`:''}<button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);
 }
 function tplModal(i){
   const L=T(),d=day(pDay),t=i>-1?d.ex[i]:{name:'',w:'',sets:3,reps:12,goal:12,unit:'',core:false,note:''};
   modal(`<h3>${i>-1?L.editEx:L.newEx}</h3>
-  <label class="fld">${L.name}<input class="inp en" id="tName" list="libdl" value="${esc(t.name)}" style="text-align:left"><datalist id="libdl">${allLib().map(x=>`<option value="${esc(x[0])}">`).join('')}</datalist></label>
+  <label class="fld">${L.name}<input class="inp" id="tName" dir="auto" autocomplete="off" value="${esc(t.name)}" style="text-align:start"></label><div class="sugl" id="tSug"></div>
   <div class="fgrid"><label class="fld">${L.weight}<input class="inp" id="tW" inputmode="decimal" value="${esc(t.w)}"></label><label class="fld">${L.sets}<input class="inp" id="tS" inputmode="numeric" value="${esc(t.sets)}"></label><label class="fld">${L.reps}<input class="inp" id="tR" inputmode="numeric" value="${esc(t.reps)}"></label></div>
   <div class="fgrid"><label class="fld">${L.goal}<input class="inp" id="tG" inputmode="numeric" value="${esc(t.goal)}"></label><label class="fld" style="grid-column:span 2">${L.unit}<select class="inp" id="tU">${['','ث','خطوة','د'].map(u=>`<option value="${u}" ${t.unit===u?'selected':''}>${L.units[u]}</option>`).join('')}</select></label></div>
   <label class="cl" style="margin:4px 0 12px"><input type="checkbox" id="tC" ${t.core?'checked':''}>${L.coreEx}</label>
@@ -1511,7 +1548,8 @@ function backupMD(){
     o.push(`### ${s.date} — ${s.dayName} · Cycle ${s.cycle} · ${L.st[s.status]||''}`,'');
     {const m=sessMeta(s);if(s.cb)m.push(s.cb.dl?tr('أسبوع خفيف ','Light week ')+cbPct(s.cb):tr(`رجوع بعد ${s.cb.g} يوم `,`Comeback after ${s.cb.g} days `)+cbPct(s.cb));if(m.length)o.push(m.join(' · '),'')}
     o.push(rowMd(L.mdSCols),rowMd(L.mdSCols.map(()=>'---')));
-    for(const e of s.ex){const f=exFlags(e,s);o.push(rowMd([e.name+(e.core?' ★':'')+(f.length?' ('+f.join(' · ')+')':''),fw(e.w),setsStr(e),e.dur&&e.dur.some(x=>x>0)?e.dur.map(x=>x>0?mmss(x):'—').join(' / '):'',e.rir!=null?(e.rir===3?'3+':String(e.rir)):'',e.clean?L.yes:tr('لأ','no'),e.note]))}
+    for(const e of s.ex){const f=exFlags(e,s);o.push(rowMd([e.name+(e.core?' ★':'')+(f.length?' ('+f.join(' · ')+')':''),fw(e.w),setsStr(e),e.dur&&e.dur.some(x=>x>0)?e.dur.map(x=>x>0?mmss(x):'—').join(' / ')+' = '+mmss(durSum(e)):'',e.rir!=null?(e.rir===3?'3+':String(e.rir)):'',e.clean?L.yes:tr('لأ','no'),e.note]))}
+    {const tot=s.ex.reduce((a,e)=>a+durSum(e),0),mn=s.t0&&s.ts&&s.ts>s.t0&&!s.imp?Math.round((s.ts-s.t0)/60000):0;const z=[];if(tot>0)z.push(tr('إجمالي وقت المجموعات: ','Total set time: ')+mmss(tot));if(mn>0&&mn<600)z.push(tr('مدة الجلسة: ','Session length: ')+mn+' '+tr('دقيقة','min'));if(z.length)o.push('',z.join(' · '))}
     o.push('');
   }
   const data=JSON.stringify({app:'gymlog',v:BK_V,at:Date.now(),exported:new Date().toISOString(),data:snapData()}).replace(/-->/g,'--\\u003e');
@@ -1546,8 +1584,8 @@ async function backupNow(){
   // بيسألك تحفظ فين: نافذة اختيار المكان لو المتصفح بيدعمها، وإلا قايمة المشاركة (Drive / Files) اللي بتختار منها المكان
   if(window.Android){nativeSave(nm+'.md',t);return}
   if(FS){try{const h=await showSaveFilePicker({suggestedName:nm+'.md',types:[{description:'Gym log',accept:{'text/markdown':['.md']}}]});const w=await h.createWritable();await w.write(t);await w.close();markBackup();toast(T().savedFile);refresh();return}catch(e){if(e.name==='AbortError')return}}
-  const t0=Date.now();
-  try{const f=new File([t],nm+'.txt',{type:'text/plain'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});markBackup();toast(T().sent);refresh();return}}catch(e){if(e.name==='AbortError'&&Date.now()-t0>900)return}
+  /* v141: إلغاء المشاركة = إلغاء (حتى لو سريع)، مفيش تنزيل صامت في Downloads، والنسخة بتتعلّم «اتحفظت» بس لما تتحفظ فعلًا */
+  try{const f=new File([t],nm+'.txt',{type:'text/plain'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});markBackup();toast(T().sent);refresh();return}}catch(e){if(e.name==='AbortError'){toast(tr('اتلغى','Cancelled'));return}}
   download(nm+'.md',t,'text/markdown');markBackup();toast(T().dlDone);refresh();
 }
 /* داخل الـ APK: نافذة «احفظ في» بتاعة أندرويد (تقدر تختار Drive أو أي فولدر) */
@@ -1728,8 +1766,25 @@ function renderData(){
 })();
 
 /* ================= الأحداث ================= */
-document.addEventListener('input',ev=>{if(ev.target.id==='libS'){libQ=ev.target.value;const r=$('#libR');if(r)r.innerHTML=libRowsHtml()}else if(ev.target.id==='lbS'){lbQ=ev.target.value;const l=$('#lbL');if(l)l.innerHTML=libRows()}});
-document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('lgrp')&&d.dataset.g){d.open?lbOpenG.add(d.dataset.g):lbOpenG.delete(d.dataset.g)}if(d.classList&&d.classList.contains('lbn')&&d.open)lbFill(d);if(d.classList&&d.classList.contains('dtl')&&d.open)setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'start'}),30)},true);
+document.addEventListener('input',ev=>{if(ev.target.id==='tName'){const q=ev.target.value.trim().toLowerCase(),box=$('#tSug');if(box)box.innerHTML=q.length<2?'':allLib().filter(x=>lbMatch(x,q)&&x[0].toLowerCase()!==q).slice(0,6).map(x=>`<button type="button" class="sugi" data-a="tPick" data-n="${esc(x[0])}"><span class="en">${esc(x[0])}</span>${LANG==='ar'&&META[x[0]]?`<small>${esc(META[x[0]].ar)}</small>`:''}</button>`).join('');return}if(ev.target.id==='libS'){libQ=ev.target.value;const r=$('#libR');if(r)r.innerHTML=libRowsHtml()}else if(ev.target.id==='lbS'){lbQ=ev.target.value;const l=$('#lbL');if(l)l.innerHTML=libRows()}});
+document.addEventListener('toggle',e=>{const d=e.target;if(d.classList&&d.classList.contains('lgrp')&&d.dataset.g){d.open?lbOpenG.add(d.dataset.g):lbOpenG.delete(d.dataset.g)}if(d.classList&&d.classList.contains('lbn')&&d.open)lbFill(d);
+  /* v141: بنحرّك الشاشة بس لما انت تدوس تفتح، مش وقت إعادة الرسم */
+  if(d.open&&TAP.el===d&&Date.now()-TAP.t<900){TAP.el=null;setTimeout(()=>reveal(d),60)}},true);
+/* v141: أي حاجة بتتفتح بدوسة بتبان كلها قدامك (بنزل الشاشة بنعومة)، ولو أطول من الشاشة فيه ظل خفيف تحت بيقولك إن فيه كمان */
+const TAP={el:null,t:0};
+document.addEventListener('click',e=>{const s=e.target.closest&&e.target.closest('summary');if(s)Object.assign(TAP,{el:s.parentElement,t:Date.now()})},true);
+function scroller(el){for(let p=el.parentElement;p&&p!==document.body;p=p.parentElement){const o=getComputedStyle(p).overflowY;if((o==='auto'||o==='scroll')&&p.scrollHeight>p.clientHeight+2)return p}return null}
+function viewOf(sc){if(sc){const r=sc.getBoundingClientRect();let b=r.bottom;const nv=sc.querySelector(':scope>.wnav');if(nv)b=Math.min(b,nv.getBoundingClientRect().top);return{top:r.top,bottom:b,l:r.left,r:r.right}}
+  const tb=document.querySelector('.tabs'),tp=document.querySelector('.top');return{top:tp?tp.getBoundingClientRect().bottom:0,bottom:tb?tb.getBoundingClientRect().top:innerHeight,l:0,r:innerWidth}}
+function reveal(el){if(!el||!el.isConnected)return;const sc=scroller(el),v=viewOf(sc),r=el.getBoundingClientRect(),m=14;
+  if(r.bottom>v.bottom-m){const dy=Math.min(r.bottom-(v.bottom-m),r.top-(v.top+m));if(dy>0)(sc||window).scrollBy({top:dy,behavior:'smooth'})}
+  edgeWatch(el,sc)}
+let EW=null;
+function edgeWatch(el,sc){edgeOff();const f=document.createElement('div');f.id='edgeF';f.setAttribute('aria-hidden','true');document.body.appendChild(f);
+  const tgt=sc||window,upd=()=>{if(!el.isConnected||el.open===false){edgeOff();return}const v=viewOf(sc),r=el.getBoundingClientRect(),more=r.bottom>v.bottom+6&&r.top<v.bottom;
+    f.style.left=v.l+'px';f.style.width=(v.r-v.l)+'px';f.style.top=(v.bottom-46)+'px';f.classList.toggle('on',more);if(!more&&r.bottom<=v.bottom+6&&EW&&EW.seen)edgeOff();if(more&&EW)EW.seen=1};
+  EW={f,tgt,upd,seen:0};tgt.addEventListener('scroll',upd,{passive:true});setTimeout(upd,40);setTimeout(upd,520)}
+function edgeOff(){if(!EW)return;EW.tgt.removeEventListener('scroll',EW.upd);EW.f.remove();EW=null}
 const TABS=['home','hist','prog','lib','data'];
 let px=0,py=0,pt=0,pok=false,pmode=0,pdx=0;
 const swOK=e=>$('#sess').hidden&&$('#modal').hidden&&e.touches.length===1&&!(qGestOn()&&e.target.closest('.qt'))&&!e.target.closest('input,select,textarea,.chips,.ptabs,table,[data-grip],.pr2.drag');
@@ -1757,6 +1812,7 @@ document.addEventListener('click',ev=>{
   if(ev.target.id==='modal'){closeModal();return}
   const b=ev.target.closest('[data-a]');if(!b)return;
   const a=b.dataset.a,i=+b.dataset.i,d=S.draft,L=T();
+  {const w=b.closest('.wdn2');if(w&&Date.now()-(+w.dataset.t0||0)<450)return}
   switch(a){
     case 'lang':$('#toast').classList.remove('on');LANG=LANG==='en'?'ar':'en';S.settings.lang=LANG;save();applyLang();if(!$('#sess').hidden)renderSession();if(!$('#modal').hidden)closeModal();go(tab);break;
     case 'start':if(b.classList.contains('orb'))orbGo(b,()=>startSession(b.dataset.d));else startSession(b.dataset.d);break;
@@ -1767,7 +1823,7 @@ document.addEventListener('click',ev=>{
     case 'addset':d.ex[i].sets.push('');save();renderSession();break;
     case 'exGo':goEx(i);break;
     case 'setTap':{const j=+b.dataset.j,e=d.ex[curEx];if(num(e.sets[j])>0){openPick('s',j);break}
-      e.sets[j]=String(e.treps);POP=j;setTimeout(()=>{POP=-1},400);try{navigator.vibrate&&navigator.vibrate(18)}catch(_){};saveSoon();if(!S.settings.hint1){S.settings.hint1=1;save();setTimeout(()=>toast(tr('دوس على الدايرة تاني لو عايز تغيّر العدّات أو وزن المجموعة دي','Tap the circle again to change the reps or this set\'s weight')),400)}
+      e.sets[j]=String(e.treps);POP=j;setTimeout(()=>{POP=-1},400);try{navigator.vibrate&&navigator.vibrate(18)}catch(_){};saveSoon();if(!S.settings.hint1){S.settings.hint1=1;save();setTimeout(()=>toast(tr('دوس على الدايرة تاني لو عايز تغيّر العدّات أو وزن المجموعة دي','Tap the circle again to change the reps or this set\'s weight'),{top:1}),400)}
       /* سوبرسيت: من A لـ B من غير راحة، ومن B راحة وترجع لـ A */
       if(e.ss&&curEx<d.ex.length-1){goEx(curEx+1);break}
       if(curEx>0&&d.ex[curEx-1].ss){const a=d.ex[curEx-1];restStart(e);if(a.sets.some(v=>!(num(v)>0)))goEx(curEx-1);else renderSession();break}
@@ -1784,7 +1840,7 @@ document.addEventListener('click',ev=>{
     case 'rir':{const e=d.ex[curEx],v=+b.dataset.v;e.rir=e.rir===v?null:v;saveSoon();renderSession();break}
     case 'tShort':{const on=b.dataset.k==='on';setShort(on);save();renderSession();openMenu();toast(on?tr('مجموعتين لكل تمرين، والأساسي الأول ✓','2 sets each, essentials first ✓'):tr('المجموعات والترتيب رجعوا ✓','Sets and order are back ✓'));break}
     case 'pain':{closeSheet();const e=d.ex[curEx];(async()=>{const go=await ask(tr('لو الوجع حاد أو في المفصل: وقّف التمرين ده النهارده. لو خفيف: نزّل الوزن 20% وكمّل بأداء أبطأ. تبدّله بتمرين تاني لنفس العضلة؟','If the pain is sharp or in the joint, stop this exercise today. If it is mild, drop the weight 20% and go slower. Swap it for another exercise for the same muscle?'),{yes:tr('بدّله','Swap it'),no:tr('نزّل الوزن 20%','Drop 20%')});
-      e.note=((e.note||'')+' ⚠ '+tr('وجع','pain')).trim();
+      e.pain=1;
       if(go){const L0=libGet(e.name);libQ='';libG=L0?L0[1]:'all';libFor='swap';libModal()}else{const w=num(e.w);if(!e.unit&&w>0){const st=stepOf(e.name);e.w=String(Math.max(st,Math.round(w*.8/st)*st))}}
       save();renderSession()})();break}
     case 'protAdd':{const v=+b.dataset.v;const old=JSON.stringify({prot:S.prot||null});S.prot={d:today(),g:Math.max(0,protToday()+v)};save();queueBackup();const pe=document.querySelector('.prt');if(pe)pe.outerHTML=protHtml();offerUndo(`${v>0?'+':''}${v} ${tr('جم بروتين','g protein')} ✓`,old);break}
@@ -1809,13 +1865,13 @@ document.addEventListener('click',ev=>{
     case 'rep':reportModal(+b.dataset.d);break;
     case 'repCopy':copy(reportText(+b.dataset.d));break;
     case 'repShare':shareText(reportText(+b.dataset.d));break;
-    case 'gymSet':{S.settings.gym=b.dataset.id==='main'?'':b.dataset.id;save();renderHome();const det=document.querySelector('.dtl');if(det)det.open=true;toast(tr('الأوزان هتتاخد من آخر مرة في الجيم ده','Weights now come from your last time at this gym'));break}
+    case 'gymSet':{S.settings.gym=b.dataset.id==='main'?'':b.dataset.id;save();renderHome();toast(tr('الأوزان هتتاخد من آخر مرة في الجيم ده','Weights now come from your last time at this gym'));break}
     case 'gymAdd':{const live=(S.gyms||[]).filter(g=>!g.del);modal(`<h3>${tr('الجيمات','Gyms')}</h3><div class="mu" style="margin-bottom:10px;line-height:1.8">${tr('لو بتتمرن في أكتر من مكان (جيم تاني، فندق في سفر، البيت)، الأجهزة بتختلف: الـ 50 في جهاز هنا مش زي الـ 50 هناك. سجّل كل مكان هنا، واختاره من «التفاصيل» قبل ما تبدأ، والتطبيق هيقترح الأوزان من آخر مرة لعبت في نفس المكان، ومش هيخلط أرقام جيم بجيم.','If you train in more than one place (another gym, a hotel, home), machines differ: 50 on one machine is not 50 on another. Add each place here and pick it in “Details” before you start; the app suggests weights from your last session in that same place and never mixes them.')}</div>
       ${live.length?`<div class="gyl">${live.map(g=>`<div class="gyi"><span class="sp">${esc(g.name)}</span><button class="btn sm ghost" data-a="gymDel" data-id="${esc(g.id)}">${tr('امسح','Delete')}</button></div>`).join('')}</div>`:''}
       <label class="fld">${tr('مكان جديد','New place')}<input class="inp" id="gymN" maxlength="20" placeholder="${tr('مثلاً: جيم الشغل','e.g. Work gym')}"></label><div class="row"><button class="btn pri sp" data-a="gymSave">${tr('ضيف','Add')}</button><button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);break}
     case 'memo':memoModal(b.dataset.n);break;
     case 'memoSave':{const n=b.dataset.n,t=($('#memoT').value||'').trim();S.exMemo=S.exMemo||{};if(t)S.exMemo[nk(n)]=t;else delete S.exMemo[nk(n)];save();queueBackup();memoDone();toast(tr('اتحفظت ✓','Saved ✓'));break}
-    case 'memoDel':{S.exMemo&&delete S.exMemo[nk(b.dataset.n)];save();queueBackup();memoDone();break}
+    case 'memoDel':{const _u=JSON.stringify({exMemo:Object.assign({},S.exMemo)});S.exMemo&&delete S.exMemo[nk(b.dataset.n)];save();queueBackup();memoDone();offerUndo(tr('الملاحظة اتمسحت','Note deleted'),_u);break}
     case 'gymDel':(async()=>{const g=(S.gyms||[]).find(x=>x.id===b.dataset.id);if(!g)return;if(!await ask(tr(`تمسح «${g.name}»؟ جلساتك القديمة فيه هتفضل زي ما هي.`,`Delete “${g.name}”? Your past sessions there stay as they are.`),{danger:1,yes:tr('امسح','Delete')}))return;g.del=1;if(S.settings.gym===g.id)S.settings.gym='';save();queueBackup();closeModal();renderHome();})();break;
     case 'gymSave':{const n=($('#gymN').value||'').trim();if(!n){toast(T().nameReq);break}S.gyms=S.gyms||[];const g={id:'g'+uid(),name:n};S.gyms.push(g);S.settings.gym=g.id;save();closeModal();renderHome();break}
     case 'safe':S.settings.safe=b.dataset.k==='on'?1:0;save();renderData();break;
@@ -1823,7 +1879,7 @@ document.addEventListener('click',ev=>{
     case 'rdyGo':{d.rdy=+b.dataset.v;d.rdyAsk=1;save();closeSheet();if(d.rdy===0){ask(tr('يوم تقيل. تخلّي النهارده الأساسي بس؟ الالتزام أهم من الرقم.','Rough day. Keep today to the essentials? Showing up beats the number.'),{yes:tr('الأساسي بس','Essentials only'),no:tr('كمّل عادي','Keep going')}).then(ok=>{if(ok&&setCoreOnly(true)){save();renderSession();toast(tr('الأساسي بس ✓ تقدر ترجّع الباقي من ⋯','Essentials only ✓ bring the rest back from ⋯'))}})}else toast(tr('اتسجّل ✓','Noted ✓'));break}
     case 'rdySkip':d.rdyAsk=1;save();closeSheet();break;
     case 'swTgl':S.settings.swOn=b.dataset.k?(b.dataset.k==='on'?1:0):(S.settings.swOn?0:1);save();renderSession();openMenu();toast(S.settings.swOn?tr('ساعة الإيقاف ظاهرة لكل التمارين','Stopwatch shown for every exercise'):tr('ساعة الإيقاف للتمارين اللي بالوقت بس','Stopwatch only for timed exercises'));break;
-    case 'dateEd':{const x=$('#mdt');if(x)x.hidden=!x.hidden;break}
+    case 'dateEd':{const x=$('#mdt');if(x){x.hidden=!x.hidden;if(!x.hidden)requestAnimationFrame(()=>reveal(x))}break}
     case 'tools':toolsModal();break;
     case 'cbWhy':xModal('cb');break;
     case 'dlWhy':xModal('dl');break;
@@ -1842,9 +1898,10 @@ document.addEventListener('click',ev=>{
     case 'copyDone':if(lastDone)copy(cardText(lastDone));break;
     case 'shareDone':if(lastDone)shareModal(lastDone);break;
     case 'imgDone':if(lastDone)shareImg(lastDone);break;
+    case 'imgSave':imgSave();break;
     case 'imgS':{const x=S.sessions.find(q=>q.id===b.dataset.id);if(x)shareImg(x);break}
     case 'doneClose':closeSession();go('home');break;
-    case 'tgl':{const k=b.dataset.k;openTips.has(k)?openTips.delete(k):openTips.add(k);renderSession();break}
+    case 'tgl':{const k=b.dataset.k,op=!openTips.has(k);op?openTips.add(k):openTips.delete(k);renderSession();if(op)requestAnimationFrame(()=>reveal($('#l3box')));else edgeOff();break}
     case 'hist':closeSheet();exHistModal(b.dataset.id);break;
     case 'guide':openGuide();break;
     case 'sess':sessModal(b.dataset.id);break;
@@ -1917,6 +1974,7 @@ document.addEventListener('click',ev=>{
     case 'daySave':{const v=$('#dName').value.trim();if(v){day(pDay).name=v;save();queueBackup()}closeModal();renderProgram();break}
     case 'dayDel':ask(tr('تحذف اليوم ده بتمارينه؟ السجل القديم مش هيتأثر.','Delete this day and its exercises? Your log is not affected.'),{danger:1}).then(ok=>{if(ok){const _u=undoSnap();S.program.days=S.program.days.filter(x=>x.id!==pDay);pDay=S.program.days[0].id;save();queueBackup();closeModal();renderProgram();offerUndo(tr('اليوم اتمسح','Day deleted'),_u)}});break;
     case 'editT':tplModal(i);break;
+    case 'tPick':{const n=$('#tName');if(n){n.value=b.dataset.n;$('#tSug').innerHTML='';const L0=libGet(b.dataset.n);if(L0){const w=$('#tW');if(w&&!w.value)w.value=lastW(L0[0])??L0[2];const u=$('#tU');if(u&&u.value!==L0[5]){u.value=L0[5]||'';u.dispatchEvent(new Event('change'))}}}break}
     case 'addT':cuModal();break;
     case 'saveT':saveTpl(i);break;
     case 'delT':ask(L.confDelEx,{danger:1}).then(ok=>{if(ok){const _u=undoSnap();day(pDay).ex.splice(i,1);save();queueBackup();closeModal();renderProgram();offerUndo(tr('التمرين اتشال','Exercise removed'),_u)}});break;
@@ -1938,13 +1996,15 @@ function onField(ev){
   if(t.id==='sDate'){d.date=t.value;saveSoon();return}
   if(t.id==='sCyc'){const n=num(t.value);if(n>0)d.cycle=n;save();return}
   const c=t.closest('.wmain');if(!c)return;const e=d.ex[+c.dataset.i],f=t.dataset.f;
+  if(f==='memo'){const v=t.value;S.exMemo=S.exMemo||{};if(v.trim())S.exMemo[nk(e.name)]=v.trim();else delete S.exMemo[nk(e.name)];e.note=v.trim();e.noteEd=1;growTa(t);saveSoon();if(ev.type==='change')queueBackup();return}
   if(f==='w')e.w=t.value;else if(f==='s')e.sets[+t.dataset.j]=t.value;else if(f==='n')e.note=t.value;else return;
   saveSoon();updCore();
 }
 sess.addEventListener('input',onField);sess.addEventListener('change',onField);
+function growTa(t){t.style.height='auto';t.style.height=Math.min(t.scrollHeight+2,220)+'px'}
 let tx=0,ty=0,tsh=false;
 let tt=0;
-sess.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY;tt=Date.now();tsh=!!e.target.closest('#sheet,input')},{passive:true});
+sess.addEventListener('touchstart',e=>{const t=e.touches[0];tx=t.clientX;ty=t.clientY;tt=Date.now();tsh=!!e.target.closest('#sheet,input,textarea')},{passive:true});
 sess.addEventListener('touchend',e=>{if(!S.draft||tsh)return;const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty,fast=Date.now()-tt<300;if(Math.abs(dx)<(fast?24:42)||Math.abs(dx)<Math.abs(dy))return;goEx(curEx+((LANG==='ar'?dx>0:dx<0)?1:-1))},{passive:true});
 let gTap=false;
 sess.addEventListener('touchstart',e=>{gTap=!!e.target.closest('.wname')},{passive:true});
@@ -2012,5 +2072,8 @@ new MutationObserver(ms=>{for(const m of ms)if(m.addedNodes.length){xpEnhance();
 xpEnhance();
 /* أمان زيادة: لو أي select اتلمس بطريقة ما، اللوحة بتاعتنا هي اللي تفتح مش بتاعة النظام */
 document.addEventListener('mousedown',e=>{const t=e.target;if(t&&(t.tagName==='SELECT'||(t.tagName==='INPUT'&&t.type==='date'))){e.preventDefault();t.tagName==='SELECT'?xpSelect(t):xpDate(t)}},true);
+/* v141: مفيش قايمة الضغطة المطوّلة بتاعة النظام على أي حاجة (لينكات، صور، نصوص) — خانات الكتابة بس */
+document.addEventListener('contextmenu',e=>{if(!(e.target.closest&&e.target.closest('input,textarea')))e.preventDefault()});
+document.addEventListener('dragstart',e=>{if(e.target.closest&&e.target.closest('a,img'))e.preventDefault()});
 const UI0=readUI();
 boot().then(()=>{if(migTheme()){delete S.settings.thGr;delete S.settings.thDawn;save()}applyLang();if(S.impN){const k=S.impN;S.impN=0;save();setTimeout(()=>toast(T().histNote(k)),600)}go('home');restoreUI(UI0);if(S.onb)setTimeout(()=>onbModal(1),700);else if(!S.settings.legend){S.settings.legend=1;save();setTimeout(()=>guideModal(null,1),1200)}if(S.mig6ask){delete S.mig6ask;save();setTimeout(async()=>{if(await ask(tr('التطبيق بقى بيعتبر أداءك نضيف من الأول، وانت بتعلّم «مش نضيف» بس لو حصلت مرجحة. نعتبر جلساتك اللي فاتت نضيفة كمان، علشان قاعدة الزيادة تبدأ تحسب منها؟','Form now counts as clean by default; you mark «not clean» only when it is not. Count your past sessions as clean too, so the progression rule can use them?'),{yes:tr('أيوه','Yes'),no:tr('لأ','No')})){for(const x of S.sessions)if(!x.imp)for(const e of x.ex)e.clean=true;save();queueBackup();go(tab)}},900)}setTimeout(()=>('requestIdleCallback' in window?requestIdleCallback(warmTabs,{timeout:4000}):warmTabs()),2500);if(pendMig){toast(T().migNote);pendMig=false}if(SYNC.on&&SYNC.dirty)setTimeout(runBackup,1500)});

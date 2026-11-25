@@ -842,3 +842,53 @@ html[data-th=morning] .orb .ch{stroke:#fff;opacity:1}
 @keyframes cmt{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.orb .cmt{animation:none}}
 .cbq .cbgo2{text-decoration:none;font-weight:600;color:var(--ac2);white-space:nowrap}
+/* ===== v141 ===== */
+/* C1: الدايرة حجمها من عرض الشاشة بس، ومابتصغرش علشان أي حاجة. لو المكان ضيق، البيت والسطر اللي تحتها هما اللي بيستخبوا */
+.hs .orb,.hs.cbm .orb,.orb{width:min(84vw,360px);min-width:0}
+.hs{height:auto;min-height:calc(100dvh - 232px)}
+@media (max-height:700px){.hs .orb,.hs.cbm .orb{width:min(84vw,360px)}.hs .qt{display:none}}
+@media (max-height:600px){.hs .oline{margin-top:12px;font-size:13px}.hs .cbq{display:none}}
+/* C6: العربي بيتكتب بخط Readex */
+.on1,.wname,.wgh,.cr .cra,pre.cardtxt,.brand .wmk~*{font-family:var(--font)}
+pre.cardtxt{font-size:14px;line-height:1.7}
+/* C13: عناوين العضلات في التمارين هادية */
+.lgrp>summary,.lgrp[open]>summary{font-weight:var(--wm);color:color-mix(in srgb,var(--tx2) 72%,var(--mu))}
+/* C15: الحلقة الواحدة بتتحرك ببطء حتى مع «تقليل الحركة» */
+@media (prefers-reduced-motion:reduce){.orb .cmt{animation:cmt 18s linear infinite}}
+/* C16: تباين أوضح في الشكلين، وكل زرار مساحته 44 على الأقل */
+:root{--arc:#6b665e}html[data-th=morning]{--arc:#988a75}
+.orb .ar{stroke:var(--arc)}.orb circle.ar.cur.one{stroke-opacity:.35}
+.on3,.wgh,.cr .crv,.whint,.whint.mine{opacity:1}
+.cbs span.ok{opacity:1;color:var(--mu);border-style:dashed}
+.btn.sm,.thseg button,.wcl,#undo button,.chips button,.rsr button,.wrir button,.gyr button,.prb button,.stp button{min-height:44px}
+.wpm,.wsw,.icb,.pws button,.xcn{width:44px;height:44px}
+.cbq button{padding:11px 4px;margin:-11px 0}
+.dls,.prg{min-height:44px;padding-inline:8px}
+.brand .lg{box-sizing:content-box;padding:11px 8px;margin:-11px -8px}
+.brand .wmk{display:inline-flex;align-items:center;min-height:44px}
+/* C17: شريط التمارين بيمشي مع اتجاه اللغة */
+.wseg{direction:inherit}
+/* C4: ملاحظتك تحت التمرين بتتكتب في مكانها */
+.wnote{display:block;width:100%;max-width:520px;margin:8px auto 0;min-height:44px;resize:none;overflow:hidden;background:transparent;border:1px solid transparent;border-radius:12px;padding:10px 12px;font:inherit;font-size:var(--t2);line-height:1.7;color:var(--tx);text-align:center;outline:none;transition:border-color .2s,background .2s}
+.wnote::placeholder{color:var(--mu);opacity:1}
+.wnote:focus{border-color:var(--bd);background:var(--s1);text-align:start}
+.wnote:placeholder-shown{border-color:color-mix(in srgb,var(--bd) 60%,transparent);border-style:dashed}
+/* C0b: «آخر 3 مرات» */
+.tch{display:inline-block;transition:transform .2s}.tch.on{transform:rotate(180deg)}
+#sess .tnote .l3{padding:6px 0;border-bottom:1px solid var(--dv)}#sess .tnote .l3:last-of-type{border-bottom:0}
+.l3n,.sdn{color:var(--tx2);font-size:var(--t2);margin-top:2px;white-space:pre-wrap}
+.l3 .bad,.sdx .bad{color:var(--badtx)}.sdx .ok{color:var(--oktx)}
+#edgeF{position:fixed;height:46px;pointer-events:none;z-index:25;background:linear-gradient(to bottom,transparent,var(--bg));opacity:0;transition:opacity .25s}
+#edgeF.on{opacity:1}
+#edgeF::after{content:'⌄';position:absolute;left:50%;bottom:2px;transform:translateX(-50%);color:var(--mu);font-size:16px}
+/* C11: تفاصيل الجلسة في السجل */
+.dr.sd{display:block}.sdh{display:flex;gap:8px}.sdh .dn2{flex:1;min-width:0}.sdx{font-size:var(--t1);color:var(--mu);margin-top:3px;line-height:1.6}
+/* C3: اقتراحات اسم التمرين بنفس الثيم */
+.sugl{display:flex;flex-direction:column;margin:-6px 0 10px;border-radius:12px;overflow:hidden}
+.sugl:empty{display:none}
+.sugi{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:0 12px;background:var(--s2);border:0;border-bottom:1px solid var(--dv);color:var(--tx2);font:inherit;font-size:var(--t2);text-align:start;cursor:pointer}
+.sugi small{color:var(--mu);font-size:var(--t1)}
+/* C18: رسالة التلميح فوق، مش فوق زرار «تم» */
+#toast.top{top:calc(70px + env(safe-area-inset-top));bottom:auto}
+.cimg{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;pointer-events:none}
+.swr .swt2{flex:1;min-width:0}
