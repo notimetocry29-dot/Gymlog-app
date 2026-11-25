@@ -1,5 +1,5 @@
 // رقم النسخة: لازم يتغير هنا وفي index.html (const VER) مع كل إصدار — تغييره هنا هو اللي بيخلّي المتصفح يلاقي النسخة الجديدة
-const BUILD='114';
+const BUILD='115';
 const C='gym-v'+BUILD;
 // كل ملف التطبيق محتاجه بيتحمّل وقت التثبيت؛ لو أي ملف ناقص التثبيت بيفشل (addAll بيرفض) بدل ما يشتغل نص نص
 const FILES=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-192.png','./icon-maskable-512.png','./apple-touch-icon.png','./favicon-48.png','./quotes.js','./exlib.js','./fonts/ruqaa.woff2','./fonts/figtree.woff2'];
