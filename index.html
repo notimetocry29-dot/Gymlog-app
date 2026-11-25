@@ -358,7 +358,8 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 .dtl .warn,.dtl .bkn{margin:0 0 10px}
 /* v108: كارت الرجوع بعد الغياب */
 .hs.cbm{height:auto;min-height:calc(100dvh - 232px);padding:30px 0 6px;box-sizing:border-box}
-.hs.cbm .orb{width:min(78vw,320px,calc(100dvh - 540px));min-width:220px}
+.hs.cbm .orb{width:min(84vw,350px,calc(100dvh - 450px));min-width:260px}
+.hs.cbm .qt{display:none}
 .cbh{display:block;width:100%;margin:14px auto 0;max-width:340px;padding:11px 14px 10px;border-radius:16px;background:var(--s1);border:1px solid var(--bd);text-align:center;font:inherit;font-size:13px;line-height:1.65;color:var(--mu);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .08s ease-out,background .08s}
 .cbh:active{transform:scale(.98);background:var(--s2)}
 .cbh .cbt{display:block}
@@ -403,6 +404,11 @@ html[data-fs="3"] #view>:not(.homew),html[data-fs="3"] .mbox,html[data-fs="3"] .
 .wrir button{border:1px solid var(--bd);background:none;color:var(--mu);border-radius:99px;padding:5px 11px;font:inherit;font-size:12.5px;min-height:34px}
 .wrir button.on{border-color:var(--ac);color:var(--ac2)}
 .plc{text-align:center;font-size:13px;color:var(--mu);margin:-2px 0 8px;min-height:18px}
+.bmx{margin:0 0 10px}.bmx>summary{font-size:13px;color:var(--mu);padding:6px 0;cursor:pointer}.bmr{font-size:11.5px}
+.prt{margin:12px 0;padding:12px 14px;border:1px solid var(--bd);border-radius:14px;background:var(--s1)}
+.prh{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:var(--tx2);margin-bottom:8px}.prg{background:none;border:0;border-bottom:1px dotted var(--mu);color:inherit;font:inherit;padding:0}
+.prb{display:flex;gap:6px;justify-content:center;margin-top:10px}.prb button{flex:1;border:1px solid var(--bd);background:none;color:var(--tx2);border-radius:10px;min-height:40px;font:inherit;font-size:14px}
+.rdy{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;margin:0 16px 8px;font-size:13px;color:var(--mu)}.rdy button{border:1px solid var(--bd);background:none;color:var(--tx2);border-radius:99px;padding:5px 12px;font:inherit;font-size:13px;min-height:34px}
 .pfbn{font-size:13px;line-height:1.7;color:var(--mu);margin:0 2px 10px}
 .cbdh{margin:16px 0 6px;font-size:13px;color:var(--mu);text-align:start}
 .sxs{margin:0 0 10px}
@@ -586,7 +592,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='118';
+const VER='119';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
@@ -945,7 +951,7 @@ function progState(t,h){
   for(const x of h){if((+x.w||0)!==W)break;n++;if(x.clean&&!ds.has(x.date)&&x.sets.length>=t.sets&&x.sets.every(r=>r>=t.goal)){ds.add(x.date);q++}}
   if(q>=2)return{k:'up'};if(n>=5)return{k:'stuck',n};if(q===1)return{k:'q1'};return null;
 }
-const STEP0={bb:2.5,db:2,mach:5,cable:5,kb:4,bw:2.5,band:2.5,other:2.5};
+const STEP0={bb:2.5,db:2.5,mach:5,cable:5,kb:4,bw:2.5,band:2.5,other:2.5};
 const stepOf=n=>{const o=S.steps&&S.steps[nk(n)];if(o>0)return o;const m=typeof META!=='undefined'&&META[n];return STEP0[(m&&m.eq)||'other']||2.5};
 function progMsg(t,h,unit,name){
   const p=progState(t,h);if(!p)return null;const L=T();
@@ -982,6 +988,7 @@ function aiText(s,skip){
   const coreAll=tpl.filter(t=>t.core),coreDone=coreAll.filter(t=>s.ex.some(e=>e.exId===t.id)).length;
   out.push(L.aiHead(s.dayName,s.cycle));
   out.push(`${L.aiDate}: ${s.date} (${fmtD(s.date)})`);
+  if(s.rdy!=null)out.push(tr('النوم والطاقة قبل الجلسة: ','Sleep and energy before the session: ')+[tr('وحش','poor'),tr('متوسط','OK'),tr('كويس','good')][s.rdy]);
   if(coreAll.length)out.push(L.aiCore(coreDone,coreAll.length));
   if(s.cb)out.push(tr(`جلسة رجوع بعد غياب ${s.cb.g} يوم (${s.cb.k==='fb'?'فول بادي':'يوم مخفف'}): الأوزان ${cbPct(s.cb)} من أوزانه قبل الغياب والمجموعات أقل عن قصد، ومابتتحسبش في قاعدة الزيادة.`,`Comeback session after a ${s.cb.g}-day break (${s.cb.k==='fb'?'full body':'light day'}): weights at ${cbPct(s.cb)} of pre-break and fewer sets on purpose; it does not count toward the progression rule.`));
   out.push(L.aiUnits);out.push(L.aiRule);out.push('');
@@ -1028,6 +1035,10 @@ function rtTick(){if(!RT)return;const el=$('#rtv');const t=(Date.now()-RT.t0)/10
   if(RT.ph!==ph){if(RT.ph){try{navigator.vibrate&&navigator.vibrate(work?[300]:[150,80,150])}catch(e){}beep(work?1:2)}RT.ph=ph}
   if(el)el.innerHTML=`<div class="rtp ${work?'w':'r'}">${work?tr('شغل','Work'):tr('راحة','Rest')}</div><div class="rtt en">${mmss(rem)}</div><div class="mu">${tr('جولة','Round')} <span class="en">${k+1}/${RT.n}</span></div>`}
 function rtEnd(done){clearInterval(RT&&RT.iv);RT=null;wakeOff();const el=$('#rtv');if(el&&done){el.innerHTML=`<div class="rtp w">${tr('خلصت ✓','Done ✓')}</div>`;try{navigator.vibrate&&navigator.vibrate([400,150,400])}catch(e){}beep(3)}}
+/* v119: عدّاد البروتين اليومي: أزرار سريعة، من غير حساب سعرات */
+const protToday=()=>{const p=S.prot;return p&&p.d===today()?+p.g||0:0};
+function protHtml(){const g=protToday(),G=+S.settings.protG||150,pc=Math.min(100,g/G*100);
+  return `<div class="prt"><div class="prh"><span>${tr('بروتين النهارده','Protein today')}</span><b class="en">${g} / <button class="prg" data-a="protG">${G}</button> g</b></div><div class="rsb"><i style="width:${pc.toFixed(0)}%"></i></div><div class="prb">${[20,30,40].map(v=>`<button data-a="protAdd" data-v="${v}">+${v}</button>`).join('')}${g?`<button data-a="protAdd" data-v="-10">−10</button>`:''}</div></div>`}
 function offerUndo(msg,snap){const el=$('#undo');if(!el)return;UND=snap;el.querySelector('span').textContent=msg;const b=el.querySelector('button');b.textContent=tr('تراجع','Undo');
   b.onclick=()=>{if(!UND)return;const o=JSON.parse(UND);UND=null;Object.assign(S,o);if(!o.fbDay)delete S.fbDay;save();queueBackup();el.classList.remove('on');if(!$('#sess').hidden&&!S.draft)closeSession();else if(S.draft&&$('#sess').hidden&&o.draft&&tab==='home')renderHome();go(tab);toast(tr('رجعت ✓','Restored ✓'))};
   el.classList.add('on');clearTimeout(offerUndo.t);offerUndo.t=setTimeout(()=>{el.classList.remove('on');UND=null},7000)}
@@ -1185,6 +1196,7 @@ function renderHome(){
       ${coreOf(pl.ex)}
       ${cp?`<div class="cbdh">${tr('جلسة الرجوع المقترحة','Suggested comeback session')} · <bdi class="en">${esc(cp.dayName)}</bdi></div><div class="dl">${rowsOf(cp.ex)}</div>${coreOf(cp.ex)}`:''}
       <div class="dwk">${L.weekOf(wk)}</div>
+      ${protHtml()}
       <div class="dlk"><button class="plink" data-a="rtOpen">${tr('تايمر جولات (كوندشننج)','Round timer (conditioning)')}</button></div>
       ${al}
       <details class="alt"><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd).map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
@@ -1319,6 +1331,7 @@ function renderSession(){
   const ar=LANG==='ar';
   $('#sess').innerHTML=`<div class="wtop"><button class="wx" data-a="closeS" aria-label="${L.back}">✕</button><div class="wseg">${seg}</div><button class="wx" data-a="menu" aria-label="${tr('خيارات','Options')}">⋯</button></div>
   <div class="corec" id="corec" aria-live="polite"></div>
+  ${!d.editing&&d.rdy==null&&!d.ex.some(x=>x.sets.some(v=>num(v)>0))?`<div class="rdy"><span>${tr('نومك وطاقتك النهارده؟','Sleep and energy today?')}</span>${[[2,tr('كويس','Good')],[1,tr('متوسط','OK')],[0,tr('وحش','Poor')]].map(([v,t])=>`<button data-a="rdy" data-v="${v}">${t}</button>`).join('')}</div>`:''}
   ${d.cb?`<div class="cbn">${cbLine(d.cb)}</div>`:''}
   <div class="wmain${wAnim?' wa':''}" data-i="${i}">
     <button class="wname en${e.core?' core':''}" data-a="guide" aria-label="${tr('طريقة الأداء','How to perform')}">${esc(e.name)}<span class="wgh">${tr('اضغط لطريقة الأداء','Tap to see how to perform')}</span></button>
@@ -1380,8 +1393,8 @@ function buildFromDraft(){
   if(!ex.length)return null;
   const core=d.ex.filter(e=>e.core).every(e=>ex.some(x=>x.exId===e.exId));
   const all=d.ex.every(e=>ex.some(x=>x.exId===e.exId));
-  const o={id:d.editing||d.id,date:d.date||today(),day:d.day,dayName:d.dayName,cycle:+num(d.cycle)||1,ex,status:all?'full':core?'core':'part',ts:Date.now()};
-  if(d.cb)o.cb=d.cb;return o;
+  const o={rdy:d.rdy,id:d.editing||d.id,date:d.date||today(),day:d.day,dayName:d.dayName,cycle:+num(d.cycle)||1,ex,status:all?'full':core?'core':'part',ts:Date.now()};
+  if(d.cb)o.cb=d.cb;if(o.rdy==null)delete o.rdy;return o;
 }
 function persistDraft(){
   const d=S.draft,s=buildFromDraft();
@@ -1703,7 +1716,7 @@ async function deriveKey(pass,salt,iter){
 }
 async function sealBytes(key,bytes){const iv=crypto.getRandomValues(new Uint8Array(12));return{iv,ct:new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,bytes))}}
 /* كل اللي محتاجينه عشان الاسترجاع يرجّع كل حاجة (نفس الشكل في الملف وGitHub) */
-const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],libOv:S.libOv||{},exNotes:S.exNotes||{},steps:S.steps||{},body:S.body||[],mig:S.mig||0,fbDay:S.fbDay||null,dl:S.dl||null});
+const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],libOv:S.libOv||{},exNotes:S.exNotes||{},steps:S.steps||{},body:S.body||[],mig:S.mig||0,fbDay:S.fbDay||null,dl:S.dl||null,prot:S.prot||null});
 async function packBackup(){
   const payload=enc.encode(JSON.stringify({app:'gymlog',v:1,at:Date.now(),data:snapData()}));
   let z=null;try{z=await pipe(payload,new CompressionStream('gzip'))}catch(e){}
@@ -1819,7 +1832,7 @@ function cleanSession(s){
   const ex=s.ex.filter(e=>e&&typeof e.name==='string'&&Array.isArray(e.sets)).map(cleanEx);
   const cb=s.cb&&typeof s.cb==='object'?{k:s.cb.k==='fb'?'fb':'lt',dl:s.cb.dl?1:undefined,p:nn(s.cb.p,.3,1,.9),g:nn(s.cb.g,0,9999,8),i:nn(s.cb.i,0,9,0),n:nn(s.cb.n,1,9,1)}:undefined;
   const o={id:String(s.id||uid()),date:s.date,day:String(s.day||''),dayName:String(s.dayName||s.day||'?').slice(0,80),cycle:nn(s.cycle,1,9999,1),status:['full','core','part','imp'].includes(s.status)?s.status:'part',ts:nn(s.ts,0,9e15,new Date(s.date+'T12:00:00').getTime()),ex};
-  if(s.imp)o.imp=1;if(cb)o.cb=cb;return o;
+  if(s.imp)o.imp=1;if(cb)o.cb=cb;if(s.rdy!=null)o.rdy=nn(s.rdy,0,2,1);return o;
 }
 function cleanRestore(d){
   if(!d||!d.program||!Array.isArray(d.program.days)||!Array.isArray(d.sessions))throw new Error('fmt');
@@ -1988,14 +2001,16 @@ async function dataMeta(){let p=null,u=false;
   try{p=navigator.storage&&navigator.storage.persisted?await navigator.storage.persisted():null}catch(e){}
   try{const pre=await idb.get('state.prerestore');u=!!(pre&&pre.data&&Date.now()-pre.at<864e5)}catch(e){}
   if(p!==DM.p||u!==DM.u){DM.p=p;DM.u=u;if(tab==='data')renderData()}}
+const BMX=[['arm','الدراع (سم)','Arm (cm)'],['chest','الصدر (سم)','Chest (cm)'],['thigh','الفخد (سم)','Thigh (cm)'],['neck','الرقبة (سم)','Neck (cm)'],['bf','نسبة الدهون %','Body fat %']];
 function bodySec(){const a=(S.body||[]).slice().sort((x,y)=>x.d<y.d?-1:1),last=a.slice(-8).reverse();
   const spark=(k,c)=>{const v=a.slice(-12).filter(x=>x[k]>0);if(v.length<2)return '';const lo=Math.min(...v.map(x=>x[k])),hi=Math.max(...v.map(x=>x[k])),r=hi-lo||1;return `<polyline class="${c}" points="${v.map((x,i)=>(4+i*(292/(v.length-1))).toFixed(1)+','+(56-(x[k]-lo)/r*48).toFixed(1)).join(' ')}"/>`};
   const sp=spark('w','a')+spark('c','b');
-  return `<details class="fsec" data-fk="body"${fOpen.has('body')?' open':''}><summary>${tr('الوزن والوسط (أسبوعي)','Weight & waist (weekly)')}<span class="pchev">⌄</span></summary><div class="fbody">
+  return `<details class="fsec" data-fk="body"${fOpen.has('body')?' open':''}><summary>${tr('الجسم والقياسات (أسبوعي)','Body & measurements (weekly)')}<span class="pchev">⌄</span></summary><div class="fbody">
     <div class="fgrid"><label class="fld">${tr('وزن الجسم (كجم)','Bodyweight (kg)')}<input class="inp" id="bW" inputmode="decimal"></label><label class="fld">${tr('الوسط (سم)','Waist (cm)')}<input class="inp" id="bC" inputmode="decimal"></label></div>
+    <details class="bmx"><summary>${tr('قياسات تانية (اختياري)','More measurements (optional)')}</summary><div class="fgrid">${BMX.map(([k,a,e])=>`<label class="fld">${tr(a,e)}<input class="inp" id="b_${k}" inputmode="decimal"></label>`).join('')}</div></details>
     <button class="btn pri w" data-a="bodySave">${tr('سجّل النهارده','Log today')}</button>
     ${sp?`<svg class="bspark" viewBox="0 0 300 64" preserveAspectRatio="none" aria-hidden="true">${sp}</svg>`:''}
-    ${last.length?`<table class="bdt">${last.map(x=>`<tr><td>${fmtD(x.d)}</td><td class="en">${x.w>0?x.w+' kg':'—'}</td><td class="en">${x.c>0?x.c+' cm':'—'}</td><td><button data-a="bodyDel" data-d="${x.d}" aria-label="${T().del}">✕</button></td></tr>`).join('')}</table>`:`<div class="mu mt">${tr('سجّل مرة في الأسبوع، نفس اليوم ونفس الوقت (الصبح قبل الأكل).','Log once a week, same day and time (morning, before eating).')}</div>`}
+    ${last.length?`<table class="bdt">${last.map(x=>`<tr><td>${fmtD(x.d)}</td><td class="en">${x.w>0?x.w+' kg':'—'}</td><td class="en">${x.c>0?x.c+' cm':'—'}${BMX.some(([k])=>x[k]>0)?`<div class="mu bmr">${BMX.filter(([k])=>x[k]>0).map(([k,a,e])=>`${tr(a.split(' ')[0],e.split(' ')[0])} ${x[k]}`).join(' · ')}</div>`:''}</td><td><button data-a="bodyDel" data-d="${x.d}" aria-label="${T().del}">✕</button></td></tr>`).join('')}</table>`:`<div class="mu mt">${tr('سجّل مرة في الأسبوع، نفس اليوم ونفس الوقت (الصبح قبل الأكل).','Log once a week, same day and time (morning, before eating).')}</div>`}
   </div></details>`}
 function renderData(){
   const L=T(),lb=S.settings.lastBackup,n=S.sessions.length;
@@ -2104,10 +2119,13 @@ document.addEventListener('click',ev=>{
       e.note=((e.note||'')+' ⚠ '+tr('وجع','pain')).trim();
       if(go){const L0=libGet(e.name);libQ='';libG=L0?L0[1]:'all';libFor='swap';libModal()}else{const w=num(e.w);if(!e.unit&&w>0){const st=stepOf(e.name);e.w=String(Math.max(st,Math.round(w*.8/st)*st))}}
       save();renderSession()})();break}
+    case 'protAdd':{const v=+b.dataset.v;S.prot={d:today(),g:Math.max(0,protToday()+v)};save();queueBackup();const pe=document.querySelector('.prt');if(pe)pe.outerHTML=protHtml();break}
+    case 'protG':{const cur=+S.settings.protG||150,nx=cur>=200?100:cur+10;S.settings.protG=nx;save();const pe=document.querySelector('.prt');if(pe)pe.outerHTML=protHtml();toast(tr(`هدف البروتين ${nx} جم (دوس تاني للتغيير)`,`Protein goal ${nx} g (tap again to change)`));break}
+    case 'rdy':{const v=+b.dataset.v;d.rdy=v;save();renderSession();if(v===0)toast(tr('يوم تقيل: خليك على الأساسي، أو «معايا وقت قليل» من ⋯. الالتزام أهم من الرقم النهارده.','Rough day: stick to the essentials or use «short on time» from ⋯. Showing up beats the number today.'));break}
     case 'clean':{const e=d.ex[curEx];e.clean=!e.clean;saveSoon();renderSession();break}
     case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
-    case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value);if(!(w>0)&&!(c>0)){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}
-      S.body=S.body||[];const t=today();let r=S.body.find(x=>x.d===t);if(!r){r={d:t};S.body.push(r)}if(w>0)r.w=w;if(c>0)r.c=c;fOpen.add('body');save();queueBackup();renderData();toast(tr('اتسجّل ✓','Logged ✓'));break}
+    case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value),mx={};for(const [k] of BMX){const v=num(($('#b_'+k)||{}).value);if(v>0&&v<400)mx[k]=v}if(!(w>0)&&!(c>0)&&!Object.keys(mx).length){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}
+      S.body=S.body||[];const t=today();let r=S.body.find(x=>x.d===t);if(!r){r={d:t};S.body.push(r)}if(w>0)r.w=w;if(c>0)r.c=c;Object.assign(r,mx);fOpen.add('body');save();queueBackup();renderData();toast(tr('اتسجّل ✓','Logged ✓'));break}
     case 'bodyDel':S.body=(S.body||[]).filter(x=>x.d!==b.dataset.d);save();renderData();break
     case 'pickClr':{if(pk){const e=d.ex[curEx];e.sets[pk.j]='';if(e.dur&&e.dur[pk.j])e.dur[pk.j]=0;saveSoon();closeSheet();renderSession()}break}
     case 'pickRm':{if(pk&&d.ex[curEx].sets.length>1){d.ex[curEx].sets.splice(pk.j,1);if(d.ex[curEx].dur)d.ex[curEx].dur.splice(pk.j,1);saveSoon();closeSheet();renderSession()}break}
