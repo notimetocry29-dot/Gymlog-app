@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='131';
+const VER='132';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -19,7 +19,8 @@ const fmtD=iso=>{try{return new Date(iso+'T12:00:00').toLocaleDateString(loc(),{
 const daysAgo=iso=>Math.round((new Date(today()+'T12:00:00')-new Date(iso+'T12:00:00'))/864e5);
 const noW=w=>w===''||w==null||isNaN(+w)||+w===0;
 const fw=w=>noW(w)?'—':(+w)+' k';
-function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),t.length>45?5000:2200)}
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);el.style.transform='';el.style.opacity='';toast.t=setTimeout(()=>el.classList.remove('on'),t.length>45?3200:1500)}
+(()=>{let x0=null;const el=()=>$('#toast');document.addEventListener('touchstart',e=>{if(e.target.closest&&e.target.closest('#toast')){x0=e.touches[0].clientX;clearTimeout(toast.t)}},{passive:true});document.addEventListener('touchmove',e=>{if(x0==null)return;const dx=e.touches[0].clientX-x0;el().style.transform=`translateX(calc(-50% + ${dx}px))`;el().style.opacity=String(Math.max(0,1-Math.abs(dx)/160))},{passive:true});document.addEventListener('touchend',e=>{if(x0==null)return;const dx=(e.changedTouches[0].clientX-x0);x0=null;const t=el();if(Math.abs(dx)>50){t.classList.remove('on');setTimeout(()=>{t.style.transform='';t.style.opacity=''},250)}else{t.style.transform='';t.style.opacity='';toast.t=setTimeout(()=>t.classList.remove('on'),1200)}})})();
 
 /* ================= البيانات ================= */
 function E(name,w,sets,reps,o={}){return{id:uid(),name,w,sets,reps,goal:o.goal??(o.unit?reps:Math.max(12,reps)),unit:o.unit||'',core:!!o.core,note:o.note||''}}
@@ -43,7 +44,7 @@ function seed(){
 }
 function load(){try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);if(o&&o.program&&Array.isArray(o.sessions))return o}}catch(e){}return null}
 /* التخزين: IndexedDB هو الأصل، وlocalStorage نسخة مرآة بنقرأ منها لو الأحدث (والرئيسية بتقرأ منها) */
-let S=null,sq=Promise.resolve(),pendMig=false;
+let POP=-1;let S=null,sq=Promise.resolve(),pendMig=false;
 let svT=null;
 function saveSoon(){clearTimeout(svT);svT=setTimeout(()=>{svT=null;save()},700)}
 function flushSave(){if(svT){clearTimeout(svT);svT=null;save()}}
@@ -412,8 +413,8 @@ async function phOpen(id,cmp){const a=(S.photos||[]).slice().sort((x,y)=>x.d<y.d
   const one=await u(id),two=cmp&&first&&first.id!==id?await u(first.id):'';
   modal(`<h3>${fmtD(x.d)}</h3>${two?`<div class="phc"><figure><img src="${two}" alt=""><figcaption>${fmtD(first.d)}</figcaption></figure><figure><img src="${one}" alt=""><figcaption>${fmtD(x.d)}</figcaption></figure></div>`:`<img class="cimg" src="${one}" alt="">`}
   <div class="row mt">${first&&first.id!==id&&!cmp?`<button class="btn sp" data-a="phCmp" data-id="${esc(id)}">${tr('قارن بأول صورة','Compare with the first')}</button>`:''}<button class="btn dan" data-a="phDel" data-id="${esc(id)}">${T().del}</button><button class="btn ghost" data-a="closeM">${T().close}</button></div>`)}
-function gymHtml(){const G=[{id:'main',name:tr('جيمي','My gym')}].concat(S.gyms||[]),cur=gymId();
-  return `<div class="gyr"><span>${tr('الجيم','Gym')}:</span>${G.map(g=>`<button class="${g.id===cur?'on':''}" data-a="gymSet" data-id="${esc(g.id)}">${esc(g.name)}</button>`).join('')}<button data-a="gymAdd" aria-label="${tr('جيم جديد','New gym')}">+</button></div>`}
+function gymHtml(){const G=[{id:'main',name:tr('جيمي','My gym')}].concat((S.gyms||[]).filter(g=>!g.del)),cur=gymId();
+  return `<div class="gyr"><span>${tr('الجيم','Gym')}:</span>${G.map(g=>`<button class="${g.id===cur?'on':''}" data-a="gymSet" data-id="${esc(g.id)}">${esc(g.name)}</button>`).join('')}<button data-a="gymAdd">${tr('تعديل','Edit')}</button></div>`}
 function toolsModal(){const n=wkStreak();modal(`<h3>${tr('أدوات','Tools')}</h3>
   <div class="mu" style="margin-bottom:10px">${T().weekOf(done().filter(s=>daysAgo(s.date)>=0&&daysAgo(s.date)<7).length)}${n>=2?` · <span class="stk">${tr(`${n} أسابيع ورا بعض حققت الهدف`,`${n} weeks in a row on target`)}</span>`:''}</div>
   <button class="mrow" data-a="rtOpen"><i>◴</i>${tr('تايمر جولات (كارديو ولياقة)','Round timer (cardio & conditioning)')}</button>
@@ -499,7 +500,7 @@ window.addEventListener('popstate',e=>{
   if(Sx.hidden&&!(wasM&&(st.tab||'home')===tab))go(st.tab||'home');
 });
 try{history.replaceState({},'')}catch(e){}
-function go(t){tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));({home:renderHome,hist:renderHistory,prog:renderProgram,lib:renderLib,data:renderData})[t]();window.scrollTo(0,0);saveUI()}
+function go(t){tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));({home:renderHome,hist:renderHistory,prog:renderProgram,lib:renderLib,data:renderData})[t]();{const v=$('#view');v.classList.remove('vin');void v.offsetWidth;v.classList.add('vin')}window.scrollTo(0,0);saveUI()}
 function modal(h){const m=$('#modal');m.querySelector('.mbox').innerHTML=h;if(m.hidden&&!hs().modal)history.pushState(Object.assign({tab:tab},hs(),{modal:1}),'');m.hidden=false}
 let mClosed=0;
 function closeModal(silent){$('#modal').hidden=true;mClosed=Date.now();if(!silent&&hs().modal)history.back()}
@@ -548,7 +549,8 @@ function copyQuote(el){
 let qx=0,qy=0,qOn=false,qSw=0;
 document.addEventListener('touchstart',e=>{qOn=qGestOn()&&tab==='home'&&e.touches.length===1&&!!e.target.closest('.qt');if(qOn){qx=e.touches[0].clientX;qy=e.touches[0].clientY}},{passive:true});
 document.addEventListener('touchend',e=>{if(!qOn)return;qOn=false;const t=e.changedTouches[0],dx=t.clientX-qx,dy=t.clientY-qy;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){qSw=Date.now();quoteNav(dx<0?-1:1)}},{passive:true});
-function renderHome(){
+function renderHome(){const _d=document.querySelector('#home .dtl, .dtl'),_o=_d&&_d.open,_y=window.scrollY;renderHome0();if(_o){const d=document.querySelector('.dtl');if(d){d.open=true;window.scrollTo(0,_y)}}}
+function renderHome0(){
   /* v129: الدايرة هي مركز كل حاجة. لو فيه رجوع أو أسبوع خفيف، الدايرة نفسها بتبقى الجلسة دي، وتحتها سطر هادي بالشرح ولينك «يومك العادي» */
   const L=T(),ds=done(),c=cbNow(),dlx=c?null:dlNow(),dcb=!!(S.draft&&S.draft.cb&&!S.draft.editing),dr=S.draft;
   const mode=dr?'draft':c?'cb':(dlx&&!dlx.act)||(dlx&&dlx.act)?'dl':'norm';
@@ -558,7 +560,8 @@ function renderHome(){
   const wk=ds.filter(s=>daysAgo(s.date)>=0&&daysAgo(s.date)<7).length,days=S.program.days,cc=+pl.cycle||pl.cycle;
   const n=days.length,g=n>1?9:0;
   const arcs=n>1&&!fb?days.map((x,k)=>{const dn=x.id!==nd&&ds.some(q=>q.cycle===cc&&(q.day===x.id||(!q.day&&q.dayName===x.name)));
-    return `<path class="ar${x.id===nd?' cur':dn?' dn':''}" d="${arcP(136,k*360/n+g/2,(k+1)*360/n-g/2)}"/>`}).join(''):`<circle class="ar cur" cx="150" cy="150" r="136"/>`;
+    const pd=arcP(136,k*360/n+g/2,(k+1)*360/n-g/2);return (x.id===nd?`<path class="ar hl" d="${pd}"/>`:'')+`<path class="ar${x.id===nd?' cur':dn?' dn':''}" d="${pd}"/>`}).join('')
+    :`<circle class="ar cur one" cx="150" cy="150" r="136"/>`+['g1','g2','g3'].map(c=>`<circle class="gl ${c}" cx="150" cy="150" r="136" pathLength="100"/>`).join('');
   let last='';
   if(ds[0]){const k=Math.max(0,daysAgo(ds[0].date));last=' · '+tr('آخر جلسة: ','Last: ')+(k===0?tr('النهارده','today'):k===1?tr('امبارح','yesterday'):tr(`من ${k} يوم`,`${k} days ago`))}
   const rowsOf=ex=>ex.map(e=>`<div class="dr${e.core?' c':''}"><span class="dn2 en">${esc(e.name)}</span><span class="dw en">${e.unit?'':fw(e.w)+' · '}${esc(String(+e.tsets||0))}×${tgt(e.treps,e.goal,e.unit)}${e.unit?' '+esc(unitTxt(e.unit)):''}</span></div>`).join('');
@@ -589,7 +592,7 @@ function renderHome(){
       <div class="dl">${rowsOf(pl.ex)}</div>
       ${coreOf(pl.ex)}
       ${protHtml()}
-      ${(S.gyms||[]).length?gymHtml():''}
+      ${(S.gyms||[]).some(g=>!g.del)?gymHtml():''}
       ${al}
       <div class="dlk2"><details class="alt"><summary>${dr?L.newInstead:L.otherDay}</summary><div class="grid3 mt">${days.filter(x=>dr||x.id!==nd||mode!=='norm').map(x=>`<button class="btn${x.id===nextDayId()?' rec':''}" data-a="start" data-d="${x.id}"><bdi>${esc(x.name)}</bdi></button>`).join('')}</div></details>
       <button class="plink" data-a="tools">${tr('أدوات','Tools')} ›</button></div>
@@ -735,7 +738,7 @@ function renderSession(){
   const u=e.unit?' '+esc(unitTxt(e.unit)):'',showW=!(noW(e.w)&&e.unit);
   const showL=openTips.has('l'+i),showH=openTips.has('h'+i),showN=openTips.has('n'+i)||!!e.note;
   const seg=d.ex.map((x,k)=>{const s=exSt(x);return `<button class="sg${k===i?' cur':''}${fullyIn(x)?' dn':s==='part'?' wn':''}" data-a="exGo" data-i="${k}" aria-label="${k+1}"><i></i></button>`}).join('');
-  const du=e.dur||[],cir=e.sets.map((r,j)=>{const v=num(r)>0;return `<div class="cw"><button class="cir${v?' on':''}" data-a="setTap" data-j="${j}" aria-label="${tr('مجموعة','Set')} ${j+1}">${v?`<span class="en">${esc(r)}</span>`:`<span class="cix en">${j+1}</span><span class="en">${esc(String(+e.treps||0))}</span>`}</button><small class="ct en">${num((e.ws||[])[j])>0&&num(e.ws[j])!==num(e.w)?esc(String(num(e.ws[j])))+' k':''}${du[j]>0?(num((e.ws||[])[j])>0&&num(e.ws[j])!==num(e.w)?' · ':'')+mmss(du[j]):''}</small></div>`}).join('');
+  const du=e.dur||[],cir=e.sets.map((r,j)=>{const v=num(r)>0;return `<div class="cw"><button class="cir${v?' on':''}${POP===j?' pop':''}" data-a="setTap" data-j="${j}" aria-label="${tr('مجموعة','Set')} ${j+1}">${v?`<span class="en">${esc(r)}</span>`:`<span class="cix en">${j+1}</span><span class="en">${esc(String(+e.treps||0))}</span>`}</button><small class="ct en">${num((e.ws||[])[j])>0&&num(e.ws[j])!==num(e.w)?esc(String(num(e.ws[j])))+' k':''}${du[j]>0?(num((e.ws||[])[j])>0&&num(e.ws[j])!==num(e.w)?' · ':'')+mmss(du[j]):''}</small></div>`}).join('');
   const lastP=h.length?h.slice(0,3).map(x=>`<div><bdi>${fmtD(x.date)}</bdi> · <bdi class="en">${fw(x.w)} | ${esc(setsStr(x))}</bdi></div>`).join(''):`<div>${L.first}</div>`;
   const ar=LANG==='ar';
   $('#sess').innerHTML=`<div class="wtop"><button class="wx" data-a="closeS" aria-label="${L.back}">✕</button><div class="wseg">${seg}</div><button class="wx" data-a="menu" aria-label="${tr('خيارات','Options')}">⋯</button></div>
@@ -750,9 +753,9 @@ function renderSession(){
     <div class="wlast" data-a="hist" data-id="${e.exId}">${l?`${tr('آخر مرة','Last')}: <bdi class="en">${fw(l.w)} · ${esc(setsStr(l))}</bdi> · ${fmtD(l.date)}`:tr('أول مرة تلعبه','First time')}${!e.sets.some(v=>num(v)>0)&&warmTxt(e)?`<br>${tr('إحماء','Warm-up')}: <bdi class="en">${warmTxt(e)}</bdi>`:''}</div>
     <div class="rst" id="rst"></div>
     ${e.sets.length&&e.sets.every(v=>num(v)>0)&&!e.unit?`<div class="wrir"><span>${tr('فاضل في إيدك كام؟','Reps left in the tank?')}</span>${[tr('على الآخر','To failure'),tr('فاضل 1–2','1–2 left'),tr('فاضل 3+','3+ left')].map((t,k)=>`<button class="${e.rir===(k===0?0:k===1?2:3)?'on':''}" data-a="rir" data-v="${k===0?0:k===1?2:3}">${t}</button>`).join('')}</div>`:''}
-    ${e.unit?'':e.clean?`<button class="wcl" data-a="clean">${tr('فيه مرجحة؟','Swinging?')}</button>`:`<button class="wcl un" data-a="clean">${tr('اتعلّم: فيه مرجحة، ومش هيتحسب في الزيادة · رجّعه','Marked: swinging, not counted toward the rule · undo')}</button>`}
+    ${e.unit?'':`<button class="wcl${e.clean?' on':''}" data-a="clean">${e.clean?tr('✓ أداء نضيف','✓ Clean form'):tr('مش نضيف (مرجحة أو أداء مكسور)','Not clean (swinging or broken form)')}</button>`}
     ${(e.unit||S.settings.swOn||(d.sw&&d.sw.i===curEx))&&!(d.rest&&!d.rest.done&&!(d.sw&&d.sw.i===curEx))?`<div class="wrest">${swHtml(e)}</div>`:''}
-    <div class="whint${showH?' open':''}" dir="auto" data-a="tgl" data-k="h${i}">${esc(e.note0&&e.note0!==libHowAlt(e.name)?e.note0:(libHow(e.name)||e.note0||''))}</div>
+    <div class="whint${memoOf(e.name)?' mine':''}" dir="auto" data-a="memo" data-n="${esc(e.name)}">${esc(memoOf(e.name)||(e.note0&&e.note0!==libHowAlt(e.name)?e.note0:(libHow(e.name)||e.note0||'')))||tr('اكتب ملاحظتك للتمرين ده','Write your note for this exercise')}</div>
     <div class="wlinks"><button data-a="tgl" data-k="l${i}">↺ ${tr('آخر 3 مرات','Last 3 times')}</button><button data-a="tgl" data-k="n${i}">✎ ${L.note}</button><button data-a="addset" data-i="${i}">+ ${tr('مجموعة','Set')}</button></div>
     ${showL?`<div class="tnote">${lastP}${p?`<div class="pmsg ${p.c}">${p.t}</div>`:''}</div>`:''}
     ${showN?`<input class="inp noteI" data-f="n" value="${esc(e.note)}" placeholder="${L.notePh}">`:''}
@@ -919,6 +922,13 @@ const customLib=()=>(S.custom||[]).map(c=>[c.name,cuG(c),c.w||0,c.sets||3,c.reps
 const allLib=()=>LIB.concat(customLib());
 const libGet=n=>LIB.find(x=>x[0]===n)||customLib().find(x=>x[0]===n);
 const libOv=n=>(S.libOv&&S.libOv[n])||null;
+/* v132: ملاحظتك الشخصية لكل تمرين — بتفضل للأبد وبتظهر في كل جلسة وفي تاب التمارين */
+const memoOf=n=>(S.exMemo&&S.exMemo[nk(n)])||'';
+function memoModal(n){const cur=memoOf(n)||((()=>{const t=S.draft&&S.draft.ex.find(e=>e.name===n);return t&&t.note0&&t.note0!==libHowAlt(n)?t.note0:libHow(n)})()||'');
+  modal(`<h3>${tr('ملاحظتك','Your note')}</h3><div class="mu" style="margin-bottom:8px"><bdi class="en">${esc(n)}</bdi> · ${tr('بتفضل محفوظة للتمرين ده في كل جلسة وفي تاب التمارين.','Kept for this exercise in every session and in the Exercises tab.')}</div>
+  <textarea class="inp" id="memoT" rows="6" dir="auto" maxlength="1200">${esc(cur)}</textarea>
+  <div class="row mt"><button class="btn pri sp" data-a="memoSave" data-n="${esc(n)}">${T().saveB}</button>${memoOf(n)?`<button class="btn ghost" data-a="memoDel" data-n="${esc(n)}">${tr('رجّع الشرح الأصلي','Restore default')}</button>`:`<button class="btn ghost" data-a="closeM">${T().cancel}</button>`}</div>`)}
+function memoDone(){closeModal();if(S.draft&&!$('#sess').hidden)renderSession();if(tab==='lib')renderLib()}
 const exNotes=n=>(S.exNotes&&S.exNotes[String(n||'').trim().toLowerCase()])||[];
 function addExNote(n,t,d){t=(t||'').trim();if(!t)return;S.exNotes=S.exNotes||{};const k=String(n||'').trim().toLowerCase(),a=S.exNotes[k]||(S.exNotes[k]=[]);if(!a.some(x=>x.t===t))a.push({d:d||today(),t})}
 function notesHtml(n,extra){const a=exNotes(n).slice();if(extra&&!a.some(x=>x.t===extra))a.push({d:'',t:extra});
@@ -969,7 +979,7 @@ function histBlock(h){
 function lbBody(x,hm){return `<div class="howto">${detHtml(x)||`<span class="mu">${tr('مفيش شرح. اضغط تعديل واكتب شرحك.','No guide yet. Tap Edit and write yours.')}</span>`}</div>${notesHtml(x[0])}
     ${histBlock(hm[nk(x[0])]||[])}
     <div class="pact" style="border:0;padding-top:4px;margin-top:6px"><button class="plink" data-a="lbAdd" data-n="${esc(x[0])}">${tr('ضيف لبرنامجي…','Add to my program…')}</button><button class="plink" data-a="hwEdit" data-n="${esc(x[0])}">${tr('تعديل الشرح','Edit guide')}</button>${x[9]?`<button class="plink" data-a="cuEdit" data-n="${esc(x[0])}">${tr('تعديل التمرين','Edit exercise')}</button>`:''}</div>`}
-function lbFill(d){const b=d.querySelector('.lbody');if(!b||b.dataset.f)return;const n=d.dataset.n,x=allLib().find(q=>q[0]===n);if(!x)return;b.dataset.f='1';b.innerHTML=lbBody(x,histMap())}
+function lbFill(d){const b=d.querySelector('.lbody');if(!b||b.dataset.f)return;const n=d.dataset.n,x=allLib().find(q=>q[0]===n);if(!x)return;b.dataset.f='1';const m=memoOf(n);b.innerHTML=`<div class="lmemo${m?'':' empty'}" dir="auto" data-a="memo" data-n="${esc(n)}"><b>${tr('ملاحظتي','My note')}</b>${m?esc(m):tr('اضغط واكتب ملاحظتك','Tap to write your note')}</div>`+lbBody(x,histMap())}
 let lbE='all';const lbOpenG=new Set();
 const lbMatch=(x,q)=>{if(!q)return true;const m=META[x[0]];return x[0].toLowerCase().includes(q)||!!(m&&m.ar.includes(q))};
 const lbEq=x=>(META[x[0]]||{eq:'other'}).eq;
@@ -1160,7 +1170,7 @@ async function deriveKey(pass,salt,iter){
 }
 async function sealBytes(key,bytes){const iv=crypto.getRandomValues(new Uint8Array(12));return{iv,ct:new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,bytes))}}
 /* كل اللي محتاجينه عشان الاسترجاع يرجّع كل حاجة (نفس الشكل في الملف وGitHub) */
-const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],libOv:S.libOv||{},exNotes:S.exNotes||{},steps:S.steps||{},body:S.body||[],mig:S.mig||0,fbDay:S.fbDay||null,dl:S.dl||null,prot:S.prot||null,gyms:S.gyms||[]});
+const snapData=()=>({program:S.program,sessions:S.sessions,settings:S.settings,draft:S.draft||null,sys:S.sys||null,custom:S.custom||[],libOv:S.libOv||{},exNotes:S.exNotes||{},exMemo:S.exMemo||{},steps:S.steps||{},body:S.body||[],mig:S.mig||0,fbDay:S.fbDay||null,dl:S.dl||null,prot:S.prot||null,gyms:S.gyms||[]});
 async function packBackup(){
   const payload=enc.encode(JSON.stringify({app:'gymlog',v:1,at:Date.now(),data:snapData()}));
   let z=null;try{z=await pipe(payload,new CompressionStream('gzip'))}catch(e){}
@@ -1290,7 +1300,7 @@ async function applyRestore(d){
   if(!await ask(T().confRestore(c.ss.length),{danger:1}))return false;
   /* نسخة من اللي على الموبايل قبل الاسترجاع، عشان «تراجع» */
   try{await idb.set('state.prerestore',{at:Date.now(),data:JSON.parse(JSON.stringify(S))})}catch(e){}
-  S={v:1,gyms:Array.isArray(d.gyms)?d.gyms.filter(g=>g&&typeof g.id==='string'&&typeof g.name==='string').map(g=>({id:g.id.slice(0,40),name:g.name.slice(0,20)})):[],photos:(S&&S.photos)||[],program:Object.assign({},d.program,{days:c.days}),sessions:c.ss,settings:Object.assign({cycle:1},d.settings&&typeof d.settings==='object'?d.settings:{},{lang:LANG}),draft:null,fbDay:d.fbDay&&Array.isArray(d.fbDay.ex)?{id:'FB',name:String(d.fbDay.name||'Full Body').slice(0,40),ex:d.fbDay.ex.filter(t=>t&&t.id&&typeof t.name==='string').map(cleanT)}:undefined,sys:d.sys||undefined,custom:Array.isArray(d.custom)?d.custom:[],libOv:(d.libOv&&typeof d.libOv==='object')?d.libOv:{},exNotes:(d.exNotes&&typeof d.exNotes==='object')?d.exNotes:{},steps:(d.steps&&typeof d.steps==='object')?d.steps:{},body:Array.isArray(d.body)?d.body:[],mig:Math.max(+d.mig||0,HIST_MIG)};
+  S={v:1,gyms:Array.isArray(d.gyms)?d.gyms.filter(g=>g&&typeof g.id==='string'&&typeof g.name==='string').map(g=>({id:g.id.slice(0,40),name:g.name.slice(0,20),del:g.del?1:undefined})):[],photos:(S&&S.photos)||[],program:Object.assign({},d.program,{days:c.days}),sessions:c.ss,settings:Object.assign({cycle:1},d.settings&&typeof d.settings==='object'?d.settings:{},{lang:LANG}),draft:null,fbDay:d.fbDay&&Array.isArray(d.fbDay.ex)?{id:'FB',name:String(d.fbDay.name||'Full Body').slice(0,40),ex:d.fbDay.ex.filter(t=>t&&t.id&&typeof t.name==='string').map(cleanT)}:undefined,sys:d.sys||undefined,custom:Array.isArray(d.custom)?d.custom:[],libOv:(d.libOv&&typeof d.libOv==='object')?d.libOv:{},exNotes:(d.exNotes&&typeof d.exNotes==='object')?d.exNotes:{},exMemo:(d.exMemo&&typeof d.exMemo==='object')?Object.fromEntries(Object.entries(d.exMemo).filter(([k,v])=>typeof v==='string').map(([k,v])=>[k.slice(0,80),v.slice(0,1200)])):{},steps:(d.steps&&typeof d.steps==='object')?d.steps:{},body:Array.isArray(d.body)?d.body:[],mig:Math.max(+d.mig||0,HIST_MIG)};
   if(S.draft&&(!Array.isArray(S.draft.ex)))S.draft=null;
   save();queueBackup();toast(c.bad?T().restoredSkip(c.bad):T().restored);go('home');return true;
 }
@@ -1563,7 +1573,7 @@ document.addEventListener('click',ev=>{
     case 'addset':d.ex[i].sets.push('');save();renderSession();break;
     case 'exGo':goEx(i);break;
     case 'setTap':{const j=+b.dataset.j,e=d.ex[curEx];if(num(e.sets[j])>0){openPick('s',j);break}
-      e.sets[j]=String(e.treps);saveSoon();if(!S.settings.hint1){S.settings.hint1=1;save();setTimeout(()=>toast(tr('دوس على الدايرة تاني لو عايز تغيّر العدّات أو وزن المجموعة دي','Tap the circle again to change the reps or this set\'s weight')),400)}
+      e.sets[j]=String(e.treps);POP=j;setTimeout(()=>{POP=-1},400);try{navigator.vibrate&&navigator.vibrate(18)}catch(_){};saveSoon();if(!S.settings.hint1){S.settings.hint1=1;save();setTimeout(()=>toast(tr('دوس على الدايرة تاني لو عايز تغيّر العدّات أو وزن المجموعة دي','Tap the circle again to change the reps or this set\'s weight')),400)}
       /* سوبرسيت: من A لـ B من غير راحة، ومن B راحة وترجع لـ A */
       if(e.ss&&curEx<d.ex.length-1){goEx(curEx+1);break}
       if(curEx>0&&d.ex[curEx-1].ss){const a=d.ex[curEx-1];restStart(e);if(a.sets.some(v=>!(num(v)>0)))goEx(curEx-1);else renderSession();break}
@@ -1602,8 +1612,14 @@ document.addEventListener('click',ev=>{
     case 'repCopy':copy(reportText(+b.dataset.d));break;
     case 'repShare':shareText(reportText(+b.dataset.d));break;
     case 'gymSet':{S.settings.gym=b.dataset.id==='main'?'':b.dataset.id;save();renderHome();const det=document.querySelector('.dtl');if(det)det.open=true;toast(tr('الأوزان هتتاخد من آخر مرة في الجيم ده','Weights now come from your last time at this gym'));break}
-    case 'gymAdd':modal(`<h3>${tr('جيم جديد','New gym')}</h3><div class="mu" style="margin-bottom:8px">${tr('للسفر أو جيم تاني بأجهزة مختلفة. كل جيم بيفتكر أوزانه لوحده.','For travel or another gym with different machines. Each gym remembers its own weights.')}</div><label class="fld">${tr('الاسم','Name')}<input class="inp" id="gymN" maxlength="20"></label><div class="row"><button class="btn pri sp" data-a="gymSave">${T().saveB}</button><button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);break;
-    case 'gymSave':{const n=($('#gymN').value||'').trim();if(!n){toast(T().nameReq);break}S.gyms=S.gyms||[];const g={id:'g'+uid(),name:n};S.gyms.push(g);S.settings.gym=g.id;save();closeModal();go('home');break}
+    case 'gymAdd':{const live=(S.gyms||[]).filter(g=>!g.del);modal(`<h3>${tr('الجيمات','Gyms')}</h3><div class="mu" style="margin-bottom:10px;line-height:1.8">${tr('لو بتتمرن في أكتر من مكان (جيم تاني، فندق في سفر، البيت)، الأجهزة بتختلف: الـ 50 في جهاز هنا مش زي الـ 50 هناك. سجّل كل مكان هنا، واختاره من «التفاصيل» قبل ما تبدأ، والتطبيق هيقترح الأوزان من آخر مرة لعبت في نفس المكان، ومش هيخلط أرقام جيم بجيم.','If you train in more than one place (another gym, a hotel, home), machines differ: 50 on one machine is not 50 on another. Add each place here and pick it in “Details” before you start; the app suggests weights from your last session in that same place and never mixes them.')}</div>
+      ${live.length?`<div class="gyl">${live.map(g=>`<div class="gyi"><span class="sp">${esc(g.name)}</span><button class="btn sm ghost" data-a="gymDel" data-id="${esc(g.id)}">${tr('امسح','Delete')}</button></div>`).join('')}</div>`:''}
+      <label class="fld">${tr('مكان جديد','New place')}<input class="inp" id="gymN" maxlength="20" placeholder="${tr('مثلاً: جيم الشغل','e.g. Work gym')}"></label><div class="row"><button class="btn pri sp" data-a="gymSave">${tr('ضيف','Add')}</button><button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);break}
+    case 'memo':memoModal(b.dataset.n);break;
+    case 'memoSave':{const n=b.dataset.n,t=($('#memoT').value||'').trim();S.exMemo=S.exMemo||{};if(t)S.exMemo[nk(n)]=t;else delete S.exMemo[nk(n)];save();queueBackup();memoDone();toast(tr('اتحفظت ✓','Saved ✓'));break}
+    case 'memoDel':{S.exMemo&&delete S.exMemo[nk(b.dataset.n)];save();queueBackup();memoDone();break}
+    case 'gymDel':(async()=>{const g=(S.gyms||[]).find(x=>x.id===b.dataset.id);if(!g)return;if(!await ask(tr(`تمسح «${g.name}»؟ جلساتك القديمة فيه هتفضل زي ما هي.`,`Delete “${g.name}”? Your past sessions there stay as they are.`),{danger:1,yes:tr('امسح','Delete')}))return;g.del=1;if(S.settings.gym===g.id)S.settings.gym='';save();queueBackup();closeModal();renderHome();})();break;
+    case 'gymSave':{const n=($('#gymN').value||'').trim();if(!n){toast(T().nameReq);break}S.gyms=S.gyms||[];const g={id:'g'+uid(),name:n};S.gyms.push(g);S.settings.gym=g.id;save();closeModal();renderHome();break}
     case 'safe':S.settings.safe=b.dataset.k==='on'?1:0;save();renderData();break;
     case 'wStep':{const e=d.ex[curEx],st=stepOf(e.name),w=num(e.w)||0;e.w=String(Math.max(0,Math.round((w+(+b.dataset.v)*st)*100)/100));saveSoon();renderSession();break}
     case 'rdyGo':{d.rdy=+b.dataset.v;d.rdyAsk=1;save();closeSheet();if(d.rdy===0){ask(tr('يوم تقيل. تخلّي النهارده الأساسي بس؟ الالتزام أهم من الرقم.','Rough day. Keep today to the essentials? Showing up beats the number.'),{yes:tr('الأساسي بس','Essentials only'),no:tr('كمّل عادي','Keep going')}).then(ok=>{if(ok){const keep=d.ex.filter(x=>x.core);if(keep.length){d.ex=keep;curEx=0;save();renderSession()}}})}else toast(tr('اتسجّل ✓','Noted ✓'));break}

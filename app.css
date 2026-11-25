@@ -621,3 +621,102 @@ html[dir=rtl] .mrow small{margin:-12px 34px 8px 0}
 .btn{border-radius:99px}.inp{border-radius:14px}.mbox,.sbx{border-radius:20px 20px 0 0}
 .tabs{border-top:0;box-shadow:0 -1px 0 color-mix(in srgb,var(--bd) 40%,transparent)}
 .wb{min-height:52px;font-size:22px}
+
+/* ===== v132: قوة (لون جمري واحد في لحظات قليلة) + حركة ===== */
+:root{--pw:#c24a37;--pwbd:#5a2a22}
+html[data-th=morning]{--pw:#ab3523;--pwbd:#e2b3a6}
+.orb .ar.dn{stroke:var(--ac);stroke-opacity:.55}
+.orb path.ar.cur{stroke:var(--pw)}
+.orb .ar.hl{stroke:var(--pw);stroke-width:16;stroke-opacity:.32;filter:blur(7px);pointer-events:none}
+.orb .gl{fill:none;stroke-linecap:round;pointer-events:none;animation:gl 9s linear infinite}
+.orb .g1{stroke:var(--ac2);stroke-width:10;stroke-dasharray:18 82;--o:100;opacity:.18}
+.orb .g2{stroke:#f6dcb8;stroke-width:10;stroke-dasharray:9 91;--o:91;opacity:.3}
+.orb .g3{stroke:#fff6ea;stroke-width:7;stroke-dasharray:2.5 97.5;--o:84.5;opacity:.9;filter:blur(1.2px)}
+@keyframes gl{from{stroke-dashoffset:var(--o)}to{stroke-dashoffset:calc(var(--o) - 100)}}
+#splash .sp-cu{stroke:var(--pw);filter:none}
+.wwt.earn{border-bottom-color:var(--pwbd)}
+.wwt.earn::after{color:var(--pw)}
+.wchk{background:var(--pw);color:#fff6ef}
+.orb{transition:transform .42s cubic-bezier(.22,1.25,.36,1),background .3s ease}
+.orb:active{transform:scale(.965);transition-duration:.09s}
+#sess.in{animation:sIn .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes sIn{from{opacity:0;transform:translateY(14px) scale(.99)}to{opacity:1;transform:none}}
+#view.vin{animation:vin .2s ease-out}
+@keyframes vin{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:none}}
+#modal:not([hidden]) .mbox{animation:shUp .34s cubic-bezier(.2,.8,.2,1)}
+@keyframes shUp{from{transform:translateY(28px);opacity:.6}to{transform:none;opacity:1}}
+#toast{transform:translate(-50%,10px) scale(.98);transition:opacity .22s ease,transform .32s cubic-bezier(.2,.8,.2,1);touch-action:pan-y;pointer-events:auto}
+#toast.on{transform:translate(-50%,0)}
+#toast:not(.on){pointer-events:none}
+.cir{transition:transform .3s cubic-bezier(.22,1.25,.36,1),background .2s,border-color .2s}
+.cir:active{transform:scale(.93);transition-duration:.08s}
+.cir.pop{animation:cpop .38s cubic-bezier(.22,1.25,.36,1)}
+.cir.pop::after{content:'';position:absolute;inset:-2px;border-radius:50%;animation:cring .5s ease-out forwards;pointer-events:none}
+@keyframes cpop{0%{transform:scale(.88)}55%{transform:scale(1.05)}100%{transform:none}}
+@keyframes cring{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--ac) 45%,transparent)}to{box-shadow:0 0 0 14px transparent}}
+@media (prefers-reduced-motion:reduce){.orb .gl{animation:none}.orb .g1,.orb .g2{display:none}#sess.in,#view.vin,#modal .mbox,.cir.pop,.cir.pop::after{animation:none!important}}
+/* زرار الأداء النضيف رجع */
+.wcl{display:block;margin:12px auto 0;padding:8px 16px;min-height:40px;border-radius:99px;border:1px solid var(--bd);font-size:13.5px;color:var(--mu)}
+.wcl.on{border-color:var(--acbd);color:var(--ac2)}
+/* ملاحظتك تحت التمرين */
+.whint{cursor:text;border-radius:10px;padding:4px 6px;margin-inline:-6px}
+.whint:active{background:var(--s2)}
+.whint.mine{color:var(--tx);opacity:.8}
+.lmemo{display:block;padding:10px 12px;margin:2px 0 12px;border-radius:12px;background:var(--s2);font-size:14px;line-height:1.7;white-space:pre-wrap;cursor:text}
+.lmemo b{display:block;font-weight:600;font-size:12.5px;color:var(--mu);margin-bottom:2px}
+.lmemo.empty{color:var(--mu)}
+/* الجيمات */
+.gyl{border:1px solid var(--bd);border-radius:14px;margin-bottom:12px}
+.gyi{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--bd)}
+.gyi:last-child{border-bottom:0}
+/* اختيار الأداة باين إنه قايمة */
+.lbf{position:relative}
+.lbf .psel{border:1px solid var(--bd);border-radius:12px;background:var(--s1);color:var(--tx);padding:11px 14px;padding-inline-end:40px;font-size:15px}
+.lbf::after{content:'';position:absolute;inset-inline-end:16px;top:50%;width:8px;height:8px;border-right:2px solid var(--mu);border-bottom:2px solid var(--mu);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+
+/* ===== Typography v1: هادي، مقروء، قوي من غير تقل ===== */
+:root{--t1:12px;--t2:13.5px;--t3:15px;--t4:17px;--t5:22px;--t6:30px;--wb:400;--wm:500;--ws:600}
+/* العناوين: أقصى وزن 600 */
+.big{font-size:var(--t5);font-weight:var(--ws);line-height:1.3;margin:4px 0 8px}
+.hero .big{font-size:var(--t6);margin:0 0 8px}
+.stitle,.mbox h3,.gdh b,.pdn{font-size:var(--t4);font-weight:var(--ws);line-height:1.35}
+.fbig,.wdt{font-size:var(--t5);font-weight:var(--ws);line-height:1.3}
+h2{font-size:var(--t2);font-weight:var(--wm);margin:24px 4px 8px;letter-spacing:0}
+.mu,.tnote,.warn,.note-ok,.pcore,.dr .dw,.prt,.rsr{font-size:var(--t2)}
+.tag,.lgc,.rs,.sc .st,.mgh,.ct,.corec,#sess .corec{font-size:var(--t1)}
+.btn{font-size:var(--t3)}.btn.sm{font-size:var(--t2)}
+.btn.pri,.chips button.on,.thseg button,.rs.nx{font-weight:var(--ws)}
+.tabs button{font-size:var(--t1)}.tabs button.on{font-weight:var(--wm)}
+.ptabs button{font-size:var(--t3);font-weight:var(--wm)}.ptabs button.on{font-weight:var(--ws)}
+.psys{font-size:var(--t4);font-weight:var(--ws)}
+.fsec>summary{font-size:var(--t3);font-weight:var(--ws);padding:16px 4px}
+.lbx summary .nm,.prow .nm,.swt2 b,.cbh b{font-weight:var(--ws)}
+.dsec b,.coreline,.pmsg,.sstag{font-size:var(--t1);font-weight:var(--wm)}
+.cyb{font-weight:var(--ws)}
+/* قوائم البرنامج */
+.pr2>summary,.pr2b{gap:12px;padding:12px 4px}
+.pr2 .pnm{font-size:var(--t3);font-weight:var(--ws);line-height:1.35}
+.pr2 .mu{font-size:var(--t2);line-height:1.5;margin-top:2px}
+.pno{font-weight:var(--wm)}.pno.cr{font-weight:var(--ws)}
+/* ===== تبويب التمارين: الجروب عنوان هادي والتمارين متداخلة تحته ===== */
+.lgrp>summary{padding:16px 4px;gap:8px;font-size:var(--t4);font-weight:var(--ws);line-height:1.35;color:var(--tx)}
+.lgrp>summary b{font-weight:inherit}
+.lgc{font-weight:var(--wb);color:var(--mu);padding:2px 8px}
+.lgrp[open]>summary{padding-bottom:8px}
+.lgrp .lbn{border-bottom-color:color-mix(in srgb,var(--bd) 55%,transparent)}
+.lgrp .lbn:last-child{border-bottom:0;margin-bottom:8px}
+.lgrp .lbn>summary{padding-block:12px;padding-inline:16px 4px}
+.lgrp .lbn .pnm{font-size:var(--t3);font-weight:var(--wm);color:var(--tx2)}
+.lgrp .lbn[open] .pnm{color:var(--tx);font-weight:var(--ws)}
+.lgrp .lbn .mu{font-size:var(--t2);margin-top:2px}
+.lbn .lbody{padding-block:0 16px;padding-inline:16px 4px}
+.howto{font-size:var(--t3);line-height:1.8;padding:12px 16px}
+/* الجلسة */
+#sess .exname{font-size:var(--t4);font-weight:var(--ws)}
+.wwt{font-weight:700}
+.scell .inp,.wrow .wi{font-weight:700}
+#sess .tnote{font-size:var(--t2);line-height:1.7}
+
+.lgrp>.pr2{margin-inline-start:10px;border-inline-start:2px solid var(--bd)}
+.lgrp[open]>summary{color:var(--ac2)}
+.mrow small{margin:-12px 0 8px;margin-inline-start:34px}
