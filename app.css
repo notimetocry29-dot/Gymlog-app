@@ -720,3 +720,81 @@ h2{font-size:var(--t2);font-weight:var(--wm);margin:24px 4px 8px;letter-spacing:
 .lgrp>.pr2{margin-inline-start:10px;border-inline-start:2px solid var(--bd)}
 .lgrp[open]>summary{color:var(--ac2)}
 .mrow small{margin:-12px 0 8px;margin-inline-start:34px}
+/* v133: شاشة الرجوع المقترحة */
+.cbpl{border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+.cbpr{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bd);font-size:var(--t3,15px)}
+.cbpr:last-child{border-bottom:0}
+.cbpr b{min-width:56px;text-align:end;font-weight:600;color:var(--ac2)}
+.cbc{font-style:normal;color:var(--pw);font-size:12px}
+.sysb{display:flex;flex-direction:column;gap:6px}
+/* v133: الدوسة المطوّلة والدليل */
+[data-lp]{-webkit-touch-callout:none}
+.gdbtn{display:flex;align-items:center;gap:12px;width:100%;padding:14px 14px;margin:0 0 16px;border:1px solid var(--bd);border-radius:16px;background:var(--s1);color:var(--tx);font:inherit;font-size:var(--t3,15px);text-align:start;cursor:pointer}
+.gdbtn>i{font-style:normal;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--s2);color:var(--ac2);font-weight:600}
+.gdbtn small{display:block;color:var(--mu);font-size:var(--t1,12px);margin-top:2px}
+html[dir=ltr] .gdbtn .pchev{transform:scaleX(-1)}
+.gdh2{display:flex;align-items:center;gap:10px;margin-bottom:10px}.gdh2 h3{flex:1;margin:0}
+.gdl{flex:0 0 auto}.gdl button{padding:6px 12px;font-size:13px}
+.gdb{max-height:58vh;overflow-y:auto;line-height:1.85;font-size:var(--t3,15px)}
+.gdb section{padding:10px 0;border-bottom:1px solid var(--bd)}.gdb section:last-child{border-bottom:0}
+.gdb b{display:block;font-weight:600;color:var(--ac2);margin-bottom:4px}
+.gdb div{white-space:pre-wrap}
+/* ===== v133: نظام مكونات موحد (زرار، شيبس، قوائم، شيتات، توست) ===== */
+:root{--r-s:12px;--r-m:14px;--r-l:20px;--r-p:99px;--rad:var(--r-m);--radb:var(--r-p);--hit:44px;
+--dv:color-mix(in srgb,var(--bd) 55%,transparent);--scrim:rgba(0,0,0,.55);
+--ring:0 0 0 3px color-mix(in srgb,var(--ac) 22%,transparent);--tsh:0 8px 24px rgba(0,0,0,.35);
+--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+--chevimg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%23968f85' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+html[data-th=morning]{--tsh:0 8px 24px rgba(60,40,10,.14);--scrim:rgba(30,20,10,.38);
+--chevimg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' fill='none' stroke='%23675e52' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+body{font-variant-emoji:text}
+
+/* 1) الزراير: 3 مستويات بس — أساسي (مليان) / ثانوي (سطح) / نصّي */
+.btn,#ask .abt button,.rdy2 button{border-radius:var(--r-p);min-height:var(--hit);font-weight:var(--wm)}
+#ask .abt button,.rdy2 button{min-height:48px}
+.btn.pri,#ask .abt .ok{font-weight:var(--ws)}
+.ptxt,.plink,.rsr button,.wlinks button,.pkx button,.wic{background:none;border:0;min-height:var(--hit);padding:0 8px;font:inherit;font-size:var(--t2);font-weight:var(--wm);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.ptxt,.plink{color:var(--ac2)}
+.rsr button,.wlinks button,.pkx button,.wic{color:var(--mu)}
+
+/* 2) الشيبس/الحبوب: شكل واحد، والمختار ناعم مش مليان */
+.chips button,.wrir button,.gyr button,.stp button,.prb button,.rdy button,.mini,.cl,.wcl,#undo button{border-radius:var(--r-p);border:1px solid var(--bd);background:transparent;color:var(--tx2);min-height:36px;padding:0 14px;font:inherit;font-size:var(--t2);font-weight:var(--wm);display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.wcl{display:flex;width:max-content;margin-inline:auto}
+.chips button.on,.wrir button.on,.gyr button.on,.stp button.on,.mini.on,#sess .mini.fill,.wcl.on{background:var(--acbg);border-color:var(--acbd);color:var(--ac2);font-weight:var(--ws)}
+.cl.on{background:var(--okbg);border-color:var(--okbd);color:var(--oktx)}
+.wcl.un{border-color:color-mix(in srgb,var(--bad) 40%,var(--bd));color:var(--badtx)}
+
+/* 3) زراير الأيقونة: دواير 40 بنفس الإطار */
+.icb,.wsw,.wpm,.pws button{width:40px;height:40px;border-radius:50%;border:1px solid var(--bd);background:transparent;color:var(--tx2);display:inline-flex;align-items:center;justify-content:center;padding:0;font-size:18px;line-height:1;flex:none}
+
+/* 4) الخانات والقوايم المنسدلة: نفس الصندوق + سهم واحد */
+.inp{border-radius:var(--r-m)}
+.inp:focus,.psel:focus-visible{border-color:var(--ac);box-shadow:var(--ring)}
+select.inp,.psel,.lbf .psel{appearance:none;-webkit-appearance:none;background:var(--s1) var(--chevimg) no-repeat left 14px center/16px;border:1px solid var(--bd);border-radius:var(--r-m);color:var(--tx);min-height:var(--hit);padding:0 14px;padding-inline-end:40px;font-size:var(--t3);cursor:pointer}
+html[dir=ltr] select.inp,html[dir=ltr] .psel,html[dir=ltr] .lbf .psel{background-position:right 14px center}
+.lbf::after{display:none}
+.lsearch:has(.psel){border-bottom:0;padding:0;margin-bottom:8px}
+.lsearch:has(.psel) .pchev{display:none}
+
+/* 5) الصفوف: فاصل واحد هادي + سهم واحد (بدل ⌄ ▾ ▴) */
+.prow,.pr2,.dr,.xr,.swr,.lbx,.fsec,.lgrp{border-bottom-color:var(--dv)}
+.pchev{font-size:0;width:16px;height:16px;display:inline-block;flex:none;background:currentColor;color:var(--mu);-webkit-mask:var(--chev) center/16px no-repeat;mask:var(--chev) center/16px no-repeat;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.dtl>summary::after,.lbx summary::after,.lbx[open] summary::after{content:'';display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-inline-start:6px;background:currentColor;-webkit-mask:var(--chev) center/14px no-repeat;mask:var(--chev) center/14px no-repeat;transition:transform .25s}
+.dtl[open]>summary::after{content:'';transform:rotate(180deg)}
+.lbx[open] summary::after{transform:rotate(180deg)}
+
+/* 6) الكروت والأسطح الداخلية: مقياس زوايا واحد */
+.card,.cbh,.gyl,.sysopt,.bkn{border-radius:var(--r-m)}
+.lmemo,.howto,.tnote,.warn,.note-ok,.cbn,.pmsg{border-radius:var(--r-s)}
+
+/* 7) الشيتات والحوارات: خلفية واحدة وعرض واحد */
+#modal,.sbk,#ask{background:var(--scrim)}
+.mbox,.sbx{max-width:560px;border-radius:var(--r-l) var(--r-l) 0 0;border-bottom:0;padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
+#ask .abx{border-radius:var(--r-l)}
+
+/* 8) التوست والتراجع: نفس الكبسولة */
+#toast,#undo{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r-m);font-size:var(--t2);color:var(--tx2);line-height:1.6;box-shadow:var(--tsh)}
+#undo button{border-color:var(--acbd);color:var(--ac2)}
+
+/* 9) الحالة الفاضية */
+.empty{padding:40px 16px;font-size:var(--t2);line-height:1.8;color:var(--mu)}
