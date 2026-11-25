@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='127';
+const VER='128';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -581,7 +581,9 @@ async function editSession(id){
   if(d)for(const t of d.ex)if(!ex.some(e=>e.exId===t.id)){const e=draftEx(t);if(s.cb)cbApply(e,s.cb);ex.push(e)}
   S.draft.ex=ex;openTips.clear();save();closeModal(true);openSession();
 }
-function openSession(){if(!S.draft||!S.draft.ex.length){S.draft=null;save();if(tab==='home')renderHome();return}const dd=S.draft,k0=dd.ex.findIndex(e=>!fullyIn(e));curEx=dd.editing?0:(k0<0?dd.ex.length-1:k0);finishing=false;renderSession();$('#sess').hidden=false;$('#sess').classList.remove('in');void $('#sess').offsetWidth;$('#sess').classList.add('in');$('#sess').scrollTop=0;document.body.style.overflow='hidden';wakeOn();if(!hs().sess){const n=Object.assign({tab:tab},hs(),{sess:1});delete n.modal;if(hs().modal)history.replaceState(n,'');else history.pushState(n,'')}saveUI()}
+function openSession(){setTimeout(askReady,450);if(!S.draft||!S.draft.ex.length){S.draft=null;save();if(tab==='home')renderHome();return}const dd=S.draft,k0=dd.ex.findIndex(e=>!fullyIn(e));curEx=dd.editing?0:(k0<0?dd.ex.length-1:k0);finishing=false;renderSession();$('#sess').hidden=false;$('#sess').classList.remove('in');void $('#sess').offsetWidth;$('#sess').classList.add('in');$('#sess').scrollTop=0;document.body.style.overflow='hidden';wakeOn();if(!hs().sess){const n=Object.assign({tab:tab},hs(),{sess:1});delete n.modal;if(hs().modal)history.replaceState(n,'');else history.pushState(n,'')}saveUI()}
+/* v128: سؤال النوم والطاقة مرة واحدة أول الجلسة، في شيت صغير */
+function askReady(){const d=S.draft;if(!d||d.editing||d.rdy!=null||d.rdyAsk||d.ex.some(x=>x.sets.some(v=>num(v)>0)))return;const sh=$('#sheet');if(!sh)return;sh.hidden=false;sh.innerHTML=`<div class="sbk" data-a="rdySkip"></div><div class="sbx"><div class="mgh">${tr('نومك وطاقتك النهارده؟','Sleep and energy today?')}</div><div class="rdy2">${[[2,tr('كويس','Good')],[1,tr('متوسط','OK')],[0,tr('وحش','Poor')]].map(([v,t])=>`<button data-a="rdyGo" data-v="${v}">${t}</button>`).join('')}</div><button class="mrow sk" data-a="rdySkip">${tr('تخطّي','Skip')}</button></div>`}
 let WL=null;async function wakeOn(){try{window.Android&&Android.keepAwake(true)}catch(e){}try{if('wakeLock' in navigator&&!WL&&!document.hidden){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}}catch(e){}}
 function wakeOff(){try{window.Android&&Android.keepAwake(false)}catch(e){}try{WL&&WL.release()}catch(e){}WL=null}
 function closeSession(){wakeOff();swHalt();flushSave();$('#sess').hidden=true;document.body.style.overflow='';if(tab==='home')renderHome();saveUI();if(hs().sess)history.back()}
@@ -659,7 +661,7 @@ function openPick(kind,j){
   const vals=[];for(let v=min;v<=max+1e-9;v+=step)vals.push(Math.round(v*100)/100);
   if(!vals.includes(cur)){vals.push(cur);vals.sort((a,b)=>a-b)}
   pk={kind,j,vals};if(kind==='s'&&!e.unit){const a=num((e.ws||[])[j]);pk.wv=a>0?a:(num(e.w)||0)}
-  const ttl=kind==='w'?`<span class="en">${esc(e.name)}</span> · ${L.wt}`:`${tr('المجموعة','Set')} ${j+1}`;
+  const ttl=kind==='w'?`<span class="en">${esc(e.name)}</span> · ${L.wt}`:`${tr('المجموعة','Set')} ${j+1}${e.unit?'':tr(': العدّات والوزن',': reps and weight')}`;
   const sh=$('#sheet');sh.hidden=false;
   sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="pkt">${ttl}</div>${kind==='w'&&!e.unit?`<div class="stp"><span>${tr('خطوة الزيادة','Step')}</span>${[1,2,2.5,4,5].map(v=>`<button class="en${stepOf(e.name)===v?' on':''}" data-a="stepSet" data-v="${v}">${v}</button>`).join('')}</div>`:''}${kind==='w'&&!e.unit&&typeof META!=='undefined'&&META[e.name]&&(META[e.name].eq==='bb'||META[e.name].eq==='mach')?`<div class="plc" id="plc"></div>`:''}${kind==='s'&&!e.unit?`<div class="pws"><span>${tr('وزن المجموعة دي','This set\'s weight')}</span><button data-a="pwm" aria-label="−">−</button><b class="en" id="pwv">${pk.wv}</b><small>k</small><button data-a="pwp" aria-label="+">+</button></div>`:''}<div class="pk"><div class="pkl" id="pkl">${vals.map(v=>`<div class="pki en">${v}</div>`).join('')}</div><div class="pkb"></div></div><button class="btn pri w" data-a="pickOk">${tr('تم','Done')}</button>${kind==='s'?`<div class="pkx"><button data-a="pickClr">${tr('امسح','Clear')}</button>${e.sets.length>1?`<button data-a="pickRm">${tr('شيل المجموعة','Remove set')}</button>`:''}</div>`:''}</div>`;
   const plc=$('#plc'),plates=v=>{let r=v;const o=[];for(const p of [20,10,5,2.5,1.25]){let c=0;while(r>=p-1e-9){c++;r=Math.round((r-p)*100)/100}if(c)o.push(c>1?`${c}×${p}`:`${p}`)}return r>0.01?'':o.join(' + ')};
@@ -668,8 +670,22 @@ function openPick(kind,j){
   let raf=0;l.addEventListener('scroll',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(mark)},{passive:true});
 }
 function openMenu(){
-  const d=S.draft,L=T(),sh=$('#sheet');sh.hidden=false;
-  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><button class="btn w pri" data-a="sxOpen">+ ${tr('ضيف تمرين للجلسة','Add an exercise')}</button><button class="btn w mt" data-a="swOpen">⇄ ${tr('بدّل التمرين ده (الجهاز مشغول)','Swap this exercise (machine busy)')}</button>${curEx<d.ex.length-1?`<button class="btn w ghost mt" data-a="ssTgl">${d.ex[curEx].ss?tr('فك السوبرسيت','Unlink superset'):tr('سوبرسيت: تمرينين ورا بعض من غير راحة','Superset: two exercises back to back')}</button>`:''}<button class="btn w ghost mt" data-a="tShort">${tr('معايا وقت قليل (مجموعتين لكل تمرين)','Short on time (2 sets each)')}</button><button class="btn w ghost mt" data-a="pain">${tr('حاسس بوجع في التمرين ده','This exercise hurts')}</button><button class="btn w ghost mt" data-a="rtOpen">${tr('تايمر جولات','Round timer')}</button><div class="meta2 mt"><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy"><span class="en">Cycle</span><input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div>${d.editing||!d.ex.some(x=>x.core)||d.ex.every(x=>x.core)?'':`<button class="btn w ghost mt" data-a="coreOnly">${tr('الأساسي بس','Essentials only')}</button>`}<button class="btn w mt" data-a="shareDraft">${L.shareW}</button><button class="btn w dan ghost mt" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
+  const d=S.draft,L=T(),sh=$('#sheet');sh.hidden=false;const e=d.ex[curEx];
+  /* v128: صفوف بنفس الشكل، مجموعتين، ومن غير زرار مليان */
+  sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx mnu">
+  <div class="mgh">${tr('التمرين ده','This exercise')}</div>
+  <button class="mrow" data-a="swOpen"><i>⇄</i>${tr('بدّله (الجهاز مشغول)','Swap it (machine busy)')}</button>
+  <button class="mrow" data-a="pain"><i>!</i>${tr('حاسس بوجع','It hurts')}</button>
+  ${curEx<d.ex.length-1?`<button class="mrow" data-a="ssTgl"><i>⇵</i>${e.ss?tr('فك السوبرسيت','Unlink superset'):tr('سوبرسيت مع اللي بعده','Superset with the next one')}</button>`:''}
+  <div class="mgh">${tr('الجلسة','Session')}</div>
+  <button class="mrow" data-a="sxOpen"><i>+</i>${tr('ضيف تمرين','Add an exercise')}</button>
+  ${d.editing?'':`<button class="mrow" data-a="timeShort"><i>◷</i>${tr('وقتي ضيق','Short on time')}</button>`}
+  <button class="mrow" data-a="swTgl"><i>⏱</i>${S.settings.swOn?tr('ساعة الإيقاف: للتمارين اللي بالوقت بس','Stopwatch: timed exercises only'):tr('ساعة الإيقاف لكل التمارين','Stopwatch for every exercise')}</button>
+  <button class="mrow" data-a="shareDraft"><i>↗</i>${L.shareW}</button>
+  <button class="mrow" data-a="finish"><i>✓</i>${d.editing?L.saveEdit:tr('خلّص واحفظ','Finish and save')}</button>
+  <button class="mrow" data-a="dateEd"><i>▤</i>${tr('تعديل التاريخ والدورة…','Edit date and cycle…')}</button>
+  <div id="mdt" class="meta2" hidden><label>${L.date}<input class="inp" type="date" id="sDate" value="${esc(d.date)}"></label><label class="cy">${tr('الدورة','Cycle')}<input class="inp" id="sCyc" inputmode="numeric" value="${esc(d.cycle)}"></label></div>
+  <button class="mrow dan" data-a="discard">${d.editing?L.discardEdit:L.discard}</button></div>`;
 }
 function openGuide(){
   const d=S.draft;if(!d)return;const e=d.ex[curEx];if(!e)return;const x=libGet(e.name),sh=$('#sheet');
@@ -684,26 +700,25 @@ function renderSession(){
   const u=e.unit?' '+esc(unitTxt(e.unit)):'',showW=!(noW(e.w)&&e.unit);
   const showL=openTips.has('l'+i),showH=openTips.has('h'+i),showN=openTips.has('n'+i)||!!e.note;
   const seg=d.ex.map((x,k)=>{const s=exSt(x);return `<button class="sg${k===i?' cur':''}${fullyIn(x)?' dn':s==='part'?' wn':''}" data-a="exGo" data-i="${k}" aria-label="${k+1}"><i></i></button>`}).join('');
-  const du=e.dur||[],cir=e.sets.map((r,j)=>{const v=num(r)>0;return `<div class="cw"><button class="cir${v?' on':''}" data-a="setTap" data-j="${j}" aria-label="${tr('مجموعة','Set')} ${j+1}"><span class="en">${v?esc(r):esc(String(+e.treps||0))}</span></button><small class="ct en">${num((e.ws||[])[j])>0&&num(e.ws[j])!==num(e.w)?esc(String(num(e.ws[j])))+' k':''}${du[j]>0?(num((e.ws||[])[j])>0&&num(e.ws[j])!==num(e.w)?' · ':'')+mmss(du[j]):''}</small></div>`}).join('');
+  const du=e.dur||[],cir=e.sets.map((r,j)=>{const v=num(r)>0;return `<div class="cw"><button class="cir${v?' on':''}" data-a="setTap" data-j="${j}" aria-label="${tr('مجموعة','Set')} ${j+1}">${v?`<span class="en">${esc(r)}</span>`:`<span class="cix en">${j+1}</span><span class="en">${esc(String(+e.treps||0))}</span>`}</button><small class="ct en">${num((e.ws||[])[j])>0&&num(e.ws[j])!==num(e.w)?esc(String(num(e.ws[j])))+' k':''}${du[j]>0?(num((e.ws||[])[j])>0&&num(e.ws[j])!==num(e.w)?' · ':'')+mmss(du[j]):''}</small></div>`}).join('');
   const lastP=h.length?h.slice(0,3).map(x=>`<div><bdi>${fmtD(x.date)}</bdi> · <bdi class="en">${fw(x.w)} | ${esc(setsStr(x))}</bdi></div>`).join(''):`<div>${L.first}</div>`;
   const ar=LANG==='ar';
   $('#sess').innerHTML=`<div class="wtop"><button class="wx" data-a="closeS" aria-label="${L.back}">✕</button><div class="wseg">${seg}</div><button class="wx" data-a="menu" aria-label="${tr('خيارات','Options')}">⋯</button></div>
   <div class="corec" id="corec" aria-live="polite"></div>
-  ${!d.editing&&d.rdy==null&&!d.ex.some(x=>x.sets.some(v=>num(v)>0))?`<div class="rdy"><span>${tr('نومك وطاقتك النهارده؟','Sleep and energy today?')}</span>${[[2,tr('كويس','Good')],[1,tr('متوسط','OK')],[0,tr('وحش','Poor')]].map(([v,t])=>`<button data-a="rdy" data-v="${v}">${t}</button>`).join('')}</div>`:''}
   ${d.cb?`<div class="cbn">${cbLine(d.cb)}</div>`:''}
   <div class="wmain${wAnim?' wa':''}" data-i="${i}">
     ${e.ss&&d.ex[i+1]?`<div class="sstag">⇄ ${tr('سوبرسيت مع','Superset with')} <bdi class="en">${esc(d.ex[i+1].name)}</bdi></div>`:i>0&&d.ex[i-1].ss?`<div class="sstag">⇄ ${tr('سوبرسيت مع','Superset with')} <bdi class="en">${esc(d.ex[i-1].name)}</bdi></div>`:''}
-    <button class="wname en${e.core?' core':''}" data-a="guide" aria-label="${tr('طريقة الأداء','How to perform')}">${esc(e.name)}<span class="wgh">${tr('اضغط لطريقة الأداء','Tap to see how to perform')}</span></button>
-    <div class="wtg">${showW?`<button class="wwt en${earn?' earn':''}" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>`:''}<span class="wsr en">${esc(String(+e.tsets||0))}×${tgt(e.treps,e.goal,e.unit)}${u}</span></div>
-    ${LANG==='ar'&&typeof META!=='undefined'&&META[e.name]&&META[e.name].ar?`<div class="war">${esc(META[e.name].ar)}</div>`:''}
+    <button class="wname en${e.core?' core':''}" data-a="guide" aria-label="${tr('طريقة الأداء','How to perform')}">${esc(e.name)}</button>
+    <div class="war">${LANG==='ar'&&typeof META!=='undefined'&&META[e.name]&&META[e.name].ar?`<span>${esc(META[e.name].ar)}</span>`:''}<button class="wic" data-a="guide">ⓘ ${tr('الأداء','How')}</button><button class="wic" data-a="swOpen">⇄ ${tr('بدّل','Swap')}</button></div>
+    <div class="wtg">${showW?`${e.unit?'':`<button class="wpm" data-a="wStep" data-v="-1" aria-label="${tr('أخف','Lighter')}">−</button>`}<button class="wwt en${earn?' earn':''}" id="wwt" data-a="pickW">${noW(e.w)?'—':esc(e.w)}<small>${L.wt}</small></button>${e.unit?'':`<button class="wpm" data-a="wStep" data-v="1" aria-label="${tr('أتقل','Heavier')}">+</button>`}`:''}<span class="wsr en">${esc(String(+e.tsets||0))}×${tgt(e.treps,e.goal,e.unit)}${u}</span></div>
     <div class="wsets">${cir}</div>
-    <div class="wlast">${l?`${tr('آخر مرة','Last')}: <bdi class="en">${fw(l.w)} · ${esc(setsStr(l))}</bdi> · ${fmtD(l.date)}`:tr('أول مرة تلعبه','First time')}${!e.sets.some(v=>num(v)>0)&&warmTxt(e)?`<br>${tr('إحماء','Warm-up')}: <bdi class="en">${warmTxt(e)}</bdi>`:''}</div>
+    <div class="wlast" data-a="hist" data-id="${e.exId}">${l?`${tr('آخر مرة','Last')}: <bdi class="en">${fw(l.w)} · ${esc(setsStr(l))}</bdi> · ${fmtD(l.date)}`:tr('أول مرة تلعبه','First time')}${!e.sets.some(v=>num(v)>0)&&warmTxt(e)?`<br>${tr('إحماء','Warm-up')}: <bdi class="en">${warmTxt(e)}</bdi>`:''}</div>
     <div class="rst" id="rst"></div>
-    ${e.sets.some(v=>num(v)>0)?`<div class="wrir"><span>${tr('آخر مجموعة','Last set')}:</span>${[tr('على الآخر','To failure'),tr('فاضل 1–2','1–2 left'),tr('فاضل 3+','3+ left')].map((t,k)=>`<button class="${e.rir===(k===0?0:k===1?2:3)?'on':''}" data-a="rir" data-v="${k===0?0:k===1?2:3}">${t}</button>`).join('')}</div>`:''}
-    ${e.unit?'':`<button class="wcl${e.clean?' on':''}" data-a="clean" aria-pressed="${e.clean?'true':'false'}">${e.clean?tr('✓ أداء نضيف','✓ Clean form'):tr('مش نضيف (مرجحة أو أداء مكسور)','Not clean (swinging or broken form)')}</button>`}
-    <div class="wrest">${swHtml(e)}</div>
+    ${e.sets.length&&e.sets.every(v=>num(v)>0)&&!e.unit?`<div class="wrir"><span>${tr('فاضل في إيدك كام؟','Reps left in the tank?')}</span>${[tr('على الآخر','To failure'),tr('فاضل 1–2','1–2 left'),tr('فاضل 3+','3+ left')].map((t,k)=>`<button class="${e.rir===(k===0?0:k===1?2:3)?'on':''}" data-a="rir" data-v="${k===0?0:k===1?2:3}">${t}</button>`).join('')}</div>`:''}
+    ${e.unit?'':e.clean?`<button class="wcl" data-a="clean">${tr('فيه مرجحة؟','Swinging?')}</button>`:`<button class="wcl un" data-a="clean">${tr('اتعلّم: فيه مرجحة، ومش هيتحسب في الزيادة · رجّعه','Marked: swinging, not counted toward the rule · undo')}</button>`}
+    ${(e.unit||S.settings.swOn||(d.sw&&d.sw.i===curEx))&&!(d.rest&&!d.rest.done&&!(d.sw&&d.sw.i===curEx))?`<div class="wrest">${swHtml(e)}</div>`:''}
     <div class="whint${showH?' open':''}" dir="auto" data-a="tgl" data-k="h${i}">${esc(e.note0&&e.note0!==libHowAlt(e.name)?e.note0:(libHow(e.name)||e.note0||''))}</div>
-    <div class="wlinks"><button data-a="tgl" data-k="l${i}">↺ ${tr('آخر أداء','Last')}</button><button data-a="tgl" data-k="n${i}">✎ ${L.note}</button><button data-a="addset" data-i="${i}">+ ${tr('مجموعة','Set')}</button></div>
+    <div class="wlinks"><button data-a="tgl" data-k="l${i}">↺ ${tr('آخر 3 مرات','Last 3 times')}</button><button data-a="tgl" data-k="n${i}">✎ ${L.note}</button><button data-a="addset" data-i="${i}">+ ${tr('مجموعة','Set')}</button></div>
     ${showL?`<div class="tnote">${lastP}${p?`<div class="pmsg ${p.c}">${p.t}</div>`:''}</div>`:''}
     ${showN?`<input class="inp noteI" data-f="n" value="${esc(e.note)}" placeholder="${L.notePh}">`:''}
   </div>
@@ -1492,13 +1507,13 @@ document.addEventListener('click',ev=>{
     case 'lang':$('#toast').classList.remove('on');LANG=LANG==='en'?'ar':'en';S.settings.lang=LANG;save();applyLang();if(!$('#sess').hidden)renderSession();if(!$('#modal').hidden)closeModal();go(tab);break;
     case 'start':if(b.classList.contains('orb'))orbGo(b,()=>startSession(b.dataset.d));else startSession(b.dataset.d);break;
     case 'resume':if(b.classList.contains('orb'))orbGo(b,openSession);else openSession();break;
-    case 'closeS':flushSave();closeSession();if(S.draft)queueDraftBackup();break;
+    case 'closeS':{const kept=S.draft&&S.draft.ex.some(x=>x.sets.some(v=>num(v)>0));flushSave();closeSession();if(S.draft)queueDraftBackup();if(kept)toast(tr('الجلسة متحفظة. كمّلها من الدايرة في الرئيسية','Session kept. Continue it from the circle on Home'));break}
     case 'shareDraft':shareDraft();break;
     case 'discard':ask(d.editing?L.confCancelEdit:L.confDiscard,{danger:1}).then(ok=>{if(ok){const _u=undoSnap();S.draft=null;openTips.clear();save();closeSession();offerUndo(tr('الجلسة اتلغت','Session discarded'),_u)}});break;
     case 'addset':d.ex[i].sets.push('');save();renderSession();break;
     case 'exGo':goEx(i);break;
     case 'setTap':{const j=+b.dataset.j,e=d.ex[curEx];if(num(e.sets[j])>0){openPick('s',j);break}
-      e.sets[j]=String(e.treps);saveSoon();
+      e.sets[j]=String(e.treps);saveSoon();if(!S.settings.hint1){S.settings.hint1=1;save();setTimeout(()=>toast(tr('دوس على الدايرة تاني لو عايز تغيّر العدّات أو وزن المجموعة دي','Tap the circle again to change the reps or this set\'s weight')),400)}
       /* سوبرسيت: من A لـ B من غير راحة، ومن B راحة وترجع لـ A */
       if(e.ss&&curEx<d.ex.length-1){goEx(curEx+1);break}
       if(curEx>0&&d.ex[curEx-1].ss){const a=d.ex[curEx-1];restStart(e);if(a.sets.some(v=>!(num(v)>0)))goEx(curEx-1);else renderSession();break}
@@ -1540,6 +1555,12 @@ document.addEventListener('click',ev=>{
     case 'gymAdd':modal(`<h3>${tr('جيم جديد','New gym')}</h3><div class="mu" style="margin-bottom:8px">${tr('للسفر أو جيم تاني بأجهزة مختلفة. كل جيم بيفتكر أوزانه لوحده.','For travel or another gym with different machines. Each gym remembers its own weights.')}</div><label class="fld">${tr('الاسم','Name')}<input class="inp" id="gymN" maxlength="20"></label><div class="row"><button class="btn pri sp" data-a="gymSave">${T().saveB}</button><button class="btn ghost" data-a="closeM">${T().cancel}</button></div>`);break;
     case 'gymSave':{const n=($('#gymN').value||'').trim();if(!n){toast(T().nameReq);break}S.gyms=S.gyms||[];const g={id:'g'+uid(),name:n};S.gyms.push(g);S.settings.gym=g.id;save();closeModal();go('home');break}
     case 'safe':S.settings.safe=b.dataset.k==='on'?1:0;save();renderData();break;
+    case 'wStep':{const e=d.ex[curEx],st=stepOf(e.name),w=num(e.w)||0;e.w=String(Math.max(0,Math.round((w+(+b.dataset.v)*st)*100)/100));saveSoon();renderSession();break}
+    case 'rdyGo':{d.rdy=+b.dataset.v;d.rdyAsk=1;save();closeSheet();if(d.rdy===0){ask(tr('يوم تقيل. تخلّي النهارده الأساسي بس؟ الالتزام أهم من الرقم.','Rough day. Keep today to the essentials? Showing up beats the number.'),{yes:tr('الأساسي بس','Essentials only'),no:tr('كمّل عادي','Keep going')}).then(ok=>{if(ok){const keep=d.ex.filter(x=>x.core);if(keep.length){d.ex=keep;curEx=0;save();renderSession()}}})}else toast(tr('اتسجّل ✓','Noted ✓'));break}
+    case 'rdySkip':d.rdyAsk=1;save();closeSheet();break;
+    case 'timeShort':{const sh=$('#sheet');sh.innerHTML=`<div class="sbk" data-a="closeSheet"></div><div class="sbx"><div class="mgh">${tr('وقتك ضيق النهارده','Short on time today')}</div>${d.ex.some(x=>x.core)&&!d.ex.every(x=>x.core)?`<button class="mrow" data-a="coreOnly">${tr('الأساسي بس','Essentials only')}<small>${tr('التمارين الأساسية بكل مجموعاتها','Essential exercises, all sets')}</small></button>`:''}<button class="mrow" data-a="tShort">${tr('مجموعتين لكل تمرين','Two sets each')}<small>${tr('كل التمارين، والأساسي الأول','Every exercise, essentials first')}</small></button></div>`;break}
+    case 'swTgl':S.settings.swOn=S.settings.swOn?0:1;save();closeSheet();renderSession();toast(S.settings.swOn?tr('ساعة الإيقاف ظاهرة لكل التمارين','Stopwatch shown for every exercise'):tr('ساعة الإيقاف للتمارين اللي بالوقت بس','Stopwatch only for timed exercises'));break;
+    case 'dateEd':{const x=$('#mdt');if(x)x.hidden=!x.hidden;break}
     case 'clean':{const e=d.ex[curEx];e.clean=!e.clean;saveSoon();renderSession();break}
     case 'coreOnly':{const keep=d.ex.filter(x=>x.core);if(keep.length&&!d.editing){d.ex=keep;curEx=0;save();closeSheet();renderSession();toast(tr('اليوم بقى الأساسي بس ✓','Essentials only ✓'))}break}
     case 'bodySave':{const w=num($('#bW').value),c=num($('#bC').value),mx={};for(const [k] of BMX){const v=num(($('#b_'+k)||{}).value);if(v>0&&v<400)mx[k]=v}if(!(w>0)&&!(c>0)&&!Object.keys(mx).length){toast(tr('اكتب الوزن أو الوسط','Enter weight or waist'));break}

@@ -567,3 +567,30 @@ input::selection,textarea::selection{background:var(--acbd)}
 /* v127: الأسامي الإنجليزي في الواجهة العربية بتتحاذى يمين */
 html[dir=rtl] .dr .dn2,html[dir=rtl] .pr2 .pnm,html[dir=rtl] .prow .nm{text-align:right}
 .oline{color:var(--mu)}
+
+/* v128: شاشة التمرين أهدى */
+.wnr{display:flex;align-items:center;justify-content:center;gap:4px}
+.wi{font-size:.5em;color:var(--mu);vertical-align:middle;opacity:.7}
+.wsw{width:40px;height:40px;border-radius:50%;border:1px solid var(--bd);background:none;color:var(--mu);font-size:17px;flex:none}
+.war{margin-top:-2px}
+.wpm{width:40px;height:40px;border-radius:50%;border:1px solid var(--bd);background:none;color:var(--tx2);font-size:22px;line-height:1;align-self:center;flex:none}
+.wtg{align-items:center;gap:12px}
+.cir .cix{position:absolute;top:18%;font-size:11px;font-weight:600;color:var(--mu);opacity:.8}
+.cir{position:relative}.cir:not(.on) span:not(.cix){font-size:24px}
+.wlast{cursor:pointer}
+.wcl{border:0;padding:6px 10px;min-height:36px;font-size:13px;color:var(--mu);margin-top:8px}
+.wcl.un{color:var(--badtx)}
+.rsr button{border:0;padding:4px 8px;color:var(--mu);text-decoration:underline;text-underline-offset:3px;min-height:32px}
+.rsr b{font-size:20px}
+.mnu{padding-top:10px}.mgh{font-size:12px;color:var(--mu);margin:14px 2px 4px}.mgh:first-child{margin-top:4px}
+.mrow{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 4px;background:none;border:0;border-bottom:1px solid color-mix(in srgb,var(--bd) 55%,transparent);color:var(--tx2);font:inherit;font-size:16px;text-align:start;cursor:pointer;flex-wrap:wrap}
+.mrow i{font-style:normal;width:22px;text-align:center;color:var(--mu);font-size:16px}
+.mrow small{flex-basis:100%;font-size:12.5px;color:var(--mu);margin:-12px 0 8px 34px}
+html[dir=rtl] .mrow small{margin:-12px 34px 8px 0}
+.mrow.dan{color:var(--badtx);border-bottom:0;margin-top:10px;justify-content:center}
+.mrow.sk{justify-content:center;color:var(--mu);border:0}
+#mdt{margin:8px 0}
+.rdy2{display:flex;gap:8px;margin:8px 0}.rdy2 button{flex:1;min-height:52px;border-radius:99px;border:1px solid var(--bd);background:var(--s2);color:var(--tx2);font:inherit;font-size:16px}
+.war{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:0}.war span{margin-inline-end:4px}
+.wic{border:0;background:none;color:var(--mu);font:inherit;font-size:12.5px;padding:4px 8px;border-radius:99px;min-height:32px}
+.wtg{direction:ltr}
