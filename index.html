@@ -512,7 +512,11 @@ body{overflow-x:clip;max-width:100vw;touch-action:pan-y}
 *::-webkit-scrollbar{display:none;width:0;height:0}
 html,body{overscroll-behavior:none}
 button,.btn,.tabs,.top,.chips,summary,label,.brand{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* v111: مفيش تحديد نص في التطبيق كله، ما عدا خانات الكتابة */
+html,body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+::selection{background:transparent}
 input,textarea,[contenteditable],[contenteditable] *{-webkit-user-select:text;user-select:text}
+input::selection,textarea::selection{background:var(--acbd)}
 </style>
 </head>
 <body>
@@ -540,7 +544,7 @@ sp.classList.add('on');setTimeout(function(){sp.classList.add('out');setTimeout(
 <script src="exlib.js"></script>
 <script>
 'use strict';
-const VER='110';
+const VER='111';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 const I18N={
