@@ -903,3 +903,9 @@ html.orboff .orb *,html.orboff .orb{animation-play-state:paused!important}
 .vrng{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;outline:none;margin:6px 0;direction:ltr;background:linear-gradient(to right,var(--ac) 0,var(--ac) var(--p,66%),var(--s2) var(--p,66%),var(--s2) 100%);touch-action:pan-y}
 .vrng::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--ac2);border:3px solid var(--s1);box-shadow:0 1px 6px rgba(0,0,0,.35);cursor:pointer}
 .vrng::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--ac2);border:3px solid var(--s1);cursor:pointer}
+/* v154: توهج القوس الأحمر وانت دايس على الدايرة (ويفضل طول الضغطة الطويلة) */
+.orb path.ar.cur,.orb circle.ar.cur.one,.orb .cmt{transition:filter .35s ease,stroke-opacity .35s ease}
+.orb .ar.hl{transition:stroke-opacity .35s ease,stroke-width .35s ease}
+.orbglow .orb path.ar.cur,.orbglow .orb .cmt{filter:drop-shadow(0 0 5px var(--pw)) drop-shadow(0 0 14px var(--pw));transition-duration:.12s}
+.orbglow .orb circle.ar.cur.one{stroke-opacity:.55;filter:drop-shadow(0 0 6px var(--pw)) drop-shadow(0 0 14px var(--pw));transition-duration:.12s}
+.orbglow .orb .ar.hl{stroke-opacity:.7;stroke-width:24;transition-duration:.12s}

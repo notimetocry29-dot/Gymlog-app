@@ -1,6 +1,6 @@
 /* چيم لوج — منطق التطبيق. الإصدار في const VER، ولازم يتغير مع BUILD في sw.js */
 'use strict';
-const VER='153';
+const VER='154';
 const KEY='gymlog.v1';
 /* ================= اللغة / Language ================= */
 let LANG='en';
@@ -747,7 +747,7 @@ let NB=null,MST=null;
 function sNoise(a){if(NB&&NB.sampleRate===a.sampleRate)return NB;const n=a.sampleRate,b=a.createBuffer(1,n,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;return NB=b}
 /* v153: مستوى صوت التطبيق: كل الأصوات بتعدّي على مفتاح واحد (0–150%) وبعده ليميتر يمنع التقطيع */
 let MV=null;
-const volPct=()=>{const v=S&&S.settings&&S.settings.vol;return v===undefined||v===null||isNaN(+v)?100:Math.max(0,Math.min(150,+v))};
+const volPct=()=>{const v=S&&S.settings&&S.settings.vol;return v===undefined||v===null||isNaN(+v)?25:Math.max(0,Math.min(150,+v))};
 function mOut(a){if(MV&&MV.context===a)return MV;const g=a.createGain(),l=a.createDynamicsCompressor();g.gain.value=volPct()/100;l.threshold.value=-2;l.knee.value=0;l.ratio.value=20;l.attack.value=.001;l.release.value=.08;g.connect(l);l.connect(a.destination);return MV=g}
 function volApply(){if(MV)try{MV.gain.setTargetAtTime(volPct()/100,MV.context.currentTime,.02)}catch(e){MV.gain.value=volPct()/100}}
 function sOut(a){if(MST&&MST.context===a)return MST;const lp=a.createBiquadFilter(),sh=a.createBiquadFilter(),c=a.createDynamicsCompressor();lp.type='lowpass';lp.frequency.value=1700;lp.Q.value=.5;sh.type='lowshelf';sh.frequency.value=180;sh.gain.value=5;lp.connect(sh);sh.connect(c);c.threshold.value=-16;c.knee.value=6;c.ratio.value=5;c.attack.value=.002;c.release.value=.12;const g=a.createGain();g.gain.value=.85;c.connect(g);g.connect(mOut(a));return MST=lp}
@@ -861,8 +861,10 @@ function orbTick(ts){
 function orbWake(){if(!orbLive()){document.documentElement.classList.add('orboff');return}document.documentElement.classList.remove('orboff');if(ORB.reduce||ORB.run)return;ORB.run=true;requestAnimationFrame(orbTick)}
 document.addEventListener('visibilitychange',()=>setTimeout(orbWake,50));
 (()=>{const on=e=>e.target.closest&&e.target.closest('.orb');
-  const end=()=>{clearTimeout(ORB.t);if(ORB.hold){ORB.hold=false;ORB.tg=ORB.idle;setTimeout(()=>{ORB.swallow=false},350)}};
-  document.addEventListener('pointerdown',e=>{if(ORB.reduce||!on(e))return;ORB.hold=false;ORB.swallow=false;clearTimeout(ORB.t);
+  /* v154: القوس الأحمر بيتوهج مع الدوسة، ويفضل متوهج طول ما الضغطة الطويلة مستمرة */
+  const glow=v=>document.documentElement.classList.toggle('orbglow',v); /* على الـ html عشان يفضل لو الرئيسية اترسمت من جديد وانت ضاغط */
+  const end=()=>{clearTimeout(ORB.t);glow(false);if(ORB.hold){ORB.hold=false;ORB.tg=ORB.idle;setTimeout(()=>{ORB.swallow=false},350)}};
+  document.addEventListener('pointerdown',e=>{if(!on(e))return;glow(true);if(ORB.reduce)return;ORB.hold=false;ORB.swallow=false;clearTimeout(ORB.t);
     ORB.t=setTimeout(()=>{ORB.hold=true;ORB.swallow=true;ORB.tg=ORB.fast;try{vib(15)}catch(_){}if(sndOn('orb'))snd('charge')},320)});
   ['pointerup','pointercancel'].forEach(n=>document.addEventListener(n,end));
   document.addEventListener('contextmenu',e=>{if(on(e))e.preventDefault()});
